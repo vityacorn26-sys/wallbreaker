@@ -6,87 +6,63 @@
     <title>WallBreaker | Bypass DPI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --neon-cyan: #0ff;
-            --neon-magenta: #f0f;
-            --metallic: #a0a0a0;
-        }
-        body { background: #080018; color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px solid var(--neon-cyan); background: rgba(0,0,0,0.3); }
-        .hamburger { width: 30px; height: 20px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; z-index: 100; }
-        .hamburger span { height: 3px; width: 100%; background: linear-gradient(90deg, #888, var(--metallic), #888); border-radius: 2px; }
-        .stats { font-size: 1.1rem; color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); font-weight: bold; }
-        main { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; }
-        #wall-btn { width: 260px; height: 260px; border: 4px solid var(--neon-cyan); border-radius: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px var(--neon-cyan); cursor: pointer; transition: transform 0.05s; background: rgba(0,255,255,0.05); overflow: hidden; }
-        #wall-btn:active { transform: scale(0.92); }
-        #wall-btn img { width: 95%; height: 95%; object-fit: cover; pointer-events: none; }
-        #menu { position: fixed; top: 0; left: -100%; width: 75%; height: 100%; background: rgba(10,0,30,0.98); border-right: 2px solid var(--neon-magenta); transition: 0.4s; z-index: 99; padding: 30px; }
-        #menu.active { left: 0; }
-        .menu-btn { display: block; width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(255,0,255,0.1); border: 1px solid var(--neon-magenta); color: #fff; border-radius: 10px; }
-        footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); text-align: center; }
-        footer a { color: var(--neon-cyan); text-decoration: none; font-size: 0.85rem; }
+        :root { --neon-cyan: #0ff; --neon-magenta: #f0f; }
+        body { background: #080018; color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; text-align: center; }
+        header { display: flex; justify-content: space-between; padding: 15px; border-bottom: 2px solid var(--neon-cyan); }
+        .stats { font-size: 1.1rem; color: var(--neon-cyan); font-weight: bold; }
+        main { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; }
+        #wall-btn { width: 250px; height: 250px; border: 4px solid var(--neon-cyan); border-radius: 30px; box-shadow: 0 0 20px var(--neon-cyan); cursor: pointer; transition: 0.1s; }
+        #wall-btn:active { transform: scale(0.95); }
+        #wall-btn img { width: 100%; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="menu">
-        <h2 style="color:var(--neon-magenta); margin-top: 50px;">СИСТЕМА</h2>
-        <button class="menu-btn" onclick="tg.showAlert('Задания: Скоро открытие')">📝 ЗАДАНИЯ</button>
-        <button class="menu-btn" onclick="toggleMenu()" style="background: grey; margin-top: 50px;">ЗАКРЫТЬ</button>
-    </div>
-
     <header>
-        <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+        <div style="font-size: 20px;" onclick="location.reload()">🔄</div>
         <div class="stats">💰 <span id="balance">0</span> | ⚡️ <span id="energy">0</span></div>
     </header>
 
     <main>
         <h2 style="color:var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta);">BYPASS DPI</h2>
         <div id="wall-btn" onclick="handleTap()">
-            <img src="cat.png" alt="CyberCat">
+            <img src="cat.png" alt="Cat">
         </div>
-        <p style="color: #555; margin-top: 20px; font-size: 0.8rem;">CLICK TO BREAK THE WALL</p>
     </main>
 
-    <footer>
-        <a href="https://t.me/hiddifyProxySale_bot" target="_blank">🔐 @hiddifyProxySale_bot | SECURE CONNECT</a>
-    </footer>
-
-    <script src="config.js"></script>
-    <script src="api.js"></script>
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Если зашли просто из браузера, используем тестовый ID
-        const currentUserId = tg.initDataUnsafe.user?.id || "test123";
-
-        function toggleMenu() {
-            document.getElementById('menu').classList.toggle('active');
-        }
+        const API_URL = "https://api.setgot.qzz.io"; // Вшили адрес прямо сюда
+        const userId = tg.initDataUnsafe?.user?.id || "test123";
 
         async function init() {
-            // Сначала создаем/получаем юзера
-            const data = await api.getUser(tg.initDataUnsafe.user ? tg.initDataUnsafe : { user: { id: "test123" } });
-            if (data) updateUI(data.balance, data.energy);
+            try {
+                const res = await fetch(`${API_URL}/api/user?id=${userId}`);
+                const data = await res.json();
+                updateUI(data.balance, data.energy);
+            } catch (e) { console.error("Load error", e); }
         }
 
         async function handleTap() {
             try {
-                const data = await api.sendTap(currentUserId);
-                updateUI(data.balance, data.energy);
-                if (navigator.vibrate) navigator.vibrate(40);
-            } catch (e) {
-                if(tg.showAlert) tg.showAlert("Энергия на нуле!");
+                const res = await fetch(`${API_URL}/api/tap?id=${userId}`);
+                const data = await res.json();
+                if (data.balance !== undefined) {
+                    updateUI(data.balance, data.energy);
+                    if (navigator.vibrate) navigator.vibrate(40);
+                }
+            } catch (e) { 
+                if (tg.showAlert) tg.showAlert("Энергия закончилась!");
                 else alert("Энергия на нуле!");
             }
         }
 
         function updateUI(b, e) {
-            document.getElementById('balance').innerText = b;
-            document.getElementById('energy').innerText = e;
+            document.getElementById('balance').innerText = b || 0;
+            document.getElementById('energy').innerText = e || 0;
         }
 
         init();
+        tg.expand();
     </script>
 </body>
 </html>
