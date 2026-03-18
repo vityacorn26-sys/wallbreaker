@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WallBreaker - Tap & Win TON</title>
+    <style>
+        /* Базовые стили, чтобы не было белого экрана */
+        body { background: #080018; color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow: hidden; }
+        #app { display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #333; }
+        #game-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #hero { max-width: 60%; } /* Твой кот */
+        #wall { width: 200px; height: 200px; background: rgba(0,255,255,0.1); border: 4px solid #0ff; box-shadow: 0 0 20px #0ff; margin-top: 20px; border-radius: 10px; cursor: pointer; position: relative; }
+        #wall:active { transform: scale(0.98); }
+        .bottom-menu { display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #333; }
+        button { background: transparent; border: 2px solid #f0f; color: #f0f; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div id="user-name">Загрузка...</div>
+            <div class="stats">
+                <div>💰 <span id="balance">0</span> $WALL</div>
+                <div>⚡️ <span id="energy">100</span>/100</div>
+            </div>
+        </header>
+
+        <main id="game-area">
+            <img src="assets/images/cat-hacker.png" id="hero" alt="Кот-хакер">
+            <div id="wall" onclick="handleTap(event)">
+                </div>
+        </main>
+
+        <nav class="bottom-menu">
+            <button onclick="openRoulette()">🎡 Рулетка</button>
+            <button onclick="openBoosts()">🚀 Бусты</button>
+            <button onclick="openShop()">🔐 Прокси</button>
+        </nav>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Инит Telegram SDK
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+        
+        // Показываем имя юзера
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || 'Гость';
+
+        // --- ЛОГИКА ТАПА (Пока визуальная, без сервера) ---
+        let balance = 0;
+        let energy = 100;
+
+        function handleTap(event) {
+            if (energy <= 0) {
+                tg.showAlert('Энергия кончилась! Посмотри рекламу или подожди.');
+                return;
+            }
+
+            energy--;
+            balance += 10; // 10 $WALL за тап
+            updateUI();
+
+            // Визуальный эффект клика
+            createClickEffect(event.clientX, event.clientY);
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = balance;
+            document.getElementById('energy').innerText = energy;
+        }
+
+        function createClickEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.innerText = '+10';
+            effect.style.position = 'absolute';
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            effect.style.color = '#0ff';
+            effect.style.fontWeight = 'bold';
+            effect.style.animation = 'floatUp 1s ease-out forwards';
+            document.body.appendChild(effect);
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        // --- ВСПЛЫВАЮЩИЕ ОКНА (Заглушки) ---
+        function openRoulette() { tg.showAlert('🎡 Рулетка скоро! Раз в 4 часа бесплатно.'); }
+        function openBoosts() { tg.showAlert('🚀 Бусты: восстанови энергию за рекламу!'); }
+        function openShop() { tg.showAlert('🔐 Прокси: скидка 10% для игроков!'); }
+
+        // Базовая анимация
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = '@keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }';
+        document.getElementsByTagName('head')[0].appendChild(style);
+    </script>
+</body>
+</html>
