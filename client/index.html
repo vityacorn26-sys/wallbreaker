@@ -3,98 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WallBreaker - Tap & Win TON</title>
+    <title>WallBreaker | Bypass DPI</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Базовые стили, чтобы не было белого экрана */
-        body { background: #080018; color: #fff; font-family: sans-serif; margin: 0; padding: 0; overflow: hidden; }
-        #app { display: flex; flex-direction: column; height: 100vh; }
-        header { padding: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #333; }
-        #game-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #hero { max-width: 60%; } /* Твой кот */
-        #wall { width: 200px; height: 200px; background: rgba(0,255,255,0.1); border: 4px solid #0ff; box-shadow: 0 0 20px #0ff; margin-top: 20px; border-radius: 10px; cursor: pointer; position: relative; }
-        #wall:active { transform: scale(0.98); }
-        .bottom-menu { display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #333; }
-        button { background: transparent; border: 2px solid #f0f; color: #f0f; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        :root {
+            --neon-cyan: #0ff;
+            --neon-magenta: #f0f;
+            --metallic: #a0a0a0;
+        }
+        body { background: #080018; color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; }
+        
+        /* HEADER */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; border-bottom: 2px solid var(--neon-cyan);
+            background: rgba(0,0,0,0.3);
+        }
+        
+        /* ГАМБУРГЕР ПОД МЕТАЛЛИК */
+        .hamburger { 
+            width: 30px; height: 20px; display: flex; flex-direction: column; 
+            justify-content: space-between; cursor: pointer; z-index: 100;
+        }
+        .hamburger span { 
+            height: 3px; width: 100%; 
+            background: linear-gradient(90deg, #888, var(--metallic), #888); 
+            border-radius: 2px; box-shadow: 0 0 5px rgba(255,255,255,0.2);
+        }
+
+        .stats { font-size: 1.1rem; color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); font-weight: bold; }
+
+        /* ИГРОВОЕ ПОЛЕ */
+        main { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; }
+        
+        #wall-btn { 
+            width: 260px; height: 260px; 
+            border: 4px solid var(--neon-cyan); border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px var(--neon-cyan);
+            cursor: pointer; transition: transform 0.05s;
+            background: rgba(0,255,255,0.05);
+            overflow: hidden;
+        }
+        #wall-btn:active { transform: scale(0.92); }
+        #wall-btn img { width: 95%; height: 95%; object-fit: cover; }
+
+        /* СКРЫТОЕ МЕНЮ */
+        #menu { 
+            position: fixed; top: 0; left: -100%; width: 75%; height: 100%; 
+            background: rgba(10,0,30,0.98); border-right: 2px solid var(--neon-magenta);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 99; padding: 30px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        #menu.active { left: 0; }
+        .menu-btn { 
+            display: block; width: 100%; padding: 15px; margin-bottom: 15px; 
+            background: rgba(255,0,255,0.1); border: 1px solid var(--neon-magenta); 
+            color: #fff; text-align: left; border-radius: 10px; font-size: 1rem;
+        }
+
+        footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); text-align: center; border-top: 1px solid #333; }
+        footer a { color: var(--neon-cyan); text-decoration: none; font-size: 0.85rem; opacity: 0.8; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <div id="user-name">Загрузка...</div>
-            <div class="stats">
-                <div>💰 <span id="balance">0</span> $WALL</div>
-                <div>⚡️ <span id="energy">100</span>/100</div>
-            </div>
-        </header>
-
-        <main id="game-area">
-            <img src="assets/images/cat-hacker.png" id="hero" alt="Кот-хакер">
-            <div id="wall" onclick="handleTap(event)">
-                </div>
-        </main>
-
-        <nav class="bottom-menu">
-            <button onclick="openRoulette()">🎡 Рулетка</button>
-            <button onclick="openBoosts()">🚀 Бусты</button>
-            <button onclick="openShop()">🔐 Прокси</button>
-        </nav>
+    <div id="menu">
+        <h2 style="color:var(--neon-magenta); margin-top: 50px;">СИСТЕМА</h2>
+        <button class="menu-btn" onclick="tg.showAlert('Задания: Скоро открытие протокола')">📝 ЗАДАНИЯ</button>
+        <button class="menu-btn" onclick="tg.showAlert('Лидерборд: Синхронизация...')">🏆 ТОП ХАКЕРОВ</button>
+        <button class="menu-btn" onclick="tg.showAlert('Рулетка: Недостаточно прав')">🎡 РУЛЕТКА</button>
+        <button class="menu-btn" onclick="toggleMenu()" style="background: grey; margin-top: 50px;">ЗАКРЫТЬ</button>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <header>
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="stats">💰 <span id="balance">0</span> | ⚡️ <span id="energy">100</span></div>
+    </header>
+
+    <main>
+        <h2 style="color:var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta); letter-spacing: 2px;">BYPASS DPI</h2>
+        <div id="wall-btn" onclick="handleTap()">
+            <img src="cat.png" alt="CyberCat">
+        </div>
+        <p style="color: #555; margin-top: 20px; font-size: 0.8rem;">CLICK TO BREAK THE WALL</p>
+    </main>
+
+    <footer>
+        <a href="https://t.me/hiddifyProxySale_bot" target="_blank">🔐 @hiddifyProxySale_bot | SECURE CONNECT</a>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
     <script>
-        // Инит Telegram SDK
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
-        
-        // Показываем имя юзера
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || 'Гость';
+        tg.expand();
 
-        // --- ЛОГИКА ТАПА (Пока визуальная, без сервера) ---
-        let balance = 0;
-        let energy = 100;
+        function toggleMenu() {
+            document.getElementById('menu').classList.toggle('active');
+        }
 
-        function handleTap(event) {
-            if (energy <= 0) {
-                tg.showAlert('Энергия кончилась! Посмотри рекламу или подожди.');
-                return;
+        async function init() {
+            const userId = tg.initDataUnsafe.user?.id;
+            if (!userId) return;
+            const data = await api.getUser(tg.initDataUnsafe);
+            if (data) updateUI(data.balance, data.energy);
+        }
+
+        async function handleTap() {
+            const userId = tg.initDataUnsafe.user?.id;
+            if (!userId) return;
+            try {
+                const data = await api.sendTap(userId);
+                updateUI(data.balance, data.energy);
+                if (navigator.vibrate) navigator.vibrate(40);
+            } catch (e) {
+                tg.showAlert("Энергия истощена! Жди восстановления.");
             }
-
-            energy--;
-            balance += 10; // 10 $WALL за тап
-            updateUI();
-
-            // Визуальный эффект клика
-            createClickEffect(event.clientX, event.clientY);
         }
 
-        function updateUI() {
-            document.getElementById('balance').innerText = balance;
-            document.getElementById('energy').innerText = energy;
+        function updateUI(b, e) {
+            document.getElementById('balance').innerText = b;
+            document.getElementById('energy').innerText = e;
         }
 
-        function createClickEffect(x, y) {
-            const effect = document.createElement('div');
-            effect.innerText = '+10';
-            effect.style.position = 'absolute';
-            effect.style.left = `${x}px`;
-            effect.style.top = `${y}px`;
-            effect.style.color = '#0ff';
-            effect.style.fontWeight = 'bold';
-            effect.style.animation = 'floatUp 1s ease-out forwards';
-            document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 1000);
-        }
-
-        // --- ВСПЛЫВАЮЩИЕ ОКНА (Заглушки) ---
-        function openRoulette() { tg.showAlert('🎡 Рулетка скоро! Раз в 4 часа бесплатно.'); }
-        function openBoosts() { tg.showAlert('🚀 Бусты: восстанови энергию за рекламу!'); }
-        function openShop() { tg.showAlert('🔐 Прокси: скидка 10% для игроков!'); }
-
-        // Базовая анимация
-        const style = document.createElement('style');
-        style.type = 'text/css';
-        style.innerHTML = '@keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }';
-        document.getElementsByTagName('head')[0].appendChild(style);
+        init();
     </script>
 </body>
 </html>
