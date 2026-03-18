@@ -1,80 +1,57 @@
-// server/server.js
 const express = require('express');
-const Datastore = require('nedb');
+const Database = require('better-sqlite3');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
-app.use(cors()); // Разрешаем запросы с других доменов
-app.use(express.json()); // Разрешаем читать JSON в запросах
+app.use(cors());
+app.use(express.json());
 
-// Подключаем базу данных (создаст файл database.db)
-const db = new Datastore({ filename: 'database.db', autoload: true });
+// Инициализация базы SQLite (создаст файл database.db в этой же папке)
+const db = new Database('database.db');
 
-// --- API: ПОЛУЧИТЬ ДАННЫЕ ЮЗЕРА (или создать нового) ---
+// Создаем таблицу, если её нет
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS users (
+    telegramId TEXT PRIMARY KEY,
+    username TEXT,
+    balance INTEGER DEFAULT 0,
+    energy INTEGER DEFAULT 100,
+    lastTap INTEGER
+  )
+`).run();
+
+// API: Загрузка юзера
 app.post('/api/user', (req, res) => {
     const { telegramId, username } = req.body;
-
-    if (!telegramId) return res.status(400).send('No ID');
-
-    db.findOne({ telegramId }, (err, user) => {
-        if (err) return res.status(500).send(err);
-
-        if (user) {
-            // Юзер найден, возвращаем данные
-            res.json(user);
-        } else {
-            // Юзера нет, создаем нового (СТАРТОВЫЙ БАЛАНС)
-            const newUser = {
-                telegramId,
-                username,
-                balance: 0,
-                energy: 100,
-                lastTap: Date.now(),
-                wallLevel: 1
-            };
-            db.insert(newUser, (err, insertedUser) => {
-                if (err) return res.status(500).send(err);
-                res.json(insertedUser);
-            });
-        }
-    });
+    let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
+    
+    if (!user) {
+        db.prepare('INSERT INTO users (telegramId, username, lastTap) VALUES (?, ?, ?)')
+          .run(telegramId, username, Date.now());
+        user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
+    }
+    res.json(user);
 });
 
-// --- API: ОБРАБОТКА ТАПА (БЕЗОПАСНОСТЬ!) ---
+// API: Обработка тапа
 app.post('/api/tap', (req, res) => {
     const { telegramId } = req.body;
+    const user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
 
-    db.findOne({ telegramId }, (err, user) => {
-        if (err || !user) return res.status(400).send('User not found');
+    if (!user || user.energy <= 0) {
+        return res.status(400).json({ error: 'No energy' });
+    }
 
-        // 1. Простая проверка времени (защита от автокликеров)
-        const now = Date.now();
-        const timeDiff = now - user.lastTap;
-        if (timeDiff < 100) { // Не чаще 10 раз в секунду
-            return res.status(429).send('Too fast!');
-        }
+    const newBalance = user.balance + 10;
+    const newEnergy = user.energy - 1;
 
-        // 2. Проверка энергии
-        if (user.energy <= 0) {
-            return res.status(403).send('No energy');
-        }
+    db.prepare('UPDATE users SET balance = ?, energy = ?, lastTap = ? WHERE telegramId = ?')
+      .run(newBalance, newEnergy, Date.now(), telegramId);
 
-        // 3. Расчет начисления (10 $WALL за тап)
-        const reward = 10;
-        const newBalance = user.balance + reward;
-        const newEnergy = user.energy - 1;
-
-        // 4. Обновляем в базе
-        db.update({ telegramId }, { $set: { balance: newBalance, energy: newEnergy, lastTap: now } }, {}, (err) => {
-            if (err) return res.status(500).send(err);
-            res.json({ balance: newBalance, energy: newEnergy });
-        });
-    });
+    res.json({ balance: newBalance, energy: newEnergy });
 });
 
-// Запускаем сервер
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Сервер WallBreaker запущен на порту ${PORT}`);
+const PORT = 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 WallBreaker Server (SQLite) started on port ${PORT}`);
 });
