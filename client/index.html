@@ -12,78 +12,35 @@
             --metallic: #a0a0a0;
         }
         body { background: #080018; color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; }
-        
-        /* HEADER */
-        header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px; border-bottom: 2px solid var(--neon-cyan);
-            background: rgba(0,0,0,0.3);
-        }
-        
-        /* ГАМБУРГЕР ПОД МЕТАЛЛИК */
-        .hamburger { 
-            width: 30px; height: 20px; display: flex; flex-direction: column; 
-            justify-content: space-between; cursor: pointer; z-index: 100;
-        }
-        .hamburger span { 
-            height: 3px; width: 100%; 
-            background: linear-gradient(90deg, #888, var(--metallic), #888); 
-            border-radius: 2px; box-shadow: 0 0 5px rgba(255,255,255,0.2);
-        }
-
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px solid var(--neon-cyan); background: rgba(0,0,0,0.3); }
+        .hamburger { width: 30px; height: 20px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; z-index: 100; }
+        .hamburger span { height: 3px; width: 100%; background: linear-gradient(90deg, #888, var(--metallic), #888); border-radius: 2px; }
         .stats { font-size: 1.1rem; color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); font-weight: bold; }
-
-        /* ИГРОВОЕ ПОЛЕ */
         main { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; }
-        
-        #wall-btn { 
-            width: 260px; height: 260px; 
-            border: 4px solid var(--neon-cyan); border-radius: 30px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px var(--neon-cyan);
-            cursor: pointer; transition: transform 0.05s;
-            background: rgba(0,255,255,0.05);
-            overflow: hidden;
-        }
+        #wall-btn { width: 260px; height: 260px; border: 4px solid var(--neon-cyan); border-radius: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 10px var(--neon-cyan); cursor: pointer; transition: transform 0.05s; background: rgba(0,255,255,0.05); overflow: hidden; }
         #wall-btn:active { transform: scale(0.92); }
-        #wall-btn img { width: 95%; height: 95%; object-fit: cover; }
-
-        /* СКРЫТОЕ МЕНЮ */
-        #menu { 
-            position: fixed; top: 0; left: -100%; width: 75%; height: 100%; 
-            background: rgba(10,0,30,0.98); border-right: 2px solid var(--neon-magenta);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 99; padding: 30px;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-        }
+        #wall-btn img { width: 95%; height: 95%; object-fit: cover; pointer-events: none; }
+        #menu { position: fixed; top: 0; left: -100%; width: 75%; height: 100%; background: rgba(10,0,30,0.98); border-right: 2px solid var(--neon-magenta); transition: 0.4s; z-index: 99; padding: 30px; }
         #menu.active { left: 0; }
-        .menu-btn { 
-            display: block; width: 100%; padding: 15px; margin-bottom: 15px; 
-            background: rgba(255,0,255,0.1); border: 1px solid var(--neon-magenta); 
-            color: #fff; text-align: left; border-radius: 10px; font-size: 1rem;
-        }
-
-        footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); text-align: center; border-top: 1px solid #333; }
-        footer a { color: var(--neon-cyan); text-decoration: none; font-size: 0.85rem; opacity: 0.8; }
+        .menu-btn { display: block; width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(255,0,255,0.1); border: 1px solid var(--neon-magenta); color: #fff; border-radius: 10px; }
+        footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.7); text-align: center; }
+        footer a { color: var(--neon-cyan); text-decoration: none; font-size: 0.85rem; }
     </style>
 </head>
 <body>
     <div id="menu">
         <h2 style="color:var(--neon-magenta); margin-top: 50px;">СИСТЕМА</h2>
-        <button class="menu-btn" onclick="tg.showAlert('Задания: Скоро открытие протокола')">📝 ЗАДАНИЯ</button>
-        <button class="menu-btn" onclick="tg.showAlert('Лидерборд: Синхронизация...')">🏆 ТОП ХАКЕРОВ</button>
-        <button class="menu-btn" onclick="tg.showAlert('Рулетка: Недостаточно прав')">🎡 РУЛЕТКА</button>
+        <button class="menu-btn" onclick="tg.showAlert('Задания: Скоро открытие')">📝 ЗАДАНИЯ</button>
         <button class="menu-btn" onclick="toggleMenu()" style="background: grey; margin-top: 50px;">ЗАКРЫТЬ</button>
     </div>
 
     <header>
-        <div class="hamburger" onclick="toggleMenu()">
-            <span></span><span></span><span></span>
-        </div>
-        <div class="stats">💰 <span id="balance">0</span> | ⚡️ <span id="energy">100</span></div>
+        <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+        <div class="stats">💰 <span id="balance">0</span> | ⚡️ <span id="energy">0</span></div>
     </header>
 
     <main>
-        <h2 style="color:var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta); letter-spacing: 2px;">BYPASS DPI</h2>
+        <h2 style="color:var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta);">BYPASS DPI</h2>
         <div id="wall-btn" onclick="handleTap()">
             <img src="cat.png" alt="CyberCat">
         </div>
@@ -100,26 +57,27 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Если зашли просто из браузера, используем тестовый ID
+        const currentUserId = tg.initDataUnsafe.user?.id || "test123";
+
         function toggleMenu() {
             document.getElementById('menu').classList.toggle('active');
         }
 
         async function init() {
-            const userId = tg.initDataUnsafe.user?.id;
-            if (!userId) return;
-            const data = await api.getUser(tg.initDataUnsafe);
+            // Сначала создаем/получаем юзера
+            const data = await api.getUser(tg.initDataUnsafe.user ? tg.initDataUnsafe : { user: { id: "test123" } });
             if (data) updateUI(data.balance, data.energy);
         }
 
         async function handleTap() {
-            const userId = tg.initDataUnsafe.user?.id;
-            if (!userId) return;
             try {
-                const data = await api.sendTap(userId);
+                const data = await api.sendTap(currentUserId);
                 updateUI(data.balance, data.energy);
                 if (navigator.vibrate) navigator.vibrate(40);
             } catch (e) {
-                tg.showAlert("Энергия истощена! Жди восстановления.");
+                if(tg.showAlert) tg.showAlert("Энергия на нуле!");
+                else alert("Энергия на нуле!");
             }
         }
 
