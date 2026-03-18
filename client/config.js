@@ -1,20 +1,18 @@
 const CONFIG = {
-    // Твой защищенный сервер
-    API_URL: 'https://setgot.qzz.io:3000',
+    // Твой защищенный API на порту Cloudflare
+    API_URL: 'https://api.setgot.qzz.io:2053',
     
-    // Ссылки на твои ресурсы
+    // Ссылки и ID
     BOT_LINK: 'https://t.me/BypassWallBot',
     OWNER_ID: '7614360974',
     PROXY_BOT_LINK: 'https://t.me/hiddifyProxySale_bot',
-    
-    // Настройки для будущей рекламы (Adsgram)
-    ADSGRAM_BLOCK_ID: '1234', // Пока тестовый ID
-    
+    ADSGRAM_BLOCK_ID: '1234',
+
     // Настройки игры
     MAX_ENERGY: 100,
-    REGEN_SPEED: 1000, // 1 единица энергии в секунду
-    
-    // Тексты (для будущего переключателя)
+    REGEN_SPEED: 1000, // 1 единица в секунду
+
+    // Тексты для языков
     LANG: {
         RU: { tap: "ТАПАЙ!", balance: "Баланс" },
         EN: { tap: "TAP!", balance: "Balance" }
