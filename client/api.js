@@ -1,16 +1,10 @@
 const api = {
-    // Получить данные юзера из твоей базы SQLite
+    // Получить данные пользователя
     async getUser(tgData) {
-        if (!tgData.user) return null;
+        const userId = tgData.user?.id;
+        if (!userId) return null;
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/user`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    telegramId: tgData.user.id.toString(),
-                    username: tgData.user.username || tgData.user.first_name
-                })
-            });
+            const response = await fetch(`${CONFIG.API_URL}/api/user?id=${userId}`);
             return await response.json();
         } catch (e) {
             console.error("Ошибка API (getUser):", e);
@@ -19,14 +13,13 @@ const api = {
     },
 
     // Отправить тап на сервер
-    async sendTap(telegramId) {
+    async sendTap(userId) {
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/tap`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegramId: telegramId.toString() })
-            });
-            if (!response.ok) throw new Error('Нет энергии');
+            const response = await fetch(`${CONFIG.API_URL}/api/tap?id=${userId}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Ошибка сервера");
+            }
             return await response.json();
         } catch (e) {
             console.error("Ошибка API (sendTap):", e);
