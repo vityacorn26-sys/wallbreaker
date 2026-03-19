@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>WallBreaker — Chrome Edition</title>
+  <title>WallBreaker — Hub Edition</title>
   <script src="https://telegram.org"></script>
   <style>
     body { background: #000; color: #00ffcc; font-family: sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
     
-    /* Живой фон */
     #bg-layer {
       position: fixed; top: -5%; left: -5%; width: 110%; height: 110%;
       background: url('cat1.jpg') no-repeat center center; background-size: cover;
@@ -18,166 +17,155 @@
 
     /* Хромированный Гамбургер */
     #menu-btn { 
-      position: fixed; top: 15px; right: 15px; font-size: 32px; cursor: pointer; z-index: 100;
-      background: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 20%, #7d7e8d 40%, #b8bac1 60%, #f5f7fa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-    }
-
-    /* Хромированная Шторка Маркета */
-    #market {
-      position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
-      /* Эффект зеркального металла с прозрачностью */
-      background: linear-gradient(135deg, rgba(184,186,193,0.3) 0%, rgba(125,126,141,0.4) 50%, rgba(184,186,193,0.3) 100%);
-      backdrop-filter: blur(15px); /* Размытие фона сквозь шторку */
-      -webkit-backdrop-filter: blur(15px);
-      border-left: 2px solid rgba(255,255,255,0.4);
-      z-index: 200; transition: 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-      padding: 20px; box-sizing: border-box; overflow-y: auto;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-    }
-    #market.open { right: 0; }
-    #market h2 { 
-      background: linear-gradient(90deg, #fff, #b8bac1, #fff);
+      position: fixed; top: 15px; right: 15px; font-size: 32px; cursor: pointer; z-index: 300;
+      background: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 50%, #7d7e8d 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
     }
 
-    /* Ранги в Маркете */
-    .rank-card { 
-      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); 
-      margin: 15px 0; padding: 12px; border-radius: 12px; text-align: left; 
+    /* Главная Шторка Меню */
+    #hub-menu {
+      position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
+      background: linear-gradient(135deg, rgba(184,186,193,0.3) 0%, rgba(125,126,141,0.4) 100%);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      z-index: 400; transition: 0.4s; padding: 30px 20px; box-sizing: border-box;
+      border-left: 1px solid rgba(255,255,255,0.2);
     }
-    .details { font-size: 11px; color: #aaa; margin-top: 5px; line-height: 1.4; }
-    .buy-btn { 
-      width: 100%; padding: 10px; margin-top: 10px; font-weight: bold; border: none; border-radius: 8px;
-      background: linear-gradient(180deg, #f5f7fa 0%, #7d7e8d 100%); color: #000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    .buy-btn:disabled { opacity: 0.3; filter: grayscale(1); }
+    #hub-menu.open { right: 0; }
 
-    /* Основной интерфейс */
-    #main-ui { padding-top: 50px; }
-    #cat-container { 
-      width: 260px; height: 320px; margin: 0 auto; position: relative; 
-      border: 4px solid #ff00aa; border-radius: 20px; overflow: hidden; 
-      box-shadow: 0 0 30px #ff00aa; background: #000;
+    /* Под-экран (Маркет) */
+    #market-screen {
+      position: fixed; top: 0; left: 100%; width: 100%; height: 100%;
+      background: #0a0014; z-index: 500; transition: 0.4s; overflow-y: auto; padding: 20px; box-sizing: border-box;
     }
+    #market-screen.open { left: 0; }
+
+    /* Кнопки Меню */
+    .menu-item {
+      width: 100%; padding: 15px; margin: 10px 0; font-weight: bold; font-size: 18px; border-radius: 12px;
+      background: linear-gradient(180deg, #f5f7fa 0%, #7d7e8d 100%); color: #000; border: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-transform: uppercase;
+    }
+
+    /* Ранги */
+    .rank-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); margin: 15px 0; padding: 12px; border-radius: 12px; text-align: left; }
+    .buy-btn { width: 100%; padding: 10px; margin-top: 10px; font-weight: bold; border: none; border-radius: 8px; background: #ff00aa; color: #fff; }
+
+    /* Остальной UI */
+    #main-ui { padding-top: 60px; }
+    #cat-container { width: 240px; height: 300px; margin: 0 auto; border: 4px solid #ff00aa; border-radius: 20px; overflow: hidden; box-shadow: 0 0 30px #ff00aa; }
     #cat-img { width: 100%; height: 100%; object-fit: cover; }
-    #coins { font-size: 52px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 15px 0; }
-    
+    #coins { font-size: 48px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 10px 0; }
     .stats { background: rgba(0,0,0,0.6); border: 1px solid #00ffcc; border-radius: 15px; padding: 12px; margin: 0 20px; }
     #energy-bar { width: 100%; height: 14px; background: #222; border-radius: 7px; margin-top: 5px; overflow: hidden; }
     #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
-
-    /* Спонсор */
-    #sponsor { position: fixed; bottom: 15px; left: 15px; width: 60px; text-decoration: none; font-size: 9px; color: #00ffcc; opacity: 0.8; }
-    #sponsor img { width: 45px; filter: drop-shadow(0 0 10px #00ffcc); }
   </style>
 </head>
 <body>
   <div id="bg-layer"></div>
-  <div id="menu-btn" onclick="toggleMarket()">☰</div>
+  <div id="menu-btn" onclick="toggleHub()">☰</div>
 
-  <div id="market">
-    <div onclick="toggleMarket()" style="text-align:right; font-size:30px; color:#fff;">✕</div>
-    <h2>Darknet Market</h2>
-    <p style="font-size:11px; color:#aaa;">Select your clearance level, runner...</p>
+  <!-- ГЛАВНЫЙ ХАБ МЕНЮ -->
+  <div id="hub-menu">
+    <div onclick="toggleHub()" style="text-align:right; font-size:30px; color:#fff;">✕</div>
+    <button class="menu-item" id="lang-btn" onclick="toggleLang()">EN / RU</button>
+    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+    <button class="menu-item" onclick="openMarket()" id="m-market">DarkNet Market</button>
+    <button class="menu-item" onclick="alert('Coming Soon...')" id="m-leader">Leaderboard</button>
+    <button class="menu-item" onclick="alert('Coming Soon...')" id="m-luck">Lucky Roulette</button>
+  </div>
+
+  <!-- ЭКРАН МАРКЕТА -->
+  <div id="market-screen">
+    <div onclick="closeMarket()" style="text-align:left; font-size:24px; color:#ff00aa; margin-bottom:20px;">← BACK</div>
+    <h2 id="market-title">DARKNET MARKET</h2>
     <div id="shop-list"></div>
   </div>
 
   <div id="main-ui">
-    <div style="font-size:14px; color:#ff00aa; text-transform:uppercase;">Clearance: <span id="rank-name">Newbie</span></div>
-    
+    <div style="font-size:14px; color:#ff00aa; text-transform:uppercase;"><span id="clearance-txt">Clearance</span>: <span id="rank-name">Newbie</span></div>
     <div id="cat-container" onmousedown="tap(event)" ontouchstart="tap(event)">
       <img id="cat-img" src="cat1.jpg">
     </div>
-
     <div id="coins">0 $WALL</div>
-
     <div class="stats">
-      ⚡ Energy: <span id="energy-val">100</span> / 100
+      ⚡ <span id="energy-txt">Energy</span>: <span id="energy-val">100</span> / 100
       <div id="energy-bar"><div id="energy-fill"></div></div>
     </div>
   </div>
-
-  <a id="sponsor" href="https://t.me/hiddifyProxySale_bot">
-    <img src="server.jpg">
-    <span>Private Proxy</span>
-  </a>
 
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    const ranks = [
-      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", desc: "Level 1. Basic bypass. Standard speed." },
-      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg", desc: "Level 2. Deep encryption. Stable tunnel." },
-      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", desc: "Level 3. DPI Firewall breaker. High speed." },
-      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", desc: "Level 4. Elite nodes. Global access." },
-      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", desc: "Level 5. Invisible. Absolute freedom." }
-    ];
-
-    let state = {
-      coins: parseInt(localStorage.getItem('w_coins')) || 0,
-      rank: parseInt(localStorage.getItem('w_rank')) || 0,
-      energy: parseInt(localStorage.getItem('w_energy')) || 100
+    let lang = localStorage.getItem('w_lang') || 'EN';
+    const texts = {
+      EN: { market: "DarkNet Market", leader: "Leaderboard", luck: "Lucky Roulette", clearance: "Clearance", energy: "Energy", back: "← BACK", dur: "Duration: 7 days", buy: "PURCHASE", owned: "OWNED", confirm: "Authorize purchase?" },
+      RU: { market: "Даркнет Маркет", leader: "Таблица Лидеров", luck: "Рулетка Удачи", clearance: "Доступ", energy: "Энергия", back: "← НАЗАД", dur: "Срок: 7 дней", buy: "КУПИТЬ", owned: "КУПЛЕНО", confirm: "Подтвердить покупку?" }
     };
 
-    function toggleMarket() { document.getElementById('market').classList.toggle('open'); }
+    const ranks = [
+      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", descEN: "Level 1 access.", descRU: "Доступ 1 уровня." },
+      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg", descEN: "Level 2. Stable tunnel.", descRU: "Уровень 2. Стабильный туннель." },
+      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", descEN: "Level 3. DPI Firewall breaker.", descRU: "Уровень 3. Обход DPI фаервола." },
+      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", descEN: "Level 4. Global access.", descRU: "Уровень 4. Глобальный доступ." },
+      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", descEN: "Level 5. Absolute freedom.", descRU: "Уровень 5. Полная свобода." }
+    ];
+
+    let state = { coins: parseInt(localStorage.getItem('w_coins')) || 0, rank: parseInt(localStorage.getItem('w_rank')) || 0, energy: 100 };
+
+    function toggleHub() { document.getElementById('hub-menu').classList.toggle('open'); }
+    function openMarket() { document.getElementById('market-screen').classList.add('open'); }
+    function closeMarket() { document.getElementById('market-screen').classList.remove('open'); }
+    function toggleLang() { lang = lang === 'EN' ? 'RU' : 'EN'; localStorage.setItem('w_lang', lang); updateUI(); }
 
     const shopList = document.getElementById('shop-list');
     ranks.forEach((r, i) => {
       if (i === 0) return;
       let card = document.createElement('div');
       card.className = 'rank-card';
-      card.innerHTML = `<b>${r.name}</b> <span style="float:right; color:#ffff00;">${r.cost}</span>
-        <div class="details">${r.desc} <br>Tap: +${r.mult} $WALL</div>
-        <button class="buy-btn" id="btn-${i}" onclick="confirmBuy(${i})">PURCHASE</button>`;
+      card.innerHTML = `<b id="name-${i}">${r.name}</b> <span style="float:right; color:#ffff00;">${r.cost}</span>
+        <div style="font-size:11px; color:#aaa; margin-top:5px;"><span id="desc-${i}">${lang === 'EN' ? r.descEN : r.descRU}</span><br><b>${texts[lang].dur}</b></div>
+        <button class="buy-btn" id="btn-${i}" onclick="confirmBuy(${i})">${texts[lang].buy}</button>`;
       shopList.appendChild(card);
     });
 
     function tap(e) {
-      if (e) e.preventDefault();
-      if (state.energy <= 0) return;
+      if (e) e.preventDefault(); if (state.energy <= 0) return;
       state.energy--; state.coins += ranks[state.rank].mult;
       document.getElementById('cat-img').style.transform = "scale(0.92)";
       setTimeout(()=> document.getElementById('cat-img').style.transform = "scale(1)", 50);
-      if (tg) tg.HapticFeedback.impactOccurred('light');
-      updateUI();
+      if (tg) tg.HapticFeedback.impactOccurred('light'); updateUI();
     }
 
     function confirmBuy(id) {
-      if (state.coins < ranks[id].cost) { alert("Insufficient $WALL tokens."); return; }
-      if (confirm(`Authorize purchase: ${ranks[id].name}?\nPrice: ${ranks[id].cost} $WALL.`)) {
-        state.coins -= ranks[id].cost; state.rank = id;
-        toggleMarket(); updateUI();
-        if (tg) tg.HapticFeedback.notificationOccurred('success');
-      }
+      if (state.coins < ranks[id].cost) { alert(lang === 'EN' ? "Low tokens!" : "Мало монет!"); return; }
+      if (confirm(texts[lang].confirm)) { state.coins -= ranks[id].cost; state.rank = id; updateUI(); }
     }
 
     function updateUI() {
+      const t = texts[lang];
+      document.getElementById('m-market').textContent = t.market;
+      document.getElementById('m-leader').textContent = t.leader;
+      document.getElementById('m-luck').textContent = t.luck;
+      document.getElementById('clearance-txt').textContent = t.clearance;
+      document.getElementById('energy-txt').textContent = t.energy;
       document.getElementById('coins').textContent = Math.floor(state.coins) + ' $WALL';
       document.getElementById('energy-val').textContent = state.energy;
       document.getElementById('energy-fill').style.width = state.energy + '%';
-      document.getElementById('rank-name').textContent = ranks[state.rank].name;
       document.getElementById('cat-img').src = ranks[state.rank].img;
       document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
-
+      
       ranks.forEach((r, i) => {
         if (i === 0) return;
         const btn = document.getElementById('btn-' + i);
         if (btn) {
-          btn.disabled = (state.rank >= i);
-          if (state.rank >= i) { btn.textContent = "OWNED"; btn.style.background = "#444"; }
+          btn.textContent = state.rank >= i ? t.owned : t.buy;
+          btn.disabled = state.rank >= i;
+          document.getElementById(`desc-${i}`).textContent = lang === 'EN' ? r.descEN : r.descRU;
         }
       });
-      localStorage.setItem('w_coins', state.coins);
-      localStorage.setItem('w_rank', state.rank);
-      localStorage.setItem('w_energy', state.energy);
+      localStorage.setItem('w_coins', state.coins); localStorage.setItem('w_rank', state.rank);
     }
-
     setInterval(() => { if (state.energy < 100) { state.energy++; updateUI(); } }, 50000);
     updateUI();
   </script>
