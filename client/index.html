@@ -3,95 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>WallBreaker — Hub Edition</title>
+  <title>WallBreaker — Elite Edition</title>
   <script src="https://telegram.org"></script>
   <style>
-    body { background: #000; color: #00ffcc; font-family: sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
+    :root {
+      --chrome: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 20%, #7d7e8d 40%, #b8bac1 60%, #f5f7fa 100%);
+      --neon-cyan: #00fff2;
+      --neon-yellow: #fffb00;
+      --glass: rgba(15, 15, 25, 0.7);
+    }
+    body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
     
     #bg-layer {
       position: fixed; top: -5%; left: -5%; width: 110%; height: 110%;
       background: url('cat1.jpg') no-repeat center center; background-size: cover;
-      opacity: 0.25; z-index: -1; animation: breath 10s infinite ease-in-out;
+      opacity: 0.3; z-index: -1; animation: breath 10s infinite ease-in-out; transition: background 0.5s;
     }
     @keyframes breath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
     /* Хромированный Гамбургер */
     #menu-btn { 
-      position: fixed; top: 15px; right: 15px; font-size: 32px; cursor: pointer; z-index: 300;
-      background: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 50%, #7d7e8d 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      position: fixed; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 1000;
+      background: var(--chrome); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
     }
 
-    /* Главная Шторка Меню */
-    #hub-menu {
-      position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
-      background: linear-gradient(135deg, rgba(184,186,193,0.3) 0%, rgba(125,126,141,0.4) 100%);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      z-index: 400; transition: 0.4s; padding: 30px 20px; box-sizing: border-box;
-      border-left: 1px solid rgba(255,255,255,0.2);
+    /* HUB MENU (Glassmorphism) */
+    .overlay {
+      position: fixed; top: 0; right: -100%; width: 100%; height: 100%;
+      background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      z-index: 900; transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    #hub-menu.open { right: 0; }
+    .overlay.open { right: 0; }
 
-    /* Под-экран (Маркет) */
-    #market-screen {
-      position: fixed; top: 0; left: 100%; width: 100%; height: 100%;
-      background: #0a0014; z-index: 500; transition: 0.4s; overflow-y: auto; padding: 20px; box-sizing: border-box;
+    /* Металлические кнопки */
+    .chrome-btn {
+      width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+      background: var(--chrome); color: #000; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.5px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); font-size: 14px;
     }
-    #market-screen.open { left: 0; }
+    .chrome-btn:active { transform: scale(0.96); }
 
-    /* Кнопки Меню */
-    .menu-item {
-      width: 100%; padding: 15px; margin: 10px 0; font-weight: bold; font-size: 18px; border-radius: 12px;
-      background: linear-gradient(180deg, #f5f7fa 0%, #7d7e8d 100%); color: #000; border: none;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-transform: uppercase;
+    /* Стили Маркета внутри Оверлея */
+    #market-content { width: 90%; max-height: 70vh; overflow-y: auto; display: none; }
+    .rank-card { 
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0,255,242,0.2); 
+      margin: 12px 0; padding: 15px; border-radius: 15px; text-align: left;
     }
+    .rank-name { color: var(--neon-cyan); font-weight: bold; font-size: 18px; text-shadow: 0 0 10px var(--neon-cyan); }
+    .rank-price { color: var(--neon-yellow); float: right; font-weight: bold; text-shadow: 0 0 8px var(--neon-yellow); }
+    .rank-desc { font-size: 11px; color: #ccc; margin: 5px 0; line-height: 1.3; }
 
-    /* Ранги */
-    .rank-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); margin: 15px 0; padding: 12px; border-radius: 12px; text-align: left; }
-    .buy-btn { width: 100%; padding: 10px; margin-top: 10px; font-weight: bold; border: none; border-radius: 8px; background: #ff00aa; color: #fff; }
-
-    /* Остальной UI */
+    /* Main UI */
     #main-ui { padding-top: 60px; }
-    #cat-container { width: 240px; height: 300px; margin: 0 auto; border: 4px solid #ff00aa; border-radius: 20px; overflow: hidden; box-shadow: 0 0 30px #ff00aa; }
+    #cat-box { 
+      width: 250px; height: 310px; margin: 0 auto; border: 3px solid #ff00aa; 
+      border-radius: 20px; overflow: hidden; box-shadow: 0 0 35px #ff00aa;
+    }
     #cat-img { width: 100%; height: 100%; object-fit: cover; }
-    #coins { font-size: 48px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 10px 0; }
-    .stats { background: rgba(0,0,0,0.6); border: 1px solid #00ffcc; border-radius: 15px; padding: 12px; margin: 0 20px; }
-    #energy-bar { width: 100%; height: 14px; background: #222; border-radius: 7px; margin-top: 5px; overflow: hidden; }
+    #coins { font-size: 56px; font-weight: 900; text-shadow: 0 0 20px #00ffcc; margin: 15px 0; color: #00ffcc; }
+    
+    .energy-box { background: rgba(0,0,0,0.5); border: 1px solid #00ffcc; border-radius: 15px; padding: 10px; margin: 0 30px; }
+    #energy-bar { width: 100%; height: 12px; background: #111; border-radius: 6px; margin-top: 8px; border: 1px solid #333; overflow: hidden; }
     #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
+
+    #sponsor { position: fixed; bottom: 20px; left: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    #sponsor img { width: 45px; filter: drop-shadow(0 0 10px #00ffcc); }
+    #sponsor span { font-size: 10px; color: #00ffcc; font-weight: bold; text-transform: uppercase; }
   </style>
 </head>
 <body>
   <div id="bg-layer"></div>
-  <div id="menu-btn" onclick="toggleHub()">☰</div>
+  <div id="menu-btn" onclick="toggleOverlay('hub')">☰</div>
 
-  <!-- ГЛАВНЫЙ ХАБ МЕНЮ -->
-  <div id="hub-menu">
-    <div onclick="toggleHub()" style="text-align:right; font-size:30px; color:#fff;">✕</div>
-    <button class="menu-item" id="lang-btn" onclick="toggleLang()">EN / RU</button>
-    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-    <button class="menu-item" onclick="openMarket()" id="m-market">DarkNet Market</button>
-    <button class="menu-item" onclick="alert('Coming Soon...')" id="m-leader">Leaderboard</button>
-    <button class="menu-item" onclick="alert('Coming Soon...')" id="m-luck">Lucky Roulette</button>
-  </div>
+  <!-- HUB OVERLAY -->
+  <div id="hub" class="overlay">
+    <div onclick="toggleOverlay('hub')" style="position:absolute; top:20px; right:25px; font-size:35px; color:#fff;">✕</div>
+    
+    <div id="hub-main-buttons" style="width:100%;">
+        <button class="chrome-btn" onclick="toggleLang()">EN / RU</button>
+        <button class="chrome-btn" onclick="showMarket()">DarkNet Market</button>
+        <button class="chrome-btn" onclick="watchAd()" style="background:var(--neon-yellow); color:#000;">⚡ Get Energy (ADS)</button>
+        <button class="chrome-btn" onclick="buyTicket()">🎟 Tickets (Lottery)</button>
+    </div>
 
-  <!-- ЭКРАН МАРКЕТА -->
-  <div id="market-screen">
-    <div onclick="closeMarket()" style="text-align:left; font-size:24px; color:#ff00aa; margin-bottom:20px;">← BACK</div>
-    <h2 id="market-title">DARKNET MARKET</h2>
-    <div id="shop-list"></div>
+    <!-- Market Content (Hidden by default) -->
+    <div id="market-content">
+        <div onclick="hideMarket()" style="color:var(--neon-cyan); margin-bottom:15px; font-weight:bold;">← BACK TO HUB</div>
+        <div id="shop-list"></div>
+    </div>
   </div>
 
   <div id="main-ui">
-    <div style="font-size:14px; color:#ff00aa; text-transform:uppercase;"><span id="clearance-txt">Clearance</span>: <span id="rank-name">Newbie</span></div>
-    <div id="cat-container" onmousedown="tap(event)" ontouchstart="tap(event)">
+    <div style="font-size:12px; color:#ff00aa; letter-spacing:2px; font-weight:bold;"><span id="clearance-txt">Clearance</span>: <span id="rank-name">Newbie</span></div>
+    
+    <div id="cat-box" onmousedown="tap(event)" ontouchstart="tap(event)">
       <img id="cat-img" src="cat1.jpg">
     </div>
-    <div id="coins">0 $WALL</div>
-    <div class="stats">
-      ⚡ <span id="energy-txt">Energy</span>: <span id="energy-val">100</span> / 100
+
+    <div id="coins">0</div>
+
+    <div class="energy-box">
+      <span id="energy-txt">Energy</span>: <span id="energy-val">100</span> / 100
       <div id="energy-bar"><div id="energy-fill"></div></div>
     </div>
   </div>
+
+  <a id="sponsor" href="https://t.me">
+    <img src="server.jpg">
+    <span>Anonymous<br>Proxy</span>
+  </a>
 
   <script>
     const tg = window.Telegram?.WebApp;
@@ -99,23 +121,23 @@
 
     let lang = localStorage.getItem('w_lang') || 'EN';
     const texts = {
-      EN: { market: "DarkNet Market", leader: "Leaderboard", luck: "Lucky Roulette", clearance: "Clearance", energy: "Energy", back: "← BACK", dur: "Duration: 7 days", buy: "PURCHASE", owned: "OWNED", confirm: "Authorize purchase?" },
-      RU: { market: "Даркнет Маркет", leader: "Таблица Лидеров", luck: "Рулетка Удачи", clearance: "Доступ", energy: "Энергия", back: "← НАЗАД", dur: "Срок: 7 дней", buy: "КУПИТЬ", owned: "КУПЛЕНО", confirm: "Подтвердить покупку?" }
+      EN: { clearance: "Clearance", energy: "Energy", ad: "⚡ Get Energy (ADS)", ticket: "🎟 Tickets (Lottery)", confirm: "Authorize purchase?", duration: "Duration: 7 Days" },
+      RU: { clearance: "Доступ", energy: "Энергия", ad: "⚡ Энергия (РЕКЛАМА)", ticket: "🎟 Билеты (Лотерея)", confirm: "Подтвердить покупку?", duration: "Срок: 7 Дней" }
     };
 
     const ranks = [
-      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", descEN: "Level 1 access.", descRU: "Доступ 1 уровня." },
-      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg", descEN: "Level 2. Stable tunnel.", descRU: "Уровень 2. Стабильный туннель." },
-      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", descEN: "Level 3. DPI Firewall breaker.", descRU: "Уровень 3. Обход DPI фаервола." },
-      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", descEN: "Level 4. Global access.", descRU: "Уровень 4. Глобальный доступ." },
-      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", descEN: "Level 5. Absolute freedom.", descRU: "Уровень 5. Полная свобода." }
+      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", descEN: "Standard tunnel.", descRU: "Обычный туннель." },
+      { name: "Pro", cost: 150000, mult: 25, img: "cat2.jpg", descEN: "Encrypted node.", descRU: "Шифрованный узел." },
+      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", descEN: "Bypass DPI v1.0.", descRU: "Обход DPI v1.0." },
+      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", descEN: "Elite ghost proxy.", descRU: "Элитный прокси." },
+      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", descEN: "The Network God.", descRU: "Бог Сети." }
     ];
 
     let state = { coins: parseInt(localStorage.getItem('w_coins')) || 0, rank: parseInt(localStorage.getItem('w_rank')) || 0, energy: 100 };
 
-    function toggleHub() { document.getElementById('hub-menu').classList.toggle('open'); }
-    function openMarket() { document.getElementById('market-screen').classList.add('open'); }
-    function closeMarket() { document.getElementById('market-screen').classList.remove('open'); }
+    function toggleOverlay(id) { document.getElementById(id).classList.toggle('open'); hideMarket(); }
+    function showMarket() { document.getElementById('hub-main-buttons').style.display = 'none'; document.getElementById('market-content').style.display = 'block'; }
+    function hideMarket() { document.getElementById('hub-main-buttons').style.display = 'block'; document.getElementById('market-content').style.display = 'none'; }
     function toggleLang() { lang = lang === 'EN' ? 'RU' : 'EN'; localStorage.setItem('w_lang', lang); updateUI(); }
 
     const shopList = document.getElementById('shop-list');
@@ -123,46 +145,46 @@
       if (i === 0) return;
       let card = document.createElement('div');
       card.className = 'rank-card';
-      card.innerHTML = `<b id="name-${i}">${r.name}</b> <span style="float:right; color:#ffff00;">${r.cost}</span>
-        <div style="font-size:11px; color:#aaa; margin-top:5px;"><span id="desc-${i}">${lang === 'EN' ? r.descEN : r.descRU}</span><br><b>${texts[lang].dur}</b></div>
-        <button class="buy-btn" id="btn-${i}" onclick="confirmBuy(${i})">${texts[lang].buy}</button>`;
+      card.innerHTML = `<span class="rank-name">${r.name}</span> <span class="rank-price">${r.cost}</span>
+        <div class="rank-desc">${lang === 'EN' ? r.descEN : r.descRU}<br><b>${texts[lang].duration}</b></div>
+        <button class="chrome-btn" style="width:100%; padding:8px; margin-top:5px;" id="btn-${i}" onclick="confirmBuy(${i})">PURCHASE</button>`;
       shopList.appendChild(card);
     });
 
     function tap(e) {
       if (e) e.preventDefault(); if (state.energy <= 0) return;
       state.energy--; state.coins += ranks[state.rank].mult;
-      document.getElementById('cat-img').style.transform = "scale(0.92)";
+      document.getElementById('cat-img').style.transform = "scale(0.94)";
       setTimeout(()=> document.getElementById('cat-img').style.transform = "scale(1)", 50);
       if (tg) tg.HapticFeedback.impactOccurred('light'); updateUI();
     }
 
     function confirmBuy(id) {
-      if (state.coins < ranks[id].cost) { alert(lang === 'EN' ? "Low tokens!" : "Мало монет!"); return; }
-      if (confirm(texts[lang].confirm)) { state.coins -= ranks[id].cost; state.rank = id; updateUI(); }
+      if (state.coins < ranks[id].cost) { alert("Insufficient $WALL."); return; }
+      if (confirm(texts[lang].confirm)) { state.coins -= ranks[id].cost; state.rank = id; updateUI(); hideMarket(); toggleOverlay('hub'); }
     }
 
+    function buyTicket() {
+      if (state.coins >= 2000000) { state.coins -= 2000000; alert("Ticket Purchased! Good luck, runner."); updateUI(); }
+      else { alert("Need 2,000,000 $WALL for 1 Ticket."); }
+    }
+
+    function watchAd() { state.energy = 100; updateUI(); alert("+100 Energy Restored!"); }
+
     function updateUI() {
-      const t = texts[lang];
-      document.getElementById('m-market').textContent = t.market;
-      document.getElementById('m-leader').textContent = t.leader;
-      document.getElementById('m-luck').textContent = t.luck;
-      document.getElementById('clearance-txt').textContent = t.clearance;
-      document.getElementById('energy-txt').textContent = t.energy;
-      document.getElementById('coins').textContent = Math.floor(state.coins) + ' $WALL';
+      document.getElementById('coins').textContent = Math.floor(state.coins).toLocaleString();
       document.getElementById('energy-val').textContent = state.energy;
       document.getElementById('energy-fill').style.width = state.energy + '%';
+      document.getElementById('rank-name').textContent = ranks[state.rank].name;
       document.getElementById('cat-img').src = ranks[state.rank].img;
       document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
+      document.getElementById('clearance-txt').textContent = texts[lang].clearance;
+      document.getElementById('energy-txt').textContent = texts[lang].energy;
       
       ranks.forEach((r, i) => {
         if (i === 0) return;
         const btn = document.getElementById('btn-' + i);
-        if (btn) {
-          btn.textContent = state.rank >= i ? t.owned : t.buy;
-          btn.disabled = state.rank >= i;
-          document.getElementById(`desc-${i}`).textContent = lang === 'EN' ? r.descEN : r.descRU;
-        }
+        if (btn) { btn.disabled = (state.rank >= i); if (state.rank >= i) btn.textContent = lang === 'EN' ? "OWNED" : "КУПЛЕНО"; }
       });
       localStorage.setItem('w_coins', state.coins); localStorage.setItem('w_rank', state.rank);
     }
