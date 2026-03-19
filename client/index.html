@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>WallBreaker — Elite Edition</title>
+  <title>WallBreaker — Final Elite</title>
   <script src="https://telegram.org"></script>
   <style>
     :root {
       --chrome: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 20%, #7d7e8d 40%, #b8bac1 60%, #f5f7fa 100%);
       --neon-cyan: #00fff2;
       --neon-yellow: #fffb00;
-      --glass: rgba(15, 15, 25, 0.7);
+      --glass: rgba(10, 10, 20, 0.6); /* Больше прозрачности */
     }
     body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
     
     #bg-layer {
       position: fixed; top: -5%; left: -5%; width: 110%; height: 110%;
       background: url('cat1.jpg') no-repeat center center; background-size: cover;
-      opacity: 0.3; z-index: -1; animation: breath 10s infinite ease-in-out; transition: background 0.5s;
+      opacity: 0.35; z-index: -1; animation: breath 10s infinite ease-in-out; transition: background 0.5s;
     }
     @keyframes breath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
     /* Хромированный Гамбургер */
     #menu-btn { 
-      position: fixed; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 1000;
+      position: fixed; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 800;
       background: var(--chrome); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
     }
@@ -31,29 +31,30 @@
     /* HUB MENU (Glassmorphism) */
     .overlay {
       position: fixed; top: 0; right: -100%; width: 100%; height: 100%;
-      background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       z-index: 900; transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     .overlay.open { right: 0; }
 
-    /* Металлические кнопки */
-    .chrome-btn {
-      width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
-      background: var(--chrome); color: #000; font-weight: 800; text-transform: uppercase;
-      letter-spacing: 1.5px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); font-size: 14px;
-    }
-    .chrome-btn:active { transform: scale(0.96); }
+    /* Кнопка закрытия внутри шторки */
+    .close-btn { position: absolute; top: 20px; right: 25px; font-size: 35px; color: #fff; cursor: pointer; }
 
-    /* Стили Маркета внутри Оверлея */
-    #market-content { width: 90%; max-height: 70vh; overflow-y: auto; display: none; }
+    .chrome-btn {
+      width: 85%; padding: 16px; margin: 10px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.2);
+      background: var(--chrome); color: #000; font-weight: 800; text-transform: uppercase;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4); font-size: 14px;
+    }
+
+    /* Маркет */
+    #market-content { width: 90%; max-height: 80vh; overflow-y: auto; display: none; }
     .rank-card { 
-      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0,255,242,0.2); 
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0,255,242,0.3); 
       margin: 12px 0; padding: 15px; border-radius: 15px; text-align: left;
     }
     .rank-name { color: var(--neon-cyan); font-weight: bold; font-size: 18px; text-shadow: 0 0 10px var(--neon-cyan); }
-    .rank-price { color: var(--neon-yellow); float: right; font-weight: bold; text-shadow: 0 0 8px var(--neon-yellow); }
-    .rank-desc { font-size: 11px; color: #ccc; margin: 5px 0; line-height: 1.3; }
+    .rank-price { color: var(--neon-yellow); float: right; font-weight: bold; }
+    .rank-desc { font-size: 11px; color: #a0fffb; margin: 5px 0; line-height: 1.3; } /* Цвет описания изменен */
 
     /* Main UI */
     #main-ui { padding-top: 60px; }
@@ -68,29 +69,28 @@
     #energy-bar { width: 100%; height: 12px; background: #111; border-radius: 6px; margin-top: 8px; border: 1px solid #333; overflow: hidden; }
     #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
 
-    #sponsor { position: fixed; bottom: 20px; left: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    #sponsor { position: fixed; bottom: 20px; left: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; z-index: 100; }
     #sponsor img { width: 45px; filter: drop-shadow(0 0 10px #00ffcc); }
-    #sponsor span { font-size: 10px; color: #00ffcc; font-weight: bold; text-transform: uppercase; }
+    #sponsor span { font-size: 9px; color: #00ffcc; font-weight: bold; }
   </style>
 </head>
 <body>
   <div id="bg-layer"></div>
-  <div id="menu-btn" onclick="toggleOverlay('hub')">☰</div>
+  <div id="menu-btn" onclick="toggleOverlay(true)">☰</div>
 
   <!-- HUB OVERLAY -->
   <div id="hub" class="overlay">
-    <div onclick="toggleOverlay('hub')" style="position:absolute; top:20px; right:25px; font-size:35px; color:#fff;">✕</div>
+    <div class="close-btn" onclick="toggleOverlay(false)">✕</div>
     
     <div id="hub-main-buttons" style="width:100%;">
         <button class="chrome-btn" onclick="toggleLang()">EN / RU</button>
         <button class="chrome-btn" onclick="showMarket()">DarkNet Market</button>
-        <button class="chrome-btn" onclick="watchAd()" style="background:var(--neon-yellow); color:#000;">⚡ Get Energy (ADS)</button>
-        <button class="chrome-btn" onclick="buyTicket()">🎟 Tickets (Lottery)</button>
+        <button class="chrome-btn" onclick="watchAd()" style="background:var(--neon-yellow); color:#000;">⚡ <span id="ad-btn-txt">Get Energy (ADS)</span></button>
+        <button class="chrome-btn" onclick="buyTicket()">🎟 <span id="ticket-btn-txt">Tickets (Lottery)</span></button>
     </div>
 
-    <!-- Market Content (Hidden by default) -->
     <div id="market-content">
-        <div onclick="hideMarket()" style="color:var(--neon-cyan); margin-bottom:15px; font-weight:bold;">← BACK TO HUB</div>
+        <div onclick="hideMarket()" style="color:var(--neon-cyan); margin-bottom:20px; font-weight:bold; cursor:pointer;">← <span id="back-txt">BACK</span></div>
         <div id="shop-list"></div>
     </div>
   </div>
@@ -110,7 +110,7 @@
     </div>
   </div>
 
-  <a id="sponsor" href="https://t.me">
+  <a id="sponsor" href="tg://resolve?domain=hiddifyProxySale_bot">
     <img src="server.jpg">
     <span>Anonymous<br>Proxy</span>
   </a>
@@ -121,24 +121,36 @@
 
     let lang = localStorage.getItem('w_lang') || 'EN';
     const texts = {
-      EN: { clearance: "Clearance", energy: "Energy", ad: "⚡ Get Energy (ADS)", ticket: "🎟 Tickets (Lottery)", confirm: "Authorize purchase?", duration: "Duration: 7 Days" },
-      RU: { clearance: "Доступ", energy: "Энергия", ad: "⚡ Энергия (РЕКЛАМА)", ticket: "🎟 Билеты (Лотерея)", confirm: "Подтвердить покупку?", duration: "Срок: 7 Дней" }
+      EN: { clearance: "Clearance", energy: "Energy", ad: "Get Energy (ADS)", ticket: "Tickets (Lottery)", back: "BACK", duration: "Duration: 7 Days", buy: "PURCHASE", owned: "OWNED" },
+      RU: { clearance: "Доступ", energy: "Энергия", ad: "Энергия (РЕКЛАМА)", ticket: "Билеты (Лотерея)", back: "НАЗАД", duration: "Срок: 7 Дней", buy: "КУПИТЬ", owned: "КУПЛЕНО" }
     };
 
     const ranks = [
       { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", descEN: "Standard tunnel.", descRU: "Обычный туннель." },
-      { name: "Pro", cost: 150000, mult: 25, img: "cat2.jpg", descEN: "Encrypted node.", descRU: "Шифрованный узел." },
+      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg", descEN: "Encrypted node.", descRU: "Шифрованный узел." },
       { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", descEN: "Bypass DPI v1.0.", descRU: "Обход DPI v1.0." },
       { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", descEN: "Elite ghost proxy.", descRU: "Элитный прокси." },
       { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", descEN: "The Network God.", descRU: "Бог Сети." }
     ];
 
-    let state = { coins: parseInt(localStorage.getItem('w_coins')) || 0, rank: parseInt(localStorage.getItem('w_rank')) || 0, energy: 100 };
+    let state = { 
+        coins: parseInt(localStorage.getItem('w_coins')) || 0, 
+        rank: parseInt(localStorage.getItem('w_rank')) || 0, 
+        energy: parseInt(localStorage.getItem('w_energy')) || 100 
+    };
 
-    function toggleOverlay(id) { document.getElementById(id).classList.toggle('open'); hideMarket(); }
+    function toggleOverlay(open) { 
+        document.getElementById('hub').classList.toggle('open', open); 
+        if(!open) hideMarket();
+    }
     function showMarket() { document.getElementById('hub-main-buttons').style.display = 'none'; document.getElementById('market-content').style.display = 'block'; }
     function hideMarket() { document.getElementById('hub-main-buttons').style.display = 'block'; document.getElementById('market-content').style.display = 'none'; }
-    function toggleLang() { lang = lang === 'EN' ? 'RU' : 'EN'; localStorage.setItem('w_lang', lang); updateUI(); }
+    
+    function toggleLang() { 
+        lang = lang === 'EN' ? 'RU' : 'EN'; 
+        localStorage.setItem('w_lang', lang); 
+        updateUI(); 
+    }
 
     const shopList = document.getElementById('shop-list');
     ranks.forEach((r, i) => {
@@ -146,8 +158,8 @@
       let card = document.createElement('div');
       card.className = 'rank-card';
       card.innerHTML = `<span class="rank-name">${r.name}</span> <span class="rank-price">${r.cost}</span>
-        <div class="rank-desc">${lang === 'EN' ? r.descEN : r.descRU}<br><b>${texts[lang].duration}</b></div>
-        <button class="chrome-btn" style="width:100%; padding:8px; margin-top:5px;" id="btn-${i}" onclick="confirmBuy(${i})">PURCHASE</button>`;
+        <div class="rank-desc" id="desc-${i}">${lang === 'EN' ? r.descEN : r.descRU}<br><b class="dur-txt">${texts[lang].duration}</b></div>
+        <button class="chrome-btn" style="width:100%; padding:8px; margin-top:10px;" id="btn-${i}" onclick="confirmBuy(${i})">${texts[lang].buy}</button>`;
       shopList.appendChild(card);
     });
 
@@ -160,34 +172,51 @@
     }
 
     function confirmBuy(id) {
-      if (state.coins < ranks[id].cost) { alert("Insufficient $WALL."); return; }
-      if (confirm(texts[lang].confirm)) { state.coins -= ranks[id].cost; state.rank = id; updateUI(); hideMarket(); toggleOverlay('hub'); }
+      if (state.coins < ranks[id].cost) { alert(lang === 'EN' ? "Low tokens!" : "Мало монет!"); return; }
+      if (confirm(lang === 'EN' ? "Confirm purchase?" : "Подтвердить?")) {
+        state.coins -= ranks[id].cost; state.rank = id;
+        updateUI(); toggleOverlay(false);
+      }
     }
 
     function buyTicket() {
-      if (state.coins >= 2000000) { state.coins -= 2000000; alert("Ticket Purchased! Good luck, runner."); updateUI(); }
-      else { alert("Need 2,000,000 $WALL for 1 Ticket."); }
+      if (state.coins >= 2000000) { state.coins -= 2000000; alert("Success!"); updateUI(); }
+      else { alert(lang === 'EN' ? "Need 2M $WALL" : "Нужно 2М монет"); }
     }
 
-    function watchAd() { state.energy = 100; updateUI(); alert("+100 Energy Restored!"); }
+    function watchAd() { state.energy = 100; updateUI(); alert("Energy Full!"); }
 
     function updateUI() {
+      const t = texts[lang];
       document.getElementById('coins').textContent = Math.floor(state.coins).toLocaleString();
       document.getElementById('energy-val').textContent = state.energy;
       document.getElementById('energy-fill').style.width = state.energy + '%';
       document.getElementById('rank-name').textContent = ranks[state.rank].name;
       document.getElementById('cat-img').src = ranks[state.rank].img;
       document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
-      document.getElementById('clearance-txt').textContent = texts[lang].clearance;
-      document.getElementById('energy-txt').textContent = texts[lang].energy;
       
+      // Перевод текстов
+      document.getElementById('clearance-txt').textContent = t.clearance;
+      document.getElementById('energy-txt').textContent = t.energy;
+      document.getElementById('ad-btn-txt').textContent = t.ad;
+      document.getElementById('ticket-btn-txt').textContent = t.ticket;
+      document.getElementById('back-txt').textContent = t.back;
+
       ranks.forEach((r, i) => {
         if (i === 0) return;
         const btn = document.getElementById('btn-' + i);
-        if (btn) { btn.disabled = (state.rank >= i); if (state.rank >= i) btn.textContent = lang === 'EN' ? "OWNED" : "КУПЛЕНО"; }
+        const desc = document.getElementById(`desc-${i}`);
+        if (btn) {
+            btn.disabled = (state.rank >= i);
+            btn.textContent = state.rank >= i ? t.owned : t.buy;
+            desc.innerHTML = `${lang === 'EN' ? r.descEN : r.descRU}<br><b>${t.duration}</b>`;
+        }
       });
-      localStorage.setItem('w_coins', state.coins); localStorage.setItem('w_rank', state.rank);
+      localStorage.setItem('w_coins', state.coins);
+      localStorage.setItem('w_rank', state.rank);
+      localStorage.setItem('w_energy', state.energy);
     }
+
     setInterval(() => { if (state.energy < 100) { state.energy++; updateUI(); } }, 50000);
     updateUI();
   </script>
