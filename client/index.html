@@ -3,160 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>WallBreaker — Bypass DPI</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>WallBreaker — Proxy Game</title>
+  <script src="https://telegram.org"></script>
   <style>
-    body { background: #050010; color: #00ffcc; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
+    body { background: #000; color: #00ffcc; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; user-select: none; }
     
-    /* Меню-Гамбургер */
-    #menu-btn { position: fixed; top: 15px; left: 15px; z-index: 100; width: 35px; height: 30px; background: linear-gradient(145deg, #aaa, #666); border-radius: 5px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-around; padding: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-    #menu-btn span { width: 100%; height: 3px; background: #222; border-radius: 2px; }
-    #side-menu { position: fixed; top: 0; left: -100%; width: 75%; height: 100%; background: rgba(5, 0, 15, 0.98); border-right: 2px solid #ff00aa; z-index: 99; transition: 0.4s; padding-top: 70px; text-align: left; box-shadow: 10px 0 20px rgba(0,0,0,0.8); }
-    #side-menu a { display: block; padding: 15px 25px; color: #00ffcc; text-decoration: none; font-size: 18px; border-bottom: 1px solid #1a1a3a; text-shadow: 0 0 5px #00ffcc; }
+    /* Слой живого фона */
+    #bg-layer {
+      position: fixed; top: -5%; left: -5%; width: 110%; height: 110%;
+      background: url('cat1.jpg') no-repeat center center;
+      background-size: cover;
+      opacity: 0.3; /* Чтобы не мешал тапать, но был виден */
+      z-index: -1;
+      animation: breath 8s infinite ease-in-out;
+    }
 
-    /* Верхняя панель */
-    .top-bar { display: flex; justify-content: flex-end; padding: 10px 15px; font-weight: bold; background: rgba(0,0,0,0.3); }
-    .stat-item { margin-left: 15px; font-size: 14px; }
+    @keyframes breath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
 
-    h1 { color: #ff00aa; text-shadow: 0 0 15px #ff00aa; font-size: 24px; margin: 20px 0 10px; }
-
-    /* Контейнер кота и Анимации */
-    @keyframes breathe { 0%, 100% { transform: scale(1); filter: brightness(100%); } 50% { transform: scale(1.02); filter: brightness(115%); } }
-    @keyframes neon-glow { 0%, 100% { box-shadow: 0 0 20px #ff00aa; } 50% { box-shadow: 0 0 35px #00ffcc; } }
-
-    #cat-container { width: 260px; height: 320px; margin: 0 auto; position: relative; border: 2px solid #00ffcc; border-radius: 20px; overflow: hidden; animation: neon-glow 4s infinite; background: #000; }
-    #cat-img { width: 100%; height: 100%; object-fit: cover; animation: breathe 5s ease-in-out infinite; transition: transform 0.05s; }
+    h1 { color: #ff00aa; text-shadow: 0 0 15px #ff00aa; font-size: 22px; margin: 5px; position: relative; }
     
-    #coins { font-size: 48px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 15px 0; color: #fff; }
-
-    .energy-container { width: 80%; margin: 10px auto; text-align: left; font-size: 14px; }
-    #energy-bar { width: 100%; height: 10px; background: #1a1a3a; border-radius: 5px; margin-top: 5px; border: 1px solid #333; overflow: hidden; }
+    #cat-container { 
+      width: 240px; height: 300px; margin: 15px auto; position: relative; 
+      border: 4px solid #ff00aa; border-radius: 20px; overflow: hidden; 
+      box-shadow: 0 0 30px #ff00aa; background: #000;
+      touch-action: none;
+    }
+    #cat-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.05s; }
+    
+    #coins { font-size: 48px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 5px; }
+    
+    .stats { background: rgba(0, 0, 0, 0.7); border: 1px solid #00ffcc; border-radius: 15px; padding: 10px; margin: 10px; }
+    #energy-bar { width: 100%; height: 14px; background: #222; border-radius: 7px; margin-top: 5px; overflow: hidden; }
     #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
 
-    /* Баннер VPN */
-    #vpn-banner { width: 90%; height: 50px; margin: 20px auto; background: #111; border: 1px dashed #ffff00; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    /* Ссылка-сервер в углу */
+    #sponsor {
+      position: fixed; bottom: 15px; left: 15px; width: 70px; text-align: center;
+      font-size: 10px; color: #00ffcc; text-decoration: none;
+    }
+    #sponsor img { width: 50px; filter: drop-shadow(0 0 10px #00ffcc); margin-bottom: 3px; }
 
-    #ticket-btn { background: #ffff00; color: #000; width: 85%; padding: 18px; border-radius: 15px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 15px #ffff00; margin-top: 10px; cursor: pointer; }
+    .shop { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .rank-card { background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 8px; border-radius: 12px; font-size: 12px; }
+    .rank-card button { width: 100%; padding: 6px; margin-top: 5px; background: #ff00aa; color: #fff; border: none; border-radius: 7px; font-weight: bold; }
+    .rank-card button:disabled { background: #333; color: #666; }
   </style>
 </head>
 <body>
+  <div id="bg-layer"></div>
+  <h1>WallBreaker: <span id="rank-name">Newbie</span></h1>
 
-  <div id="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
-  <div id="side-menu">
-    <a href="#" onclick="showSection('tasks')">🛠 ЗАДАНИЯ (AD)</a>
-    <a href="#" onclick="showSection('leaderboard')">🏆 ЛИДЕРБОРД</a>
-    <a href="#" onclick="showSection('roulette')">🎡 РУЛЕТКА</a>
-    <a href="https://t.me/wallbreaker_community" target="_blank">📢 COMMUNITY</a>
-    <a href="#" onclick="toggleMenu()" style="color: #ff00aa; margin-top: 20px;">✖ ЗАКРЫТЬ</a>
+  <div id="cat-container" onmousedown="tap(event)" ontouchstart="tap(event)">
+    <img id="cat-img" src="cat1.jpg" alt="Cat">
   </div>
 
-  <div class="top-bar">
-    <div class="stat-item">💰 <span id="balance-top">0</span></div>
-    <div class="stat-item">⚡ <span id="energy-top">100</span></div>
-  </div>
+  <div id="coins">0 $WALL</div>
 
-  <h1>BYPASS DPI</h1>
-
-  <div id="cat-container" onclick="tap(event)">
-    <img id="cat-img" src="loading.jpg" alt="Loading...">
-  </div>
-
-  <div id="coins">0</div>
-
-  <div class="energy-container">
-    CPU LOAD: <span id="energy-val">100</span>%
+  <div class="stats">
+    ⚡ Энергия: <span id="energy-val">100</span> / 100
     <div id="energy-bar"><div id="energy-fill"></div></div>
   </div>
 
-  <div id="vpn-banner" onclick="window.open('https://t.me/hiddifyProxySale_bot', '_blank')">
-    <span style="color: #ffff00; font-size: 13px; font-weight: bold;">🔒 SECURE TUNNEL: [CONNECT]</span>
-  </div>
+  <div class="shop" id="shop"></div>
 
-  <button id="ticket-btn" onclick="buyTicket()">🎟 КЛЮЧ ШИФРОВАНИЯ (2M)</button>
+  <a id="sponsor" href="https://t.me">
+    <img src="server.jpg" alt="VPN">
+    <span>Private Proxy</span>
+  </a>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
 
     const ranks = [
-      { name: "Newbie", mult: 10, img: "cat1.jpg" },
-      { name: "Pro", mult: 25, img: "cat2.jpg" },
-      { name: "Punk", mult: 60, img: "cat3.jpg" },
-      { name: "Agent", mult: 150, img: "cat4.jpg" },
-      { name: "CyberGod", mult: 400, img: "cat5.jpg" }
+      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg" },
+      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg" },
+      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg" },
+      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg" },
+      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg" }
     ];
 
     let state = {
       coins: parseInt(localStorage.getItem('w_coins')) || 0,
-      energy: 100,
-      rank: 0
+      rank: parseInt(localStorage.getItem('w_rank')) || 0,
+      energy: parseInt(localStorage.getItem('w_energy')) || 100
     };
 
-    function toggleMenu() {
-      const m = document.getElementById('side-menu');
-      m.style.left = m.style.left === '0px' ? '-100%' : '0px';
-    }
+    const shopEl = document.getElementById('shop');
+    ranks.forEach((r, i) => {
+      if (i === 0) return;
+      let card = document.createElement('div');
+      card.className = 'rank-card';
+      card.innerHTML = `<b>${r.name}</b><br>Cost: ${r.cost}<br><button onclick="buyRank(${i})" id="btn-${i}">BUY</button>`;
+      shopEl.appendChild(card);
+    });
 
     function tap(e) {
+      if (e) e.preventDefault();
       if (state.energy <= 0) return;
       
+      state.energy--;
       state.coins += ranks[state.rank].mult;
-      state.energy -= 1;
       
-      // Визуальный отклик
       const img = document.getElementById('cat-img');
-      img.style.transform = "scale(0.95)";
-      setTimeout(() => img.style.transform = "scale(1)", 50);
-
-      // Вылетающий текст (простой вариант)
-      showPopup(e.clientX, e.clientY, `+${ranks[state.rank].mult}`);
+      img.style.transform = "scale(0.9) rotate(2deg)";
+      setTimeout(() => img.style.transform = "scale(1) rotate(0deg)", 50);
       
+      if (tg) tg.HapticFeedback.impactOccurred('light');
       updateUI();
     }
 
-    function showPopup(x, y, text) {
-      const p = document.createElement('div');
-      p.innerText = text;
-      p.style.position = 'fixed';
-      p.style.left = x + 'px';
-      p.style.top = y + 'px';
-      p.style.color = '#00ffcc';
-      p.style.fontWeight = 'bold';
-      p.style.pointerEvents = 'none';
-      p.style.animation = 'fadeOut 0.8s forwards';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 800);
-    }
-
     function updateUI() {
-      document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
-      document.getElementById('balance-top').innerText = Math.floor(state.coins).toLocaleString();
-      document.getElementById('energy-val').innerText = state.energy;
-      document.getElementById('energy-top').innerText = state.energy;
+      document.getElementById('coins').textContent = Math.floor(state.coins) + ' $WALL';
+      document.getElementById('energy-val').textContent = state.energy;
       document.getElementById('energy-fill').style.width = state.energy + '%';
-      
-      // Загрузка кота по рангу (после loading.jpg)
-      const currentImg = ranks[state.rank].img;
-      if (document.getElementById('cat-img').src.indexOf(currentImg) === -1) {
-          document.getElementById('cat-img').src = currentImg;
-      }
+      document.getElementById('rank-name').textContent = ranks[state.rank].name;
+      document.getElementById('cat-img').src = ranks[state.rank].img;
+      document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
+
+      ranks.forEach((r, i) => {
+        if (i === 0) return;
+        const btn = document.getElementById('btn-' + i);
+        if (btn) {
+          btn.disabled = (state.coins < r.cost || state.rank >= i);
+          if (state.rank >= i) btn.textContent = "ACTIVE";
+        }
+      });
 
       localStorage.setItem('w_coins', state.coins);
+      localStorage.setItem('w_rank', state.rank);
+      localStorage.setItem('w_energy', state.energy);
     }
 
-    // Реген энергии (1% в 20 секунд)
+    function buyRank(id) {
+      if (state.coins >= ranks[id].cost && state.rank < id) {
+        state.coins -= ranks[id].cost;
+        state.rank = id;
+        updateUI();
+        if (tg) tg.HapticFeedback.notificationOccurred('success');
+      }
+    }
+
     setInterval(() => {
       if (state.energy < 100) {
         state.energy++;
         updateUI();
       }
-    }, 20000);
+    }, 50000);
 
     updateUI();
   </script>
-
-  <style>
-    @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
-  </style>
 </body>
 </html>
