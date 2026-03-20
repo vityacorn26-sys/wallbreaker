@@ -29,7 +29,7 @@
       background: url('loading.jpg') center/cover;
       opacity: 0.35;
       z-index: -1;
-      transition: opacity 1.5s, background-image 1.5s;
+      transition: opacity 1.5s;
     }
     #menu-btn {
       position: fixed;
@@ -289,7 +289,7 @@
     canvas.addEventListener('touchstart', tap);
     updateUI();
 
-    // Через 1.5 секунды заменяем заставку на кота текущего ранга
+    // Через 1.5 секунды убираем заставку loading.jpg
     setTimeout(() => {
       document.getElementById('bg-layer').style.opacity = 0.25;
       document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
