@@ -6,7 +6,7 @@ const CONFIG = {
     ADSGRAM_BLOCK_ID: "24607", 
     
     // Наше новое название валюты
-    CURRENCY_NAME: "WBR",
+    CURRENCY_NAME: "WBC",
     
     // Лимит, о котором договаривались: 3 тапа в секунду
     TAPS_PER_SECOND_LIMIT: 3,
