@@ -4,220 +4,289 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>WallBreaker — Final Elite</title>
-  <script src="https://telegram.org"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --chrome: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 20%, #7d7e8d 40%, #b8bac1 60%, #f5f7fa 100%);
       --neon-cyan: #00fff2;
-      --neon-yellow: #fffb00;
-      --glass: rgba(10, 10, 20, 0.6); /* Больше прозрачности */
+      --neon-pink: #ff00aa;
+      --glass: rgba(10, 10, 30, 0.65);
+      --chrome: linear-gradient(135deg, #f5f7fa 0%, #b8bac1 20%, #7d7e8d 40%, #b8bac1 60%, #f5f7fa 100%);
     }
-    body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
-    
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #00ffcc;
+      font-family: 'Orbitron', monospace;
+      overflow: hidden;
+      text-align: center;
+      user-select: none;
+    }
     #bg-layer {
-      position: fixed; top: -5%; left: -5%; width: 110%; height: 110%;
-      background: url('cat1.jpg') no-repeat center center; background-size: cover;
-      opacity: 0.35; z-index: -1; animation: breath 10s infinite ease-in-out; transition: background 0.5s;
+      position: fixed;
+      inset: -10%;
+      background: url('cat1.jpg') center/cover;
+      opacity: 0.25;
+      z-index: -1;
+      animation: breath 12s infinite ease-in-out;
     }
-    @keyframes breath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes breath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
-    /* Хромированный Гамбургер */
-    #menu-btn { 
-      position: fixed; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 800;
-      background: var(--chrome); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+    #menu-btn {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      font-size: 38px;
+      color: var(--neon-cyan);
+      cursor: pointer;
+      z-index: 1000;
+      text-shadow: 0 0 15px var(--neon-cyan);
     }
 
-    /* HUB MENU (Glassmorphism) */
     .overlay {
-      position: fixed; top: 0; right: -100%; width: 100%; height: 100%;
-      background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      z-index: 900; transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      z-index: 999;
+      transform: translateX(-100%);
+      transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 80px;
     }
-    .overlay.open { right: 0; }
+    .overlay.open { transform: translateX(0); }
 
-    /* Кнопка закрытия внутри шторки */
-    .close-btn { position: absolute; top: 20px; right: 25px; font-size: 35px; color: #fff; cursor: pointer; }
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      font-size: 40px;
+      color: var(--neon-pink);
+      cursor: pointer;
+    }
 
     .chrome-btn {
-      width: 85%; padding: 16px; margin: 10px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.2);
-      background: var(--chrome); color: #000; font-weight: 800; text-transform: uppercase;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.4); font-size: 14px;
+      width: 82%;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 14px;
+      border: 1px solid rgba(0,255,242,0.4);
+      background: var(--chrome);
+      color: #000;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      cursor: pointer;
     }
 
-    /* Маркет */
-    #market-content { width: 90%; max-height: 80vh; overflow-y: auto; display: none; }
-    .rank-card { 
-      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0,255,242,0.3); 
-      margin: 12px 0; padding: 15px; border-radius: 15px; text-align: left;
-    }
-    .rank-name { color: var(--neon-cyan); font-weight: bold; font-size: 18px; text-shadow: 0 0 10px var(--neon-cyan); }
-    .rank-price { color: var(--neon-yellow); float: right; font-weight: bold; }
-    .rank-desc { font-size: 11px; color: #a0fffb; margin: 5px 0; line-height: 1.3; } /* Цвет описания изменен */
-
-    /* Main UI */
-    #main-ui { padding-top: 60px; }
-    #cat-box { 
-      width: 250px; height: 310px; margin: 0 auto; border: 3px solid #ff00aa; 
-      border-radius: 20px; overflow: hidden; box-shadow: 0 0 35px #ff00aa;
+    #main-ui { padding-top: 70px; }
+    #cat-box {
+      width: 260px;
+      height: 320px;
+      margin: 0 auto 15px;
+      border: 3px solid var(--neon-pink);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 0 40px var(--neon-pink);
     }
     #cat-img { width: 100%; height: 100%; object-fit: cover; }
-    #coins { font-size: 56px; font-weight: 900; text-shadow: 0 0 20px #00ffcc; margin: 15px 0; color: #00ffcc; }
-    
-    .energy-box { background: rgba(0,0,0,0.5); border: 1px solid #00ffcc; border-radius: 15px; padding: 10px; margin: 0 30px; }
-    #energy-bar { width: 100%; height: 12px; background: #111; border-radius: 6px; margin-top: 8px; border: 1px solid #333; overflow: hidden; }
-    #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
 
-    #sponsor { position: fixed; bottom: 20px; left: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; z-index: 100; }
-    #sponsor img { width: 45px; filter: drop-shadow(0 0 10px #00ffcc); }
-    #sponsor span { font-size: 9px; color: #00ffcc; font-weight: bold; }
+    #coins { font-size: 54px; font-weight: 900; margin: 12px 0; text-shadow: 0 0 20px var(--neon-cyan); }
+    .energy-box { background: rgba(0,0,0,0.6); border: 1px solid var(--neon-cyan); border-radius: 14px; padding: 12px; margin: 0 40px 20px; }
+    #energy-bar { width: 100%; height: 14px; background: #111; border-radius: 7px; overflow: hidden; margin-top: 8px; }
+    #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan)); box-shadow: 0 0 12px var(--neon-cyan); transition: width 0.4s; }
+
+    #sponsor {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      z-index: 100;
+    }
+    #sponsor span {
+      font-size: 11px;
+      color: var(--neon-cyan);
+      font-weight: bold;
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
   </style>
 </head>
 <body>
   <div id="bg-layer"></div>
+
   <div id="menu-btn" onclick="toggleOverlay(true)">☰</div>
 
-  <!-- HUB OVERLAY -->
+  <!-- Оверлей-меню (гамбургер) -->
   <div id="hub" class="overlay">
     <div class="close-btn" onclick="toggleOverlay(false)">✕</div>
-    
-    <div id="hub-main-buttons" style="width:100%;">
-        <button class="chrome-btn" onclick="toggleLang()">EN / RU</button>
-        <button class="chrome-btn" onclick="showMarket()">DarkNet Market</button>
-        <button class="chrome-btn" onclick="watchAd()" style="background:var(--neon-yellow); color:#000;">⚡ <span id="ad-btn-txt">Get Energy (ADS)</span></button>
-        <button class="chrome-btn" onclick="buyTicket()">🎟 <span id="ticket-btn-txt">Tickets (Lottery)</span></button>
+
+    <div id="hub-main">
+      <button class="chrome-btn" onclick="toggleLang()">EN / RU</button>
+      <button class="chrome-btn" onclick="showMarket()">DarkNet Market</button>
+      <button class="chrome-btn" onclick="watchAd()">Get Energy (ADS)</button>
+      <button class="chrome-btn" onclick="buyTicket()">Tickets (Lottery)</button>
     </div>
 
-    <div id="market-content">
-        <div onclick="hideMarket()" style="color:var(--neon-cyan); margin-bottom:20px; font-weight:bold; cursor:pointer;">← <span id="back-txt">BACK</span></div>
-        <div id="shop-list"></div>
+    <div id="market-content" style="display:none; width:90%; max-height:70vh; overflow-y:auto;">
+      <div onclick="hideMarket()" style="color:var(--neon-cyan); margin:0 0 20px; font-weight:bold; cursor:pointer;">← BACK</div>
+      <div id="shop-list"></div>
     </div>
   </div>
 
   <div id="main-ui">
-    <div style="font-size:12px; color:#ff00aa; letter-spacing:2px; font-weight:bold;"><span id="clearance-txt">Clearance</span>: <span id="rank-name">Newbie</span></div>
-    
-    <div id="cat-box" onmousedown="tap(event)" ontouchstart="tap(event)">
+    <div style="font-size:13px; color:#ff00aa; letter-spacing:1.5px; margin-bottom:8px;">
+      Clearance: <span id="rank-name">Newbie</span>
+    </div>
+
+    <div id="cat-box">
       <img id="cat-img" src="cat1.jpg">
     </div>
 
     <div id="coins">0</div>
 
     <div class="energy-box">
-      <span id="energy-txt">Energy</span>: <span id="energy-val">100</span> / 100
-      <div id="energy-bar"><div id="energy-fill"></div></div>
+      Energy: <span id="energy-val">100</span> / 100
+      <div id="energy-bar"><div id="energy-fill" style="width:100%"></div></div>
     </div>
   </div>
 
-  <a id="sponsor" href="tg://resolve?domain=hiddifyProxySale_bot">
-    <img src="server.jpg">
-    <span>Anonymous<br>Proxy</span>
+  <!-- Ссылка на бота внизу слева -->
+  <a id="sponsor" href="https://t.me/hiddifyProxySale_bot">
+    <span>Secure Connect</span>
   </a>
 
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    let lang = localStorage.getItem('w_lang') || 'EN';
+    let lang = localStorage.getItem('w_lang') || 'RU';
     const texts = {
-      EN: { clearance: "Clearance", energy: "Energy", ad: "Get Energy (ADS)", ticket: "Tickets (Lottery)", back: "BACK", duration: "Duration: 7 Days", buy: "PURCHASE", owned: "OWNED" },
-      RU: { clearance: "Доступ", energy: "Энергия", ad: "Энергия (РЕКЛАМА)", ticket: "Билеты (Лотерея)", back: "НАЗАД", duration: "Срок: 7 Дней", buy: "КУПИТЬ", owned: "КУПЛЕНО" }
+      RU: { clearance: "Доступ", energy: "Энергия", back: "НАЗАД", buy: "КУПИТЬ", owned: "КУПЛЕНО" },
+      EN: { clearance: "Clearance", energy: "Energy", back: "BACK", buy: "PURCHASE", owned: "OWNED" }
     };
 
     const ranks = [
-      { name: "Newbie", cost: 0, mult: 10, img: "cat1.jpg", descEN: "Standard tunnel.", descRU: "Обычный туннель." },
-      { name: "Pro", cost: 100000, mult: 25, img: "cat2.jpg", descEN: "Encrypted node.", descRU: "Шифрованный узел." },
-      { name: "Punk", cost: 300000, mult: 60, img: "cat3.jpg", descEN: "Bypass DPI v1.0.", descRU: "Обход DPI v1.0." },
-      { name: "Agent", cost: 800000, mult: 150, img: "cat4.jpg", descEN: "Elite ghost proxy.", descRU: "Элитный прокси." },
-      { name: "CyberGod", cost: 1500000, mult: 400, img: "cat5.jpg", descEN: "The Network God.", descRU: "Бог Сети." }
+      { name: "Newbie", cost: 0, mult: 1, img: "cat1.jpg", desc: "Обычный туннель / Standard tunnel." },
+      { name: "Pro", cost: 100000, mult: 1.5, img: "cat2.jpg", desc: "Шифрованный узел / Encrypted node." },
+      { name: "Punk", cost: 300000, mult: 2.2, img: "cat3.jpg", desc: "Обход DPI v1.0 / Bypass DPI v1.0." },
+      { name: "Agent", cost: 800000, mult: 3.0, img: "cat4.jpg", desc: "Элитный прокси / Elite ghost proxy." },
+      { name: "CyberGod", cost: 1500000, mult: 4.5, img: "cat5.jpg", desc: "Бог Сети / The Network God." }
     ];
 
-    let state = { 
-        coins: parseInt(localStorage.getItem('w_coins')) || 0, 
-        rank: parseInt(localStorage.getItem('w_rank')) || 0, 
-        energy: parseInt(localStorage.getItem('w_energy')) || 100 
+    let state = {
+      coins: parseInt(localStorage.getItem('w_coins')) || 0,
+      rank: parseInt(localStorage.getItem('w_rank')) || 0,
+      energy: parseInt(localStorage.getItem('w_energy')) || 100
     };
 
-    function toggleOverlay(open) { 
-        document.getElementById('hub').classList.toggle('open', open); 
-        if(!open) hideMarket();
-    }
-    function showMarket() { document.getElementById('hub-main-buttons').style.display = 'none'; document.getElementById('market-content').style.display = 'block'; }
-    function hideMarket() { document.getElementById('hub-main-buttons').style.display = 'block'; document.getElementById('market-content').style.display = 'none'; }
-    
-    function toggleLang() { 
-        lang = lang === 'EN' ? 'RU' : 'EN'; 
-        localStorage.setItem('w_lang', lang); 
-        updateUI(); 
+    function toggleOverlay(open) {
+      document.getElementById('hub').classList.toggle('open', open);
+      if (!open) hideMarket();
     }
 
+    function showMarket() {
+      document.getElementById('hub-main').style.display = 'none';
+      document.getElementById('market-content').style.display = 'block';
+    }
+
+    function hideMarket() {
+      document.getElementById('hub-main').style.display = 'block';
+      document.getElementById('market-content').style.display = 'none';
+    }
+
+    function toggleLang() {
+      lang = lang === 'RU' ? 'EN' : 'RU';
+      localStorage.setItem('w_lang', lang);
+      updateUI();
+    }
+
+    // Магазин рангов
     const shopList = document.getElementById('shop-list');
     ranks.forEach((r, i) => {
       if (i === 0) return;
       let card = document.createElement('div');
-      card.className = 'rank-card';
-      card.innerHTML = `<span class="rank-name">${r.name}</span> <span class="rank-price">${r.cost}</span>
-        <div class="rank-desc" id="desc-${i}">${lang === 'EN' ? r.descEN : r.descRU}<br><b class="dur-txt">${texts[lang].duration}</b></div>
-        <button class="chrome-btn" style="width:100%; padding:8px; margin-top:10px;" id="btn-${i}" onclick="confirmBuy(${i})">${texts[lang].buy}</button>`;
+      card.innerHTML = `
+        <span style="color:var(--neon-cyan); font-weight:bold;">${r.name}</span>
+        <span style="float:right; color:var(--neon-pink); font-weight:bold;">${r.cost}</span>
+        <div style="font-size:11px; color:#a0fffb; margin:6px 0;">${r.desc}<br>7 дней</div>
+        <button class="chrome-btn" style="width:100%; padding:10px;" onclick="buyRank(${i})">${texts[lang].buy}</button>
+      `;
       shopList.appendChild(card);
     });
 
-    function tap(e) {
-      if (e) e.preventDefault(); if (state.energy <= 0) return;
-      state.energy--; state.coins += ranks[state.rank].mult;
-      document.getElementById('cat-img').style.transform = "scale(0.94)";
-      setTimeout(()=> document.getElementById('cat-img').style.transform = "scale(1)", 50);
-      if (tg) tg.HapticFeedback.impactOccurred('light'); updateUI();
-    }
-
-    function confirmBuy(id) {
-      if (state.coins < ranks[id].cost) { alert(lang === 'EN' ? "Low tokens!" : "Мало монет!"); return; }
-      if (confirm(lang === 'EN' ? "Confirm purchase?" : "Подтвердить?")) {
-        state.coins -= ranks[id].cost; state.rank = id;
-        updateUI(); toggleOverlay(false);
+    function buyRank(id) {
+      if (state.coins < ranks[id].cost) {
+        alert(lang === 'RU' ? "Мало монет!" : "Not enough tokens!");
+        return;
+      }
+      if (confirm(lang === 'RU' ? "Подтвердить покупку?" : "Confirm purchase?")) {
+        state.coins -= ranks[id].cost;
+        state.rank = id;
+        localStorage.setItem('w_coins', state.coins);
+        localStorage.setItem('w_rank', state.rank);
+        updateUI();
+        toggleOverlay(false);
       }
     }
 
-    function buyTicket() {
-      if (state.coins >= 2000000) { state.coins -= 2000000; alert("Success!"); updateUI(); }
-      else { alert(lang === 'EN' ? "Need 2M $WALL" : "Нужно 2М монет"); }
+    function watchAd() {
+      state.energy = Math.min(100, state.energy + 40);
+      state.coins += 10000;
+      updateUI();
+      alert(lang === 'RU' ? "Энергия +40 | +10 000 $WALL" : "Energy +40 | +10 000 $WALL");
     }
 
-    function watchAd() { state.energy = 100; updateUI(); alert("Energy Full!"); }
+    function buyTicket() {
+      if (state.coins >= 2000000) {
+        state.coins -= 2000000;
+        alert(lang === 'RU' ? "Билет куплен!" : "Ticket purchased!");
+        updateUI();
+      } else {
+        alert(lang === 'RU' ? "Нужно 2 млн $WALL" : "Need 2M $WALL");
+      }
+    }
+
+    function tap(e) {
+      if (e) e.preventDefault();
+      if (state.energy <= 0) return;
+      state.energy--;
+      state.coins += ranks[state.rank].mult * 10;
+      document.getElementById('cat-img').style.transform = "scale(0.95)";
+      setTimeout(()=> document.getElementById('cat-img').style.transform = "scale(1)", 80);
+      if (tg) tg.HapticFeedback.impactOccurred('light');
+      updateUI();
+    }
 
     function updateUI() {
       const t = texts[lang];
       document.getElementById('coins').textContent = Math.floor(state.coins).toLocaleString();
       document.getElementById('energy-val').textContent = state.energy;
       document.getElementById('energy-fill').style.width = state.energy + '%';
-      document.getElementById('rank-name').textContent = ranks[state.rank].name;
       document.getElementById('cat-img').src = ranks[state.rank].img;
       document.getElementById('bg-layer').style.backgroundImage = `url(${ranks[state.rank].img})`;
-      
-      // Перевод текстов
-      document.getElementById('clearance-txt').textContent = t.clearance;
-      document.getElementById('energy-txt').textContent = t.energy;
-      document.getElementById('ad-btn-txt').textContent = t.ad;
-      document.getElementById('ticket-btn-txt').textContent = t.ticket;
-      document.getElementById('back-txt').textContent = t.back;
-
-      ranks.forEach((r, i) => {
-        if (i === 0) return;
-        const btn = document.getElementById('btn-' + i);
-        const desc = document.getElementById(`desc-${i}`);
-        if (btn) {
-            btn.disabled = (state.rank >= i);
-            btn.textContent = state.rank >= i ? t.owned : t.buy;
-            desc.innerHTML = `${lang === 'EN' ? r.descEN : r.descRU}<br><b>${t.duration}</b>`;
-        }
-      });
       localStorage.setItem('w_coins', state.coins);
-      localStorage.setItem('w_rank', state.rank);
       localStorage.setItem('w_energy', state.energy);
+      localStorage.setItem('w_rank', state.rank);
     }
 
-    setInterval(() => { if (state.energy < 100) { state.energy++; updateUI(); } }, 50000);
+    // Восстановление энергии каждые 30 секунд
+    setInterval(() => {
+      if (state.energy < 100) {
+        state.energy++;
+        updateUI();
+      }
+    }, 30000);
+
+    canvas.addEventListener('mousedown', tap);
+    canvas.addEventListener('touchstart', tap);
     updateUI();
   </script>
 </body>
