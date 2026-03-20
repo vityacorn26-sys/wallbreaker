@@ -1,217 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>WallBreaker — Bypass DPI</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    /* ВОЗВРАЩАЕМ КУРЬЕР NEW — ЭТО СТИЛЬ */
-    body { background: #050010; color: #00ffcc; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
-    
-    /* ФОНОВЫЙ СЛОЙ (Синхронный с кнопкой) — ВОЗВРАЩАЕМ АТМОСФЕРУ */
-    #background-layer {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-size: cover; background-position: center;
-        /* Идеальный баланс: фон виден, но не мешает */
-        filter: blur(5px) brightness(50%); 
-        z-index: -1; transition: background-image 0.8s ease-in-out;
-    }
-
-    /* Меню "Жидкий Металл" на 2/3 экрана — ВОЗВРАЩАЕМ СЕКСУАЛЬНОСТЬ */
-    #menu-btn { position: fixed; top: 15px; left: 15px; z-index: 100; width: 35px; height: 30px; background: linear-gradient(145deg, #aaa, #666); border-radius: 5px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-around; padding: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-    #menu-btn span { width: 100%; height: 3px; background: #222; border-radius: 2px; }
-    #side-menu {
-        position: fixed; top: 0; left: -100%; width: 66%; height: 100%;
-        background: rgba(100, 100, 100, 0.2); 
-        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); /* Жидкий металл */
-        border-right: 2px solid rgba(200, 200, 200, 0.5); 
-        z-index: 99; transition: 0.5s ease-out; padding-top: 70px; text-align: left;
-        box-shadow: 10px 0 20px rgba(0,0,0,0.8);
-    }
-    #side-menu a { display: block; padding: 15px 25px; color: #ddd; text-decoration: none; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); text-shadow: 0 0 5px rgba(255,255,255,0.5); }
-    #side-menu a:hover { color: #fff; background: rgba(255,255,255,0.05); }
-
-    /* Верхняя панель */
-    .top-bar { display: flex; justify-content: flex-end; padding: 10px 15px; font-weight: bold; background: rgba(0,0,0,0.3); }
-    .stat-item { margin-left: 15px; font-size: 14px; }
-
-    /* Панель уровня */
-    h1 { color: #ff00aa; text-shadow: 0 0 15px #ff00aa; font-size: 20px; margin: 30px 0 10px; font-weight: bold; }
-    #rank-name { color: #fff; text-shadow: 0 0 5px #fff; }
-
-    /* Кот-Кнопка и Анимации — ВОЗВРАЩАЕМ ДЫХАНИЕ */
-    @keyframes breathe { 0%, 100% { transform: scale(1); filter: brightness(100%); } 50% { transform: scale(1.03); filter: brightness(120%); } }
-    @keyframes neon-glow { 0%, 100% { box-shadow: 0 0 20px #ff00aa; } 50% { box-shadow: 0 0 35px #00ffcc; } }
-
-    #cat-container { width: 220px; height: 280px; margin: 0 auto; position: relative; border: 2px solid #00ffcc; border-radius: 15px; overflow: hidden; animation: neon-glow 4s infinite; background: #000; perspective: 1000px; }
-    #cat-img { width: 100%; height: 100%; object-fit: cover; animation: breathe 3.5s ease-in-out infinite; /* Живее дышит */ transition: transform 0.05s; transform-origin: center bottom; /* Пружинит */ }
-    
-    #coins { font-size: 44px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 10px 0; color: #fff; }
-
-    .energy-container { width: 85%; margin: 10px auto; text-align: center; font-size: 14px; font-weight: bold; color: #555; }
-    #energy-bar { width: 100%; height: 10px; background: #1a1a3a; border-radius: 5px; margin-top: 5px; border: 1px solid #333; overflow: hidden; position: relative; }
-    #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; position: absolute; }
-    #energy-label { position: absolute; width: 100%; text-align: center; font-size: 12px; color: #fff; line-height: 10px; text-shadow: 0 0 3px #000; }
-
-    /* Баннер VPN в углу — ВОЗВРАЩАЕМ ИКОНКУ */
-    #vpn-banner { 
-        position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; 
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: transform 0.2s;
-    }
-    #vpn-banner:hover { transform: scale(1.1); }
-    #vpn-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 2px solid #ffff00; box-shadow: 0 0 10px #ffff00; }
-
-    /* Кнопка Магазина (Добавлена, но пока заглушка) */
-    #shop-btn { background: #00ffcc; color: #000; width: 85%; padding: 12px; border-radius: 10px; font-weight: bold; border: none; font-size: 16px; margin-top: 10px; cursor: pointer; }
-
-    #ticket-btn { background: #ffff00; color: #000; width: 85%; padding: 18px; border-radius: 15px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 15px #ffff00; margin: 15px 0 80px; cursor: pointer; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wall Breaker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org"></script>
+    <script src="https://sad.adsgram.ai"></script>
 </head>
 <body>
-
-  <div id="background-layer"></div>
-
-  <div id="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
-
-  <div id="side-menu">
-    <a href="#" onclick="showSection('tasks')">🛠 ЗАДАНИЯ (AD)</a>
-    <a href="#" onclick="showSection('leaderboard')">🏆 ЛИДЕРБОРД</a>
-    <a href="#" onclick="showSection('roulette')">🎡 РУЛЕТКА</a>
-    <a href="https://t.me/wallbreaker_community" target="_blank">📢 COMMUNITY</a>
-    <a href="#" onclick="toggleMenu()" style="color: #ff00aa; margin-top: 20px;">✖ ЗАКРЫТЬ</a>
-  </div>
-
-  <div class="top-bar">
-    <div class="stat-item">💰 <span id="balance-top">0</span></div>
-  </div>
-
-  <h1>Clearance: <span id="rank-name">Newbie</span></h1>
-
-  <div id="cat-container" onclick="tap(event)">
-    <img id="cat-img" src="loading.jpg" alt="Loading...">
-  </div>
-
-  <div id="coins">0</div>
-
-  <div class="energy-container">
-    <span style="color: #555;">DPI BLOCKADE</span>
-    <div id="energy-bar">
-        <div id="energy-fill"></div>
-        <div id="energy-label">CPU: <span id="energy-val">100</span>%</div>
+    <!-- Заставка при загрузке -->
+    <div id="loading-screen" style="position:fixed; inset:0; z-index:999; background:#000; display:flex; align-items:center; justify-content:center;">
+        <img src="assets/loading.jpg" style="width:100%; height:100%; object-fit:cover;">
     </div>
-  </div>
 
-  <div id="vpn-banner" onclick="window.open('https://t.me/hiddifyProxySale_bot', '_blank')">
-    <img src="server.jpg" alt="VPN" id="vpn-img">
-  </div>
+    <!-- Гамбургер -->
+    <div class="hamburger" onclick="toggleMenu()">☰</div>
 
-  <button id="shop-btn" onclick="alert('Даркнет-маркет скоро...')">🛒 ДАРКНЕТ-МАРКЕТ</button>
+    <!-- Шторка меню -->
+    <div id="side-menu" class="side-menu">
+        <h2 style="color:#00f2ff;">WALL BREAKER</h2>
+        <a href="#" class="menu-btn" onclick="showSection('referral')">Рефералы</a>
+        <a href="#" class="menu-btn" onclick="showSection('tasks')">Задания</a>
+        <div style="margin-top: 50px;">
+            <p>W-Pass Premium: 0.5 TON</p>
+            <a href="#" class="menu-btn" style="border-color:#ffcc00; color:#ffcc00;">КУПИТЬ ТИKET</a>
+        </div>
+    </div>
 
-  <button id="ticket-btn" onclick="buyTicket()">🎟 КЛЮЧ ШИФРОВАНИЯ (2M)</button>
+    <!-- Основная игра -->
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-around; height:100vh;">
+        <img id="bg-cat" src="assets/cat1.jpg">
+        <div id="balance" style="font-size:32px; font-weight:bold; color:#00f2ff; text-shadow:0 0 10px #00f2ff;">0 $WBC</div>
+        <img id="tap-button" src="assets/cat1.jpg" class="tap-button" onclick="handleTap()">
+        <div id="energy" style="font-size:18px; color:#fff;">Энергия: 100/100</div>
+    </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    const ranks = [
-      { name: "Newbie", mult: 10, img: "cat1.jpg" }, // Базовый
-      { name: "Pro", mult: 25, img: "cat2.jpg" }, // Покупной
-      { name: "Punk", mult: 60, img: "cat3.jpg" }, // Покупной
-      { name: "Agent", mult: 150, img: "cat4.jpg" }, // Покупной
-      { name: "CyberGod", mult: 400, img: "cat5.jpg" } // Покупной
-    ];
-
-    let state = {
-      coins: parseInt(localStorage.getItem('w_coins')) || 0,
-      energy: 100,
-      rank: parseInt(localStorage.getItem('w_rank')) || 0 // Берём сохранённый ранг
-    };
-
-    function toggleMenu() {
-      const m = document.getElementById('side-menu');
-      m.style.left = m.style.left === '0px' ? '-100%' : '0px';
-    }
-
-    // ТА САМАЯ ФУНКЦИЯ — ВОЗВРАЩАЕМ СИНХРОНИЗАЦИЮ
-    function updateVisuals() {
-        const r = ranks[state.rank];
-        const imgUrl = r.img; // Например, "cat3.jpg"
-        
-        // 1. Меняем Кнопку-Тап (центральный кот)
-        const catImg = document.getElementById('cat-img');
-        if (catImg.src.indexOf(imgUrl) === -1) {
-            catImg.src = imgUrl; 
-        }
-        
-        // 2. Меняем ФОН всей игры (синхронно, с чётким визулом)
-        const backgroundLayer = document.getElementById('background-layer');
-        backgroundLayer.style.backgroundImage = `url(${imgUrl})`;
-    }
-
-    function tap(e) {
-      if (state.energy <= 0) return;
-      
-      state.coins += ranks[state.rank].mult;
-      state.energy -= 1;
-      
-      // ВОЗВРАЩАЕМ ПРУЖИНУ (вверх-вниз и наклон кверху)
-      const img = document.getElementById('cat-img');
-      img.style.transform = "translateY(5px) rotateX(-20deg) scale(0.95)"; 
-      setTimeout(() => img.style.transform = "translateY(0) rotateX(0) scale(1)", 100); 
-
-      // Вылетающий текст
-      showPopup(e.clientX, e.clientY, `+${ranks[state.rank].mult}`);
-      
-      updateUI();
-    }
-
-    function showPopup(x, y, text) {
-      const p = document.createElement('div');
-      p.innerText = text;
-      p.style.position = 'fixed';
-      p.style.left = x + 'px';
-      p.style.top = y + 'px';
-      p.style.color = '#fff';
-      p.style.textShadow = "0 0 5px #ff00aa";
-      p.style.fontWeight = 'bold';
-      p.style.pointerEvents = 'none';
-      p.style.animation = 'fadeOut 0.8s forwards';
-      p.style.zIndex = '101';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 800);
-    }
-
-    function updateUI() {
-      document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
-      document.getElementById('balance-top').innerText = Math.floor(state.coins).toLocaleString();
-      document.getElementById('energy-val').innerText = state.energy;
-      document.getElementById('energy-fill').style.width = state.energy + '%';
-      
-      const r = ranks[state.rank];
-      document.getElementById('rank-name').innerText = r.name;
-      
-      // Запускаем синхронизацию
-      updateVisuals();
-
-      localStorage.setItem('w_coins', state.coins);
-      localStorage.setItem('w_rank', state.rank); // Сохраняем ранг
-    }
-
-    // Реген энергии (1% в 15 секунд)
-    setInterval(() => {
-      if (state.energy < 100) {
-        state.energy++;
-        updateUI();
-      }
-    }, 15000);
-
-    updateUI();
-  </script>
-
-  <style>
-    @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
-  </style>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/game.js"></script>
+    <script>
+        function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
+        // Скрываем загрузку через 2 секунды (пока для теста)
+        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 2000);
+    </script>
 </body>
 </html>
