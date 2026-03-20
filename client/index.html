@@ -9,31 +9,42 @@
     <script src="https://sad.adsgram.ai"></script>
 </head>
 <body>
-    <!-- Заставка при загрузке -->
-    <div id="loading-screen" style="position:fixed; inset:0; z-index:999; background:#000; display:flex; align-items:center; justify-content:center;">
+    <!-- Заставка -->
+    <div id="loading-screen" style="position:fixed; inset:0; z-index:9999; background:#000; display:flex; align-items:center; justify-content:center;">
         <img src="assets/loading.jpg" style="width:100%; height:100%; object-fit:cover;">
     </div>
+
+    <!-- Кнопка Языка -->
+    <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
 
     <!-- Гамбургер -->
     <div class="hamburger" onclick="toggleMenu()">☰</div>
 
     <!-- Шторка меню -->
     <div id="side-menu" class="side-menu">
-        <h2 style="color:#00f2ff;">WALL BREAKER</h2>
-        <a href="#" class="menu-btn" onclick="showSection('referral')">Рефералы</a>
-        <a href="#" class="menu-btn" onclick="showSection('tasks')">Задания</a>
-        <div style="margin-top: 50px;">
-            <p>W-Pass Premium: 0.5 TON</p>
-            <a href="#" class="menu-btn" style="border-color:#ffcc00; color:#ffcc00;">КУПИТЬ ТИKET</a>
+        <h2 style="color:#0f0; margin-bottom:30px;">HACKER TERMINAL</h2>
+        <a href="#" class="menu-btn" id="menu-ref">РЕФЕРАЛЫ</a>
+        <a href="#" class="menu-btn" id="menu-tasks">ЗАДАНИЯ</a>
+        <div style="margin-top: 40px; border-top: 1px solid #0f0; padding-top: 20px;">
+            <p id="premium-text" style="font-size:12px;">W-Pass Premium: 0.5 TON</p>
+            <a href="#" class="menu-btn" style="border-color:#ffcc00; color:#ffcc00;" id="menu-buy">ROOT INJECTION</a>
         </div>
     </div>
 
-    <!-- Основная игра -->
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-around; height:100vh;">
+    <!-- Игровое поле -->
+    <div class="game-container" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around; height:100vh; position:relative;">
         <img id="bg-cat" src="assets/cat1.jpg">
-        <div id="balance" style="font-size:32px; font-weight:bold; color:#00f2ff; text-shadow:0 0 10px #00f2ff;">0 $WBC</div>
-        <img id="tap-button" src="assets/cat1.jpg" class="tap-button" onclick="handleTap()">
-        <div id="energy" style="font-size:18px; color:#fff;">Энергия: 100/100</div>
+        
+        <div id="balance" style="font-size:32px; font-weight:bold; color:#0f0; text-shadow:0 0 10px #0f0; z-index:2;">0 $WBC</div>
+        
+        <img id="tap-button" src="assets/cat1.jpg" class="tap-button" onclick="handleTap()" draggable="false">
+        
+        <div id="energy-container" style="width:80%; z-index:2; text-align:center;">
+            <div id="energy-text" style="margin-bottom:5px;">Энергия: 100/100</div>
+            <div style="width:100%; height:10px; background:#111; border:1px solid #0f0; border-radius:5px;">
+                <div id="energy-fill" style="width:100%; height:100%; background:#0f0; transition:0.3s;"></div>
+            </div>
+        </div>
     </div>
 
     <script src="js/config.js"></script>
@@ -41,8 +52,11 @@
     <script src="js/game.js"></script>
     <script>
         function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
-        // Скрываем загрузку через 2 секунды (пока для теста)
-        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 2000);
+        
+        // Скрываем загрузку, когда всё подтянется
+        window.onload = () => {
+            setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 1500);
+        };
     </script>
 </body>
 </html>
