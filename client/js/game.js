@@ -1,3 +1,23 @@
+let user = {
+    id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "local_user",
+    balance: 0,
+    energy: 100,
+    lastTap: 0
+};
+
+// Скрыть экран загрузки
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none';
+    }, 1000);
+});
+
+function toggleMenu() {
+    const menu = document.getElementById('side-menu');
+    const ham = document.getElementById('ham-menu');
+    menu.classList.toggle('active');
+    ham.classList.toggle('active');
+}
 const langData = {
     ru: {
         nodes: "СЕТЬ УЗЛОВ",
