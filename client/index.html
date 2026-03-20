@@ -9,40 +9,40 @@
     <script src="https://sad.adsgram.ai"></script>
 </head>
 <body>
-    <!-- Заставка -->
-    <div id="loading-screen" style="position:fixed; inset:0; z-index:9999; background:#000; display:flex; align-items:center; justify-content:center;">
-        <img src="assets/loading.jpg" style="width:100%; height:100%; object-fit:cover;">
+    <div id="loading-screen">
+        <img src="assets/loading.jpg" alt="Loading...">
     </div>
 
-    <!-- Кнопка Языка -->
     <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
+    <div class="hamburger" id="ham-menu" onclick="toggleMenu()">☰</div>
 
-    <!-- Гамбургер -->
-    <div class="hamburger" onclick="toggleMenu()">☰</div>
-
-    <!-- Шторка меню -->
     <div id="side-menu" class="side-menu">
-        <h2 style="color:#0f0; margin-bottom:30px;">HACKER TERMINAL</h2>
-        <a href="#" class="menu-btn" id="menu-ref">РЕФЕРАЛЫ</a>
-        <a href="#" class="menu-btn" id="menu-tasks">ЗАДАНИЯ</a>
-        <div style="margin-top: 40px; border-top: 1px solid #0f0; padding-top: 20px;">
-            <p id="premium-text" style="font-size:12px;">W-Pass Premium: 0.5 TON</p>
-            <a href="#" class="menu-btn" style="border-color:#ffcc00; color:#ffcc00;" id="menu-buy">ROOT INJECTION</a>
+        <div class="close-menu" onclick="toggleMenu()">×</div>
+        <h2 style="color:#00ffff; margin-bottom:30px; font-style: italic;">HACKER TERMINAL</h2>
+        <div id="menu-container">
+            <a href="#" class="menu-btn" id="menu-ref">СЕТЬ УЗЛОВ</a>
+            <a href="#" class="menu-btn" id="menu-market">ДАРКНЕТ МАРКЕТ</a>
+            <a href="#" class="menu-btn" id="menu-exploit">ЗАГРУЗИТЬ ЭКСПЛОИТ</a>
+            <a href="#" class="menu-btn" id="menu-tasks">ПОБОЧНЫЕ КВЕСТЫ</a>
+            <a href="#" class="menu-btn" id="menu-top">ТОП БРЕЙКЕРОВ</a>
+            <a href="#" class="menu-btn" id="menu-laundry">ПРАЧЕЧНАЯ</a>
+        </div>
+        <div class="premium-block">
+            <p id="premium-text">W-Pass Premium: 0.5 TON</p>
+            <a href="#" class="menu-btn inject-btn" id="menu-buy">ROOT INJECTION</a>
         </div>
     </div>
 
-    <!-- Игровое поле -->
-    <div class="game-container" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around; height:100vh; position:relative;">
+    <div class="game-container">
         <img id="bg-cat" src="assets/cat1.jpg">
-        
-        <div id="balance" style="font-size:32px; font-weight:bold; color:#0f0; text-shadow:0 0 10px #0f0; z-index:2;">0 $WBC</div>
-        
-        <img id="tap-button" src="assets/cat1.jpg" class="tap-button" onclick="handleTap()" draggable="false">
-        
-        <div id="energy-container" style="width:80%; z-index:2; text-align:center;">
-            <div id="energy-text" style="margin-bottom:5px;">Энергия: 100/100</div>
-            <div style="width:100%; height:10px; background:#111; border:1px solid #0f0; border-radius:5px;">
-                <div id="energy-fill" style="width:100%; height:100%; background:#0f0; transition:0.3s;"></div>
+        <div id="balance">0 $WBC</div>
+        <div class="tap-area">
+            <img id="tap-button" src="assets/cat1.jpg" onclick="handleTap()" draggable="false">
+        </div>
+        <div id="energy-container">
+            <div id="energy-text">ЭНЕРГИЯ: 100/100</div>
+            <div class="energy-pipe">
+                <div id="energy-fill"></div>
             </div>
         </div>
     </div>
@@ -50,13 +50,5 @@
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/game.js"></script>
-    <script>
-        function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
-        
-        // Скрываем загрузку, когда всё подтянется
-        window.onload = () => {
-            setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 1500);
-        };
-    </script>
 </body>
 </html>
