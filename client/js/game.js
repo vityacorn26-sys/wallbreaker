@@ -1,61 +1,42 @@
-// 1. Данные пользователя (локально, пока сервер не настроен)
 let user = {
     id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "local_user",
     balance: 0,
     energy: 100,
-    lastTap: 0
+    lastTap: 0,
+    refLink: `https://t.me{window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "123"}`
 };
 
 let currentLang = 'ru';
 
 const langData = {
     ru: {
-        nodes: "СЕТЬ УЗЛОВ",
-        market: "ДАРКНЕТ МАРКЕТ",
-        exploit: "ЗАГРУЗИТЬ ЭКСПЛОИТ",
-        quests: "ПОБОЧНЫЕ КВЕСТЫ",
-        top: "ТОП БРЕЙКЕРОВ",
-        laundry: "ПРАЧЕЧНАЯ",
-        inject: "ROOT INJECTION",
-        energy: "ЭНЕРГИЯ",
-        premium: "Injection: 0.5 TON"
+        nodes: "СЕТЬ УЗЛОВ", market: "ДАРКНЕТ МАРКЕТ", exploit: "ЗАГРУЗИТЬ ЭКСПЛОИТ",
+        quests: "ПОБОЧНЫЕ КВЕСТЫ", top: "ТОП БРЕЙКЕРОВ", laundry: "ПРАЧЕЧНАЯ",
+        inject: "ROOT INJECTION", energy: "ЭНЕРГИЯ", premium: "Injection: 0.5 TON",
+        refText: "ТВОЯ ССЫЛКА ДЛЯ ВЕРБОВКИ:",
+        marketRules: "РАНГИ: 2 - 150k WBC, 3 - 450k (или 0.5 TON), 4 - 900k, 5 - 1.5M. Каждый ранг действует 7 дней."
     },
     en: {
-        nodes: "NODE NETWORK",
-        market: "DARKNET MARKET",
-        exploit: "LOAD EXPLOIT",
-        quests: "SIDE QUESTS",
-        top: "TOP BREAKERS",
-        laundry: "LAUNDRY (WITHDRAW)",
-        inject: "ROOT INJECTION",
-        energy: "ENERGY",
-        premium: "Injection: 0.5 TON"
+        nodes: "NODE NETWORK", market: "DARKNET MARKET", exploit: "LOAD EXPLOIT",
+        quests: "SIDE QUESTS", top: "TOP BREAKERS", laundry: "LAUNDRY (WITHDRAW)",
+        inject: "ROOT INJECTION", energy: "ENERGY", premium: "Injection: 0.5 TON",
+        refText: "YOUR RECRUITMENT LINK:",
+        marketRules: "RANKS: 2 - 150k WBC, 3 - 450k (or 0.5 TON), 4 - 900k, 5 - 1.5M. Active for 7 days."
     }
 };
 
-// 2. Инициализация при загрузке
 window.addEventListener('load', () => {
-    // Устанавливаем язык по умолчанию
     updateMenuTexts();
-    
-    // Скрываем экран загрузки через 1.5 сек
-    setTimeout(() => {
-        const loader = document.getElementById('loading-screen');
-        if (loader) loader.style.display = 'none';
-    }, 1500);
+    setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 1500);
 });
 
-// 3. Управление меню и языком
-function toggleMenu() {
-    const menu = document.getElementById('side-menu');
-    if (menu) menu.classList.toggle('active');
-}
+function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
 
 function toggleLang() {
     currentLang = currentLang === 'ru' ? 'en' : 'ru';
     document.getElementById('lang-btn').innerText = currentLang.toUpperCase();
     updateMenuTexts();
-    updateUI(); // Чтобы обновить слово "Энергия"
+    updateUI();
 }
 
 function updateMenuTexts() {
@@ -70,52 +51,32 @@ function updateMenuTexts() {
     document.getElementById('premium-text').innerText = d.premium;
 }
 
-// 4. Механика Тапов
+// Открытие разделов
+function showSection(type) {
+    const modal = document.getElementById('info-modal');
+    const content = document.getElementById('modal-content');
+    const d = langData[currentLang];
+    modal.style.display = 'flex';
+    
+    if(type === 'ref') {
+        content.innerHTML = `<h3>${d.nodes}</h3><p>${d.refText}</p><code style="background:#222;padding:5px;">${user.refLink}</code>`;
+    } else if(type === 'market') {
+        content.innerHTML = `<h3>${d.market}</h3><p>${d.marketRules}</p>`;
+    }
+}
+
+function closeModal() { document.getElementById('info-modal').style.display = 'none'; }
+
 function handleTap() {
     const now = Date.now();
-    // Лимит: 3 тапа в секунду (333мс)
-    if (now - user.lastTap < 333) return;
-    if (user.energy <= 0) return;
-
-    user.balance += 10;
-    user.energy -= 1;
-    user.lastTap = now;
-
+    if (now - user.lastTap < 333 || user.energy <= 0) return;
+    user.balance += 10; user.energy -= 1; user.lastTap = now;
     updateUI();
-    
-    // Пружина (эффект нажатия)
-    const btn = document.getElementById('tap-button');
-    if (btn) {
-        btn.style.transform = 'scale(0.92) translateY(-5px)';
-        setTimeout(() => { btn.style.transform = 'scale(1) translateY(0)'; }, 100);
-    }
-
-    // Отправка на сервер (сохранение будет работать после настройки server.js)
-    if (typeof api !== 'undefined') {
-        api.sendTap(user.id, 1);
-    }
 }
 
-// 5. Обновление интерфейса
 function updateUI() {
     const d = langData[currentLang];
-    const balanceEl = document.getElementById('balance');
-    const energyTextEl = document.getElementById('energy-text');
-    const energyFillEl = document.getElementById('energy-fill');
-
-    if (balanceEl) balanceEl.innerText = `${user.balance.toLocaleString()} $WBC`;
-    if (energyTextEl) energyTextEl.innerText = `${d.energy.toUpperCase()}: ${user.energy}/100`;
-    
-    if (energyFillEl) {
-        let percent = (user.energy / 100) * 100;
-        energyFillEl.style.width = percent + '%';
-    }
+    document.getElementById('balance').innerText = `${user.balance.toLocaleString()} $WBC`;
+    document.getElementById('energy-text').innerText = `${d.energy.toUpperCase()}: ${user.energy}/100`;
+    document.getElementById('energy-fill').style.width = (user.energy / 100 * 100) + '%';
 }
-
-// 6. Восстановление энергии (1 ед / 30 сек)
-setInterval(() => {
-    if (user.energy < 100) {
-        user.energy++;
-        updateUI();
-    }
-}, 30000);
