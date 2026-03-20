@@ -8,65 +8,49 @@
   <style>
     body { background: #050010; color: #00ffcc; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 0; overflow: hidden; user-select: none; }
     
-    /* Меню "Жидкий Металл" на 2/3 экрана */
+    /* ФОНОВЫЙ СЛОЙ — Синхронный с рангом */
+    #background-layer {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-size: cover; background-position: center;
+        filter: blur(12px) brightness(25%); /* Затемняем, чтобы кот-кнопка выделялся */
+        z-index: -1; transition: background-image 0.8s ease-in-out;
+    }
+
+    /* Меню "Жидкий Металл" */
     #menu-btn { position: fixed; top: 15px; left: 15px; z-index: 100; width: 35px; height: 30px; background: linear-gradient(145deg, #aaa, #666); border-radius: 5px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-around; padding: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
     #menu-btn span { width: 100%; height: 3px; background: #222; border-radius: 2px; }
+    #side-menu { position: fixed; top: 0; left: -100%; width: 66%; height: 100%; background: rgba(100, 100, 100, 0.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-right: 2px solid rgba(200, 200, 200, 0.5); z-index: 99; transition: 0.5s ease-out; padding-top: 70px; text-align: left; }
+    #side-menu a { display: block; padding: 15px 25px; color: #ddd; text-decoration: none; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+    /* Визуал игры */
+    h1 { color: #ff00aa; text-shadow: 0 0 15px #ff00aa; font-size: 18px; margin: 60px 0 10px; }
+    #cat-container { width: 220px; height: 280px; margin: 0 auto; position: relative; border: 2px solid #00ffcc; border-radius: 15px; overflow: hidden; animation: neon-glow 4s infinite; background: #000; perspective: 1000px; }
+    #cat-img { width: 100%; height: 100%; object-fit: cover; animation: breathe 4s ease-in-out infinite; transition: transform 0.05s; transform-origin: center bottom; }
     
-    #side-menu {
-        position: fixed; top: 0; left: -100%; width: 66%; height: 100%;
-        background: rgba(100, 100, 100, 0.2); 
-        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); /* Жидкий металл */
-        border-right: 2px solid rgba(200, 200, 200, 0.5); 
-        z-index: 99; transition: 0.5s ease-out; padding-top: 70px; text-align: left;
-        box-shadow: 10px 0 20px rgba(0,0,0,0.8);
-    }
-    #side-menu a { display: block; padding: 15px 25px; color: #ddd; text-decoration: none; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); text-shadow: 0 0 5px rgba(255,255,255,0.5); }
-    #side-menu a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    #coins { font-size: 40px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 10px 0; color: #fff; }
 
-    /* Переключатель языка */
-    .lang-toggle { font-size: 12px; padding: 5px 10px; background: #1a1a3a; border-radius: 5px; cursor: pointer; color: #555; position: fixed; top: 15px; right: 15px; z-index: 100; }
-    .lang-toggle.active { color: #00ffcc; font-weight: bold; text-shadow: 0 0 5px #00ffcc; }
+    .energy-container { width: 85%; margin: 5px auto; text-align: center; }
+    #energy-bar { width: 100%; height: 12px; background: #1a1a3a; border-radius: 6px; margin-top: 5px; border: 1px solid #333; overflow: hidden; position: relative; }
+    #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; }
 
-    /* Панель уровня */
-    h1 { color: #ff00aa; text-shadow: 0 0 15px #ff00aa; font-size: 20px; margin: 60px 0 10px; font-weight: bold; }
-    #rank-name { color: #fff; text-shadow: 0 0 5px #fff; }
+    #vpn-banner { position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; cursor: pointer; }
+    #vpn-img { width: 100%; height: 100%; border-radius: 8px; border: 2px solid #ffff00; }
 
-    /* Кот-Кнопка и Анимации */
-    @keyframes breathe { 0%, 100% { transform: scale(1); filter: brightness(100%); } 50% { transform: scale(1.02); filter: brightness(120%); } }
-    @keyframes neon-glow { 0%, 100% { box-shadow: 0 0 20px #ff00aa; } 50% { box-shadow: 0 0 35px #00ffcc; } }
+    #ticket-btn { background: #ffff00; color: #000; width: 85%; padding: 18px; border-radius: 15px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 15px #ffff00; margin: 15px 0 80px; cursor: pointer; }
 
-    #cat-container { width: 240px; height: 300px; margin: 0 auto; position: relative; border: 2px solid #00ffcc; border-radius: 15px; overflow: hidden; animation: neon-glow 4s infinite; background: #000; perspective: 1000px; }
-    #cat-img { width: 100%; height: 100%; object-fit: cover; animation: breathe 3.5s ease-in-out infinite; /* Живее дышит */ transition: transform 0.05s; transform-origin: center bottom; /* Пружинит */ }
-    
-    #coins { font-size: 44px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; margin: 15px 0; color: #fff; }
-
-    .energy-container { width: 85%; margin: 10px auto; text-align: center; font-size: 14px; font-weight: bold; color: #555; }
-    #energy-bar { width: 100%; height: 10px; background: #1a1a3a; border-radius: 5px; margin-top: 5px; border: 1px solid #333; overflow: hidden; position: relative; }
-    #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); transition: width 0.3s; position: absolute; }
-    #energy-label { position: absolute; width: 100%; text-align: center; font-size: 12px; color: #fff; line-height: 10px; text-shadow: 0 0 3px #000; }
-
-    /* Баннер VPN в углу */
-    #vpn-banner { 
-        position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; 
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: transform 0.2s;
-    }
-    #vpn-banner:hover { transform: scale(1.1); }
-    #vpn-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 2px solid #ffff00; box-shadow: 0 0 10px #ffff00; }
-
-    #ticket-btn { background: #ffff00; color: #000; width: 85%; padding: 18px; border-radius: 15px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 15px #ffff00; margin: 20px 0 100px; cursor: pointer; }
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+    @keyframes neon-glow { 0%, 100% { box-shadow: 0 0 15px #ff00aa; } 50% { box-shadow: 0 0 30px #00ffcc; } }
+    @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
   </style>
 </head>
 <body>
 
+  <div id="background-layer"></div>
   <div id="menu-btn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
-  <div class="lang-toggle" onclick="setLang('en')" id="lang-en">ENG</div>
-  <div class="lang-toggle active" onclick="setLang('ru')" id="lang-ru" style="right: 60px;">RU</div>
 
   <div id="side-menu">
-    <a href="#" onclick="showSection('tasks')">🛠 ЗАДАНИЯ (AD)</a>
-    <a href="#" onclick="showSection('leaderboard')">🏆 ЛИДЕРБОРД</a>
-    <a href="#" onclick="showSection('roulette')">🎡 РУЛЕТКА</a>
+    <a href="#">🛠 ЗАДАНИЯ (AD)</a>
+    <a href="#">🏆 ЛИДЕРБОРД</a>
     <a href="https://t.me/wallbreaker_community" target="_blank">📢 COMMUNITY</a>
     <a href="#" onclick="toggleMenu()" style="color: #ff00aa; margin-top: 20px;">✖ ЗАКРЫТЬ</a>
   </div>
@@ -80,23 +64,17 @@
   <div id="coins">0</div>
 
   <div class="energy-container">
-    <span style="color: #555;">DPI BLOCKADE</span>
-    <div id="energy-bar">
-        <div id="energy-fill"></div>
-        <div id="energy-label">CPU: <span id="energy-val">100</span>%</div>
-    </div>
+    <span style="font-size: 12px; color: #555;">DPI BLOCKADE</span>
+    <div id="energy-bar"><div id="energy-fill"></div></div>
   </div>
 
   <div id="vpn-banner" onclick="window.open('https://t.me/hiddifyProxySale_bot', '_blank')">
     <img src="server.jpg" alt="VPN" id="vpn-img">
   </div>
 
-  <button id="ticket-btn" onclick="buyTicket()">🎟 КЛЮЧ ШИФРОВАНИЯ (2M)</button>
+  <button id="ticket-btn">🎟 КЛЮЧ ШИФРОВАНИЯ (2M)</button>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
     const ranks = [
       { name: "Newbie", mult: 10, img: "cat1.jpg" },
       { name: "Pro", mult: 25, img: "cat2.jpg" },
@@ -105,24 +83,10 @@
       { name: "CyberGod", mult: 400, img: "cat5.jpg" }
     ];
 
-    // Умная загрузка ранга из памяти
     let state = {
       coins: parseInt(localStorage.getItem('w_coins')) || 0,
       energy: 100,
-      rank: parseInt(localStorage.getItem('w_rank')) || 0 // Берём сохранённый ранг
-    };
-
-    const currentLang = localStorage.getItem('w_lang') || 'ru';
-
-    function setLang(l) {
-        localStorage.setItem('w_lang', l);
-        location.reload(); // Перезагружаем, чтобы язык применился
-    }
-
-    // Тексты для языка
-    const texts = {
-        ru: { key: "КЛЮЧ ШИФРОВАНИЯ", tasks: "🛠 ЗАДАНИЯ (AD)", lead: "🏆 ЛИДЕРБОРД", roul: "🎡 РУЛЕТКА", dpi: "DPI BLOCKADE" },
-        en: { key: "ENCRYPTION KEY", tasks: "🛠 TASKS (AD)", lead: "🏆 LEADERBOARD", roul: "🎡 ROULETTE", dpi: "DPI BLOCKADE" }
+      rank: parseInt(localStorage.getItem('w_rank')) || 0
     };
 
     function toggleMenu() {
@@ -130,21 +94,43 @@
       m.style.left = m.style.left === '0px' ? '-100%' : '0px';
     }
 
+    // ТА САМАЯ ФУНКЦИЯ — ТЕПЕРЬ ВНУТРИ КОДА
+    function updateCatVisual() {
+      const currentRank = ranks[state.rank];
+      const imgUrl = currentRank.img;
+
+      // 1. Обновляем Кнопку
+      const catImg = document.getElementById('cat-img');
+      if (catImg.src.indexOf(imgUrl) === -1) {
+          catImg.src = imgUrl; 
+      }
+
+      // 2. Обновляем Фон синхронно
+      const bgLayer = document.getElementById('background-layer');
+      bgLayer.style.backgroundImage = `url(${imgUrl})`;
+    }
+
+    function updateUI() {
+      document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
+      document.getElementById('energy-fill').style.width = state.energy + '%';
+      document.getElementById('rank-name').innerText = ranks[state.rank].name;
+      
+      updateCatVisual(); // Вызываем синхронизацию
+
+      localStorage.setItem('w_coins', state.coins);
+      localStorage.setItem('w_rank', state.rank);
+    }
+
     function tap(e) {
       if (state.energy <= 0) return;
-      
       state.coins += ranks[state.rank].mult;
       state.energy -= 1;
       
-      // Пружинящий визуал (вверх-вниз и наклон кверху)
       const img = document.getElementById('cat-img');
-      img.style.transform = "translateY(5px) rotateX(-20deg) scale(0.95)"; 
-      setTimeout(() => img.style.transform = "translateY(0) rotateX(0) scale(1.01)", 50); 
-      setTimeout(() => img.style.transform = "scale(1)", 150); 
+      img.style.transform = "translateY(8px) rotateX(-15deg) scale(0.95)"; 
+      setTimeout(() => img.style.transform = "scale(1)", 100); 
 
-      // Вылетающий текст
       showPopup(e.clientX, e.clientY, `+${ranks[state.rank].mult}`);
-      
       updateUI();
     }
 
@@ -154,56 +140,15 @@
       p.style.position = 'fixed';
       p.style.left = x + 'px';
       p.style.top = y + 'px';
-      p.style.color = '#fff'; // Чтобы было видно на фоне
-      p.style.textShadow = "0 0 5px #ff00aa";
+      p.style.color = '#fff';
       p.style.fontWeight = 'bold';
-      p.style.pointerEvents = 'none';
       p.style.animation = 'fadeOut 0.8s forwards';
-      p.style.zIndex = '101';
       document.body.appendChild(p);
       setTimeout(() => p.remove(), 800);
     }
 
-    function updateUI() {
-      document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
-      document.getElementById('energy-val').innerText = state.energy;
-      document.getElementById('energy-fill').style.width = state.energy + '%';
-      
-      const r = ranks[state.rank];
-      document.getElementById('rank-name').innerText = r.name;
-      
-      // Загрузка кота по рангу (после loading.jpg)
-      const currentImg = r.img;
-      if (document.getElementById('cat-img').src.indexOf(currentImg) === -1) {
-          document.getElementById('cat-img').src = currentImg;
-      }
-
-      // Перевод текстов
-      const t = texts[currentLang];
-      document.getElementById('ticket-btn').innerText = `🎟 ${t.key} (2M)`;
-      document.querySelector('.energy-container span').innerText = t.dpi;
-
-      // Обновляем Lang актив
-      document.getElementById('lang-en').className = currentLang === 'en' ? 'lang-toggle active' : 'lang-toggle';
-      document.getElementById('lang-ru').className = currentLang === 'ru' ? 'lang-toggle active' : 'lang-toggle';
-
-      localStorage.setItem('w_coins', state.coins);
-      localStorage.setItem('w_rank', state.rank); // Сохраняем ранг
-    }
-
-    // Реген энергии (1% в 15 секунд)
-    setInterval(() => {
-      if (state.energy < 100) {
-        state.energy++;
-        updateUI();
-      }
-    }, 15000);
-
+    setInterval(() => { if (state.energy < 100) { state.energy++; updateUI(); } }, 15000);
     updateUI();
   </script>
-
-  <style>
-    @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
-  </style>
 </body>
 </html>
