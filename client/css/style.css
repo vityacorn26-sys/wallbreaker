@@ -1,0 +1,53 @@
+/* Убираем лишние отступы и ставим черный фон */
+body, html { 
+    margin: 0; 
+    padding: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #000; 
+    overflow: hidden; 
+    font-family: 'Inter', sans-serif;
+}
+
+/* Контейнер для всего */
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+/* Оживляем ФОНОВОГО кота (убираем блюр) */
+#bg-cat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Чтобы картинка заполнила экран без искажений */
+    z-index: -1;
+    filter: none; /* Гарантируем отсутствие блюра */
+    animation: bg-breathe 8s ease-in-out infinite; /* Медленное дыхание фона */
+}
+
+/* Кнопка-кот (наша цель для тапов) */
+#tap-button {
+    width: 250px;
+    z-index: 2;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
+    transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Анимация дыхания фона */
+@keyframes bg-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+/* Эффект пружины при тапе (то, что ты просил) */
+.tapped {
+    transform: scale(0.85) translateY(-10px) !important;
+}
