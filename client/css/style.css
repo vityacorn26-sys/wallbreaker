@@ -1,26 +1,43 @@
-body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #0f0; }
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
 
-/* Живой фон */
+/* Живой фон без блюра */
 #bg-cat {
     position: absolute; width: 100%; height: 100%; object-fit: cover; 
-    z-index: -1; filter: brightness(0.4); animation: pulse 8s infinite ease-in-out;
+    z-index: -1; animation: breathe 8s infinite ease-in-out;
 }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
-/* Шторка (скрыта по дефолту) */
+/* Шторка Серебристый Металлик Прозрачный */
 .side-menu {
-    position: fixed; left: -75%; top: 0; width: 75%; height: 100%;
-    background: rgba(0, 20, 20, 0.8); backdrop-filter: blur(10px);
-    border-right: 2px solid #0f0; transition: 0.5s; z-index: 1000;
+    position: fixed; left: -75%; top: 0; width: 70%; height: 100%;
+    background: rgba(192, 192, 192, 0.2); /* Серебро + прозрачность */
+    border-right: 3px solid #e0e0e0;
+    transition: 0.4s ease; z-index: 1000; padding: 40px 20px;
 }
-.side-menu.active { left: 0; box-shadow: 5px 0 20px rgba(0, 255, 0, 0.3); }
+.side-menu.active { left: 0; box-shadow: 15px 0 50px rgba(0, 255, 255, 0.2); }
 
-/* Кнопка-Кот (Пружина) */
-#tap-button {
-    width: 220px; cursor: pointer; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    filter: drop-shadow(0 0 10px #0f0);
+/* Кнопки Жидкий Металл */
+.menu-btn {
+    display: block; width: 100%; padding: 12px; margin-bottom: 15px;
+    background: linear-gradient(145deg, #ffffff, #a1a1a1, #ffffff);
+    border: none; border-radius: 5px;
+    color: #008080; /* Бирюза */
+    text-align: center; text-decoration: none; font-weight: 900;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
 }
-#tap-button:active { transform: scale(0.9) translateY(-10px); }
 
-/* Язык */
-.lang-switch { position: fixed; top: 15px; right: 15px; cursor: pointer; border: 1px solid #0f0; padding: 5px 10px; font-size: 14px; background: rgba(0,0,0,0.5); z-index: 1001; }
+/* Гамбургер и Крестик (Аквамарин) */
+.hamburger, .close-menu {
+    position: fixed; top: 15px; left: 15px; font-size: 35px;
+    color: #c0c0c0; cursor: pointer; z-index: 1001; transition: 0.3s;
+}
+.close-menu { left: auto; right: 20px; color: #7fffd4; /* Аквамарин */ }
+.hamburger.active { color: #7fffd4; left: 65%; } /* Гамбургер на краю шторки */
+
+/* Энергия Аквамарин */
+.energy-pipe { width: 100%; height: 12px; background: #222; border: 1px solid #7fffd4; border-radius: 10px; }
+#energy-fill { width: 100%; height: 100%; background: #7fffd4; box-shadow: 0 0 10px #7fffd4; }
+
+#balance { font-size: 36px; color: #7fffd4; text-shadow: 0 0 15px #7fffd4; z-index: 5; }
+#loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
