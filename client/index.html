@@ -3,22 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wall Breaker</title>
+    <title>WallBreaker</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://telegram.org"></script>
     <script src="https://sad.adsgram.ai"></script>
 </head>
 <body>
     <div id="loading-screen">
-        <img src="assets/loading.jpg" alt="Loading...">
+        <img src="assets/loading.jpg" alt="System Boot...">
     </div>
 
-    <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
-    <div class="hamburger" id="ham-menu" onclick="toggleMenu()">☰</div>
+    <div class="top-bar">
+        <div class="hamburger" id="ham-menu" onclick="toggleMenu()">☰</div>
+        <div id="balance">0 $WBC</div>
+        <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
+    </div>
 
     <div id="side-menu" class="side-menu">
         <div class="close-menu" onclick="toggleMenu()">×</div>
-        <h2 style="color:#00ffff; margin-bottom:30px; font-style: italic;">HACKER TERMINAL</h2>
+        <h2 class="menu-title">TERMINAL</h2>
         <div id="menu-container">
             <a href="#" class="menu-btn" id="menu-ref">СЕТЬ УЗЛОВ</a>
             <a href="#" class="menu-btn" id="menu-market">ДАРКНЕТ МАРКЕТ</a>
@@ -28,22 +31,19 @@
             <a href="#" class="menu-btn" id="menu-laundry">ПРАЧЕЧНАЯ</a>
         </div>
         <div class="premium-block">
-            <p id="premium-text">W-Pass Premium: 0.5 TON</p>
-            <a href="#" class="menu-btn inject-btn" id="menu-buy">ROOT INJECTION</a>
+            <p id="premium-text">Injection: 0.5 TON</p>
+            <a href="#" class="menu-btn special" id="menu-buy">ROOT INJECTION</a>
         </div>
     </div>
 
-    <div class="game-container">
+    <div class="main-frame">
         <img id="bg-cat" src="assets/cat1.jpg">
-        <div id="balance">0 $WBC</div>
-        <div class="tap-area">
+        <div class="click-zone">
             <img id="tap-button" src="assets/cat1.jpg" onclick="handleTap()" draggable="false">
         </div>
-        <div id="energy-container">
-            <div id="energy-text">ЭНЕРГИЯ: 100/100</div>
-            <div class="energy-pipe">
-                <div id="energy-fill"></div>
-            </div>
+        <div class="stats-zone">
+            <div id="energy-text">ENERGY: 100/100</div>
+            <div class="energy-bar"><div id="energy-fill"></div></div>
         </div>
     </div>
 
