@@ -3,50 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WallBreaker</title>
+    <title>WallBreaker Terminal</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://telegram.org"></script>
     <script src="https://sad.adsgram.ai"></script>
 </head>
 <body>
+    <!-- 1. Экран загрузки -->
     <div id="loading-screen">
-        <img src="assets/loading.jpg" alt="System Boot...">
+        <img src="assets/loading.jpg" alt="System Booting...">
     </div>
 
+    <!-- 2. Верхняя панель (Баланс и Язык) -->
     <div class="top-bar">
         <div class="hamburger" id="ham-menu" onclick="toggleMenu()">☰</div>
         <div id="balance">0 $WBC</div>
         <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
     </div>
 
+    <!-- 3. Шторка меню (Металлик) -->
     <div id="side-menu" class="side-menu">
         <div class="close-menu" onclick="toggleMenu()">×</div>
-        <h2 class="menu-title">TERMINAL</h2>
+        <h2 class="menu-title">TERMINAL_v1.0</h2>
         <div id="menu-container">
-            <a href="#" class="menu-btn" id="menu-ref">СЕТЬ УЗЛОВ</a>
-            <a href="#" class="menu-btn" id="menu-market">ДАРКНЕТ МАРКЕТ</a>
-            <a href="#" class="menu-btn" id="menu-exploit">ЗАГРУЗИТЬ ЭКСПЛОИТ</a>
-            <a href="#" class="menu-btn" id="menu-tasks">ПОБОЧНЫЕ КВЕСТЫ</a>
-            <a href="#" class="menu-btn" id="menu-top">ТОП БРЕЙКЕРОВ</a>
-            <a href="#" class="menu-btn" id="menu-laundry">ПРАЧЕЧНАЯ</a>
+            <a href="#" class="menu-btn" id="menu-ref" onclick="showSection('ref')">СЕТЬ УЗЛОВ</a>
+            <a href="#" class="menu-btn" id="menu-market" onclick="showSection('market')">ДАРКНЕТ МАРКЕТ</a>
+            <a href="#" class="menu-btn" id="menu-exploit" onclick="showSection('exploit')">ЗАГРУЗИТЬ ЭКСПЛОИТ</a>
+            <a href="#" class="menu-btn" id="menu-tasks" onclick="showSection('tasks')">ПОБОЧНЫЕ КВЕСТЫ</a>
+            <a href="#" class="menu-btn" id="menu-top" onclick="showSection('top')">ТОП БРЕЙКЕРОВ</a>
+            <a href="#" class="menu-btn" id="menu-laundry" onclick="showSection('laundry')">ПРАЧЕЧНАЯ</a>
         </div>
         <div class="premium-block">
             <p id="premium-text">Injection: 0.5 TON</p>
-            <a href="#" class="menu-btn special" id="menu-buy">ROOT INJECTION</a>
+            <a href="#" class="menu-btn special" id="menu-buy" onclick="showSection('premium')">ROOT INJECTION</a>
         </div>
     </div>
 
+    <!-- 4. Информационное окно (Правила/Рефы) -->
+    <div id="info-modal" class="modal">
+        <div class="close-modal" onclick="closeModal()">×</div>
+        <div id="modal-content"></div>
+    </div>
+
+    <!-- 5. Основная игровая зона -->
     <div class="main-frame">
+        <!-- Фон-кот -->
         <img id="bg-cat" src="assets/cat1.jpg">
+        
+        <!-- Кнопка-кот -->
         <div class="click-zone">
             <img id="tap-button" src="assets/cat1.jpg" onclick="handleTap()" draggable="false">
         </div>
+
+        <!-- Статистика снизу -->
         <div class="stats-zone">
             <div id="energy-text">ENERGY: 100/100</div>
-            <div class="energy-bar"><div id="energy-fill"></div></div>
+            <div class="energy-bar">
+                <div id="energy-fill"></div>
+            </div>
         </div>
     </div>
 
+    <!-- Скрипты -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/game.js"></script>
