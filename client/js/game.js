@@ -1,4 +1,4 @@
-// 1. Инициализация данных пользователя
+// 1. Данные пользователя (локально, пока сервер не настроен)
 let user = {
     id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "local_user",
     balance: 0,
@@ -17,7 +17,8 @@ const langData = {
         top: "ТОП БРЕЙКЕРОВ",
         laundry: "ПРАЧЕЧНАЯ",
         inject: "ROOT INJECTION",
-        energy: "ЭНЕРГИЯ"
+        energy: "ЭНЕРГИЯ",
+        premium: "Injection: 0.5 TON"
     },
     en: {
         nodes: "NODE NETWORK",
@@ -27,33 +28,34 @@ const langData = {
         top: "TOP BREAKERS",
         laundry: "LAUNDRY (WITHDRAW)",
         inject: "ROOT INJECTION",
-        energy: "ENERGY"
+        energy: "ENERGY",
+        premium: "Injection: 0.5 TON"
     }
 };
 
-// 2. Управление загрузкой и меню
+// 2. Инициализация при загрузке
 window.addEventListener('load', () => {
-    // Скрываем загрузку через 1.5 сек
+    // Устанавливаем язык по умолчанию
+    updateMenuTexts();
+    
+    // Скрываем экран загрузки через 1.5 сек
     setTimeout(() => {
         const loader = document.getElementById('loading-screen');
         if (loader) loader.style.display = 'none';
     }, 1500);
 });
 
+// 3. Управление меню и языком
 function toggleMenu() {
     const menu = document.getElementById('side-menu');
-    const ham = document.getElementById('ham-menu');
-    if (menu && ham) {
-        menu.classList.toggle('active');
-        ham.classList.toggle('active');
-    }
+    if (menu) menu.classList.toggle('active');
 }
 
 function toggleLang() {
     currentLang = currentLang === 'ru' ? 'en' : 'ru';
-    const langBtn = document.getElementById('lang-btn');
-    if (langBtn) langBtn.innerText = currentLang.toUpperCase();
+    document.getElementById('lang-btn').innerText = currentLang.toUpperCase();
     updateMenuTexts();
+    updateUI(); // Чтобы обновить слово "Энергия"
 }
 
 function updateMenuTexts() {
@@ -65,37 +67,36 @@ function updateMenuTexts() {
     document.getElementById('menu-top').innerText = d.top;
     document.getElementById('menu-laundry').innerText = d.laundry;
     document.getElementById('menu-buy').innerText = d.inject;
+    document.getElementById('premium-text').innerText = d.premium;
 }
 
-// 3. Механика Тапов
+// 4. Механика Тапов
 function handleTap() {
     const now = Date.now();
-    // Лимит: 3 тапа в секунду (333мс между кликами)
+    // Лимит: 3 тапа в секунду (333мс)
     if (now - user.lastTap < 333) return;
     if (user.energy <= 0) return;
 
-    user.balance += 10; // Базовая награда за тап
+    user.balance += 10;
     user.energy -= 1;
     user.lastTap = now;
 
     updateUI();
     
-    // Пружина для кнопки (визуальный отклик)
+    // Пружина (эффект нажатия)
     const btn = document.getElementById('tap-button');
     if (btn) {
-        btn.style.transform = 'scale(0.85) translateY(-10px)';
-        setTimeout(() => {
-            btn.style.transform = 'scale(1) translateY(0)';
-        }, 100);
+        btn.style.transform = 'scale(0.92) translateY(-5px)';
+        setTimeout(() => { btn.style.transform = 'scale(1) translateY(0)'; }, 100);
     }
 
-    // Отправляем данные на сервер (через api.js)
+    // Отправка на сервер (сохранение будет работать после настройки server.js)
     if (typeof api !== 'undefined') {
         api.sendTap(user.id, 1);
     }
 }
 
-// 4. Обновление интерфейса
+// 5. Обновление интерфейса
 function updateUI() {
     const d = langData[currentLang];
     const balanceEl = document.getElementById('balance');
@@ -111,7 +112,7 @@ function updateUI() {
     }
 }
 
-// 5. Фоновое восстановление энергии (1 ед / 30 сек)
+// 6. Восстановление энергии (1 ед / 30 сек)
 setInterval(() => {
     if (user.energy < 100) {
         user.energy++;
