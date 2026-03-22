@@ -1,107 +1,85 @@
-/* ОБЩИЕ НАСТРОЙКИ (Full Screen) */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { 
     position: fixed; width: 100%; height: 100%; margin: 0; padding: 0; 
     background: #000; color: #fff; font-family: sans-serif; overflow: hidden; 
 }
 
-/* ЗАСТАВКА */
 #loading-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
 }
 #loading-screen img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ФОН (Тёмный хром) */
+/* ФОН БЕЗ ЗАТЕМНЕНИЯ */
 #bg-layer {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: -2; background-size: cover; background-position: center;
-    filter: brightness(0.2); transition: background-image 0.5s ease-in-out;
+    filter: none; 
 }
 
-/* ГАМБУРГЕР (Хром) */
+/* ТЕКСТ - ЖИДКИЙ МЕТАЛЛ */
+#balance, .menu-item:not(.highlight):not(.ton-buy), #energy-text, .lang-selector {
+    background: linear-gradient(180deg, #ffffff 0%, #a1a1a1 45%, #444 50%, #a1a1a1 55%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8));
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+/* КОТ-КНОПКА В ОБОДКЕ */
+#cat-box {
+    width: 85vw; max-width: 340px; height: 340px; margin: 30px auto;
+    border-radius: 25px; padding: 6px;
+    background: linear-gradient(45deg, #00ffcc, #ff00aa, #00ffcc);
+    background-size: 400% 400%; 
+    animation: gradient-flow 5s ease infinite;
+    transition: transform 0.1s; /* Для анимации тапа */
+}
+@keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+#cat-img { width: 100%; height: 100%; object-fit: cover; border-radius: 20px; }
+
+/* ГАМБУРГЕР */
 #menu-btn {
     position: fixed; top: 15px; left: 15px; z-index: 1001;
     width: 45px; height: 38px; border-radius: 8px;
     background: linear-gradient(145deg, #ffffff 0%, #a1a1a1 50%, #444 100%);
-    border: 1px solid #fff; box-shadow: 0 0 15px rgba(255,255,255,0.4);
-    display: flex; flex-direction: column; justify-content: space-around; padding: 7px; cursor: pointer;
+    border: 1px solid #fff; display: flex; flex-direction: column; justify-content: space-around; padding: 7px;
 }
-#menu-btn span { width: 100%; height: 4px; background: #111; border-radius: 2px; }
+#menu-btn span { width: 100%; height: 4px; background: #111; }
 
-/* БОКОВАЯ ШТОРА */
+/* ШТОРА */
 #sidebar {
-    position: fixed; top: 0; left: -75%; width: 70%; height: 100%;
-    background: rgba(10, 10, 10, 0.98); border-right: 2px solid #00ffcc;
-    z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; flex-direction: column; padding-top: 80px;
+    position: fixed; top: 0; left: -85%; width: 85%; height: 100%;
+    background: rgba(5, 5, 5, 0.98); border-right: 2px solid #00ffcc;
+    z-index: 1000; transition: 0.3s; display: flex; flex-direction: column; padding: 80px 20px 20px 20px;
 }
 #sidebar.active { left: 0; }
 
-/* ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА В МЕНЮ */
-.lang-selector { text-align: center; margin-bottom: 20px; color: #888; font-weight: bold; cursor: pointer; font-size: 16px; }
-.lang-selector span.active-lang {
-    background: linear-gradient(180deg, #fff 0%, #aaa 50%, #444 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+.menu-item {
+    width: 100%; padding: 15px; margin-bottom: 10px; border: 1px solid #444;
+    border-radius: 12px; text-align: center; font-size: 14px; cursor: pointer;
 }
 
-/* КНОПКИ МЕНЮ */
-.menu-item {
-    background: #1a1a1a; padding: 15px; margin: 10px 20px; font-weight: bold; 
-    text-align: center; border-radius: 8px; text-transform: uppercase; transition: 0.2s;
-    border: 1px solid #333; color: #00ffcc;
+/* КНОПКИ TON (РОЗОВЫЙ НЕОН) */
+.menu-item.ton-buy {
+    background: #ff00aa !important; color: #fff !important;
+    -webkit-text-fill-color: #fff !important; box-shadow: 0 0 15px #ff00aa; border: 2px solid #fff;
 }
-/* Бирюза */
+
+/* КНОПКА РЕКЛАМЫ (БИРЮЗА) */
 .menu-item.highlight {
     background: #00ffcc !important; color: #000 !important;
-    box-shadow: 0 0 20px #00ffcc; border: none;
-}
-/* Жидкий металл */
-.menu-item:not(.highlight) {
-    background: linear-gradient(180deg, #fff 0%, #aaaaaa 50%, #444444 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    -webkit-text-fill-color: #000 !important; box-shadow: 0 0 15px #00ffcc; border: none;
 }
 
-/* БАЛАНС (Жидкий металл) */
-#balance {
-    text-align: center; font-size: 36px; font-weight: 900; margin-top: 50px;
-    background: linear-gradient(180deg, #fff 0%, #d1d1d1 25%, #888 50%, #444 51%, #aaaaaa 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9));
-}
+#game-ui { text-align: center; width: 100vw; }
+#balance { font-size: 32px; margin-top: 20px; }
 
-/* КОТ-КНОПКА (Ободок Бирюза-Пурпур + Дыхание) */
-#cat-box {
-    width: 280px; height: 280px; margin: 50px auto 20px;
-    border-radius: 25px; padding: 4px;
-    background: linear-gradient(45deg, #00ffcc, #ff00aa, #00ffcc);
-    background-size: 400% 400%; animation: gradient-flow 5s ease infinite;
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.4); position: relative;
-}
-@keyframes gradient-flow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-#cat-img {
-    width: 100%; height: 100%; object-fit: cover; border-radius: 21px;
-    animation: breathe 4s ease-in-out infinite; transition: transform 0.05s;
-}
-@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+.energy-container { width: 80%; margin: 20px auto; }
+.energy-bar { height: 22px; background: #111; border: 1px solid #00ffcc; border-radius: 11px; overflow: hidden; }
+#energy-fill { height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); width: 100%; transition: width 0.3s; }
 
-/* ЭНЕРГИЯ */
-.energy-container { width: 85%; margin: 10px auto; text-align: center; }
-.energy-bar { 
-    width: 100%; height: 22px; background: #111; border: 2px solid #ff00aa; 
-    border-radius: 11px; overflow: hidden; box-shadow: 0 0 10px rgba(255,0,170,0.3);
-}
-#energy-fill { height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); width: 100%; }
-#energy-text { margin-top: 5px; font-size: 14px; letter-spacing: 2px; }
-
-/* СЕРВЕР-ИКОНКА (Пульсация x1.5) */
-#gateway { position: fixed; bottom: 20px; left: 20px; cursor: pointer; z-index: 10; }
-#gateway img {
-    width: 65px; height: 65px; border-radius: 12px;
-    border: 2px solid #00ffcc; box-shadow: 0 0 20px #00ffcc;
-    animation: pulse-server 3s ease-in-out infinite;
-}
-@keyframes pulse-server {
-    0%,100%{transform:scale(1);filter:brightness(1)}
-    50%{transform:scale(1.5);filter:brightness(1.4);box-shadow:0 0 35px #00ffcc}
-}
+#gateway { position: fixed; bottom: 20px; left: 20px; cursor: pointer; }
+#gateway img { width: 65px; height: 65px; border: 2px solid #00ffcc; border-radius: 12px; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
