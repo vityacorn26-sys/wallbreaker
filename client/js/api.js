@@ -1,29 +1,22 @@
-const api = {
-    // Получаем данные юзера при входе
-    async getUser(tgData) {
-        const userId = tgData?.user?.id;
-        if (!userId) return null;
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/api/user?id=${userId}`);
-            return await response.json();
-        } catch (e) {
-            console.error("Ошибка API (getUser):", e);
-            return null;
-        }
+const API = {
+    async getUser(id) {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/api/user?id=${id}`);
+        return await res.json();
     },
-
-    // Отправляем тапы (пачкой или по одному)
-    async sendTap(userId, count = 1) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/api/tap`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId, taps: count })
-            });
-            return await response.json();
-        } catch (e) {
-            console.error("Ошибка API (sendTap):", e);
-            throw e;
-        }
+    async sendTap(id) {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/api/tap`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id })
+        });
+        return await res.json();
+    },
+    async claimAdReward(id) {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/api/ad-reward`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id })
+        });
+        return await res.json();
     }
 };
