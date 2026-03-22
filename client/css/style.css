@@ -5,7 +5,7 @@ html, body {
     background: #000; color: #fff; font-family: sans-serif; overflow: hidden; 
 }
 
-/* ЭКРАН ЗАГРУЗКИ */
+/* ЗАСТАВКА */
 #loading-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -29,51 +29,48 @@ html, body {
 }
 #menu-btn span { width: 100%; height: 4px; background: #111; border-radius: 2px; }
 
-/* ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА (Металл) */
-#lang-switch {
-    position: fixed; top: 15px; right: 15px; z-index: 1001;
-    font-size: 14px; cursor: pointer; border: 1px solid #444; 
-    padding: 8px 12px; border-radius: 5px;
-    background: linear-gradient(180deg, #d1d1d1 0%, #888 50%, #444 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: bold; border-color: #888;
-}
-
 /* БОКОВАЯ ШТОРА */
 #sidebar {
-    position: fixed; top: 0; left: -70%; width: 70%; height: 100%;
+    position: fixed; top: 0; left: -75%; width: 70%; height: 100%;
     background: rgba(10, 10, 10, 0.98); border-right: 2px solid #00ffcc;
     z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex; flex-direction: column; padding-top: 80px;
 }
 #sidebar.active { left: 0; }
 
+/* ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА В МЕНЮ */
+.lang-selector { text-align: center; margin-bottom: 20px; color: #888; font-weight: bold; cursor: pointer; font-size: 16px; }
+.lang-selector span.active-lang {
+    background: linear-gradient(180deg, #fff 0%, #aaa 50%, #444 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
 /* КНОПКИ МЕНЮ */
 .menu-item {
-    background: #1a1a1a; color: #00ffcc; border: 1px solid #333;
-    padding: 15px; margin: 10px 20px; font-weight: bold; text-align: center;
-    border-radius: 8px; text-transform: uppercase; transition: 0.2s;
+    background: #1a1a1a; padding: 15px; margin: 10px 20px; font-weight: bold; 
+    text-align: center; border-radius: 8px; text-transform: uppercase; transition: 0.2s;
+    border: 1px solid #333; color: #00ffcc;
 }
-/* Бирюзовая подсветка для активных кнопок */
+/* Бирюза */
 .menu-item.highlight {
     background: #00ffcc !important; color: #000 !important;
     box-shadow: 0 0 20px #00ffcc; border: none;
 }
-/* Жидкий металл для обычных кnoпок в меню */
+/* Жидкий металл */
 .menu-item:not(.highlight) {
-    background: linear-gradient(180deg, #e0e0e0 0%, #888 50%, #444 100%);
+    background: linear-gradient(180deg, #fff 0%, #aaaaaa 50%, #444444 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
 /* БАЛАНС (Жидкий металл) */
 #balance {
-    text-align: center; font-size: 36px; font-weight: 900; margin-top: 40px;
+    text-align: center; font-size: 36px; font-weight: 900; margin-top: 50px;
     background: linear-gradient(180deg, #fff 0%, #d1d1d1 25%, #888 50%, #444 51%, #aaaaaa 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9));
 }
 
-/* КОТ-КНОПКА (Ободок Бирюза-Пурпур) */
+/* КОТ-КНОПКА (Ободок Бирюза-Пурпур + Дыхание) */
 #cat-box {
     width: 280px; height: 280px; margin: 50px auto 20px;
     border-radius: 25px; padding: 4px;
@@ -81,25 +78,18 @@ html, body {
     background-size: 400% 400%; animation: gradient-flow 5s ease infinite;
     box-shadow: 0 0 30px rgba(0, 255, 204, 0.4); position: relative;
 }
-@keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
+@keyframes gradient-flow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 #cat-img {
     width: 100%; height: 100%; object-fit: cover; border-radius: 21px;
     animation: breathe 4s ease-in-out infinite; transition: transform 0.05s;
 }
-@keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
-}
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
 
 /* ЭНЕРГИЯ */
 .energy-container { width: 85%; margin: 10px auto; text-align: center; }
 .energy-bar { 
     width: 100%; height: 22px; background: #111; border: 2px solid #ff00aa; 
-    border-radius: 11px; overflow: hidden; box-shadow: 0 0 10px rgba(255, 0, 170, 0.3);
+    border-radius: 11px; overflow: hidden; box-shadow: 0 0 10px rgba(255,0,170,0.3);
 }
 #energy-fill { height: 100%; background: linear-gradient(90deg, #ff00aa, #00ffcc); width: 100%; }
 #energy-text { margin-top: 5px; font-size: 14px; letter-spacing: 2px; }
@@ -112,6 +102,6 @@ html, body {
     animation: pulse-server 3s ease-in-out infinite;
 }
 @keyframes pulse-server {
-    0%, 100% { transform: scale(1); filter: brightness(1); }
-    50% { transform: scale(1.5); filter: brightness(1.4); box-shadow: 0 0 35px #00ffcc; }
+    0%,100%{transform:scale(1);filter:brightness(1)}
+    50%{transform:scale(1.5);filter:brightness(1.4);box-shadow:0 0 35px #00ffcc}
 }
