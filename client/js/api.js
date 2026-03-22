@@ -4,7 +4,7 @@ const API = {
     async getUser(id) {
         try {
             const response = await fetch(`${this.BASE_URL}/api/user?id=${id}`);
-            if (!response.ok) throw new Error('User not found');
+            if (!response.ok) throw new Error('User fetch failed');
             return await response.json();
         } catch (e) {
             console.error("API Error (getUser):", e);
@@ -16,7 +16,10 @@ const API = {
         try {
             const response = await fetch(`${this.BASE_URL}/api/tap`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ id })
             });
             if (!response.ok) throw new Error('Tap failed');
@@ -34,10 +37,20 @@ const API = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id })
             });
+            if (!response.ok) throw new Error('Ad reward failed');
             return await response.json();
         } catch (e) {
             console.error("API Error (AdReward):", e);
             return { success: false };
+        }
+    },
+
+    async getLeaderboard() {
+        try {
+            const response = await fetch(`${this.BASE_URL}/api/leaderboard`);
+            return await response.json();
+        } catch (e) {
+            return [];
         }
     }
 };
