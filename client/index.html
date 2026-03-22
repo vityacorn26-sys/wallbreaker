@@ -3,51 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WallBreaker Terminal</title>
+    <title>WallBreaker | Tap to Unblock</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://telegram.org"></script>
-    <script src="https://sad.adsgram.ai"></script>
+    <script src="https://sad.adsgram.ai/js/adsgram-sdk.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div id="loading-screen" style="position:fixed; inset:0; z-index:9999; background:#000; display:flex; align-items:center; justify-content:center;">
-        <img src="assets/loading.jpg" style="width:100%; height:100%; object-fit:contain;">
+    <div id="bg-layer"></div>
+    
+    <div id="menu-btn" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
 
-    <div class="top-bar">
-        <div class="hamburger" id="ham-menu" onclick="toggleMenu()">☰</div>
-        <div id="balance">0 $WBC</div>
-        <div class="lang-switch" onclick="toggleLang()" id="lang-btn">RU</div>
+    <div id="sidebar" id="sidebar">
+        <div class="menu-item highlight" onclick="buyRank3()">ROOT INJECTION: 0.5 TON</div>
+        <div class="menu-item" onclick="showAds()">СМОТРЕТЬ РЕКЛАМУ (+5000)</div>
+        <div class="menu-item" onclick="window.open('https://t.me/hiddifyProxySale_bot')">МАРКЕТ</div>
+        <div class="menu-item" onclick="toggleMenu()" style="border-color:#ff00aa; color:#ff00aa; margin-top: auto; margin-bottom: 30px;">ЗАКРЫТЬ</div>
     </div>
 
-    <div id="side-menu" class="side-menu">
-        <div class="close-menu" style="position:absolute; top:15px; right:20px; font-size:35px; color:#7fffd4;" onclick="toggleMenu()">×</div>
-        <h2 style="color:#7fffd4; font-style:italic; border-bottom:1px solid #7fffd4; padding-bottom:10px;">TERMINAL_v1.1</h2>
-        <div id="menu-container">
-            <a href="#" class="menu-btn" id="menu-ref" onclick="showSection('ref')">СЕТЬ УЗЛОВ</a>
-            <a href="#" class="menu-btn" id="menu-market" onclick="showSection('market')">ДАРКНЕТ МАРКЕТ</a>
-            <a href="#" class="menu-btn" id="menu-exploit" onclick="showSection('exploit')">ЗАГРУЗИТЬ ЭКСПЛОИТ</a>
-            <a href="#" class="menu-btn" id="menu-tasks" onclick="showSection('tasks')">ПОБОЧНЫЕ КВЕСТЫ</a>
-            <a href="#" class="menu-btn" id="menu-top" onclick="showSection('top')">ТОП БРЕЙКЕРОВ</a>
-            <a href="#" class="menu-btn" id="menu-laundry" onclick="showSection('laundry')">ПРАЧЕЧНАЯ</a>
+    <div id="balance">
+        <span id="balance-val">0</span> $WBC
+    </div>
+
+    <div id="cat-box" onclick="handleTap()">
+        <img id="cat-img" src="assets/cat1.jpg" alt="Breaker">
+    </div>
+
+    <div class="energy-container">
+        <div style="color: #ff00aa; font-weight: bold; font-size: 14px;">ЭНЕРГИЯ</div>
+        <div class="energy-bar">
+            <div id="energy-fill"></div>
         </div>
-        <div class="premium-block" style="margin-top:30px;">
-            <p id="premium-text" style="font-size:12px;">Injection: 0.5 TON</p>
-            <a href="#" class="menu-btn special" id="menu-buy" onclick="showSection('premium')">ROOT INJECTION</a>
-        </div>
     </div>
 
-    <div id="info-modal" class="modal">
-        <div class="close-modal" onclick="closeModal()">×</div>
-        <div id="modal-content" style="text-align:center; max-width:90%;"></div>
-    </div>
-
-    <div class="main-frame">
-        <img id="bg-cat" src="assets/cat1.jpg">
-        <img id="tap-button" src="assets/cat1.jpg" onclick="handleTap()" draggable="false">
-        <div class="stats-zone">
-            <div id="energy-text">ENERGY: 100/100</div>
-            <div class="energy-bar"><div id="energy-fill"></div></div>
-        </div>
+    <div id="gateway" onclick="window.open('https://t.me/hiddifyProxySale_bot')">
+        <img src="assets/server.jpg" alt="Gateway">
     </div>
 
     <script src="js/config.js"></script>
