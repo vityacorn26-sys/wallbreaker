@@ -1,74 +1,85 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-tg.ready();
+// Оборачиваем старт в try-catch, чтобы скрипт не падал молча
+let tg, userId;
+try {
+    tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+    userId = tg.initDataUnsafe?.user?.id || "dev_user";
+} catch (e) {
+    alert("Ошибка Telegram API: " + e.message);
+    userId = "dev_user";
+}
 
-const userId = tg.initDataUnsafe.user?.id || "dev_user";
 let userState = { balance: 0, energy: 100, rank_id: 1 };
 let currentLang = 'RU';
 
 const i18n = {
     RU: {
-        market: "ДАРКНЕТ-МАРКЕТ",
-        close: "ЗАКРЫТЬ",
-        energy: "ЭНЕРГИЯ",
-        buy_msg: "ВЫБЕРИТЕ УРОВЕНЬ ИНЪЕКЦИИ (RANK):",
-        ads_ok: "Система взломана! +1500 WBC и энергия 100%",
-        refs: "РЕФЕРАЛЫ (10%)",
-        top: "ЛЕДЕРБОРД"
+        market: "ДАРКНЕТ-МАРКЕТ", close: "ЗАКРЫТЬ", energy: "ЭНЕРГИЯ",
+        buy_msg: "ВЫБЕРИТЕ УРОВЕНЬ ИНЪЕКЦИИ:", ads_ok: "Взломано! +1500 WBC",
+        refs: "РЕФЕРАЛЫ (10%)", top: "ЛЕДЕРБОРД"
     },
     EN: {
-        market: "DARKNET-MARKET",
-        close: "CLOSE",
-        energy: "ENERGY",
-        buy_msg: "SELECT INJECTION LEVEL (RANK):",
-        ads_ok: "System Breach! +1500 WBC and Energy 100%",
-        refs: "REFERRALS (10%)",
-        top: "LEADERBOARD"
+        market: "DARKNET-MARKET", close: "CLOSE", energy: "ENERGY",
+        buy_msg: "SELECT INJECTION LEVEL:", ads_ok: "Breach! +1500 WBC",
+        refs: "REFERRALS (10%)", top: "LEADERBOARD"
     }
 };
 
 async function init() {
-    const data = await API.getUser(userId);
-    if (data) {
-        userState = data;
+    try {
+        const data = await API.getUser(userId);
+        if (data) userState = data;
+        
         updateUI();
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('game-ui').style.display = 'block';
         document.getElementById('menu-btn').style.display = 'flex';
         document.getElementById('bg-layer').style.display = 'block';
+    } catch (e) {
+        alert("Ошибка сервера при старте: " + e.message);
     }
 }
 
 async function handleTap() {
     if (userState.energy <= 0) return;
 
-    // Анимация кнопки (теперь гуляет)
+    // Пружина кота
     const box = document.getElementById('cat-box');
     box.style.transform = "translateY(8px) scale(0.98)";
     setTimeout(() => { box.style.transform = "translateY(0) scale(1)"; }, 100);
 
-    const data = await API.sendTap(userId);
-    if (data) {
-        userState = data;
-        updateUI();
+    try {
+        const data = await API.sendTap(userId);
+        if (data && data.balance !== undefined) {
+            userState = data;
+            updateUI();
+        } else {
+            alert("Сервер не вернул баланс. Проверь API.");
+        }
+    } catch (e) {
+        // ЭТОТ АЛЕРТ ПОКАЖЕТ НАМ РЕАЛЬНУЮ ПРИЧИНУ
+        alert("Сбой отправки тапа: " + e.message);
     }
 }
 
 function updateUI() {
+    // Цифры баланса
     document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
+    
+    // Цифры энергии ВОЗВРАЩЕНЫ
     document.getElementById('energy-fill').style.width = userState.energy + "%";
+    document.getElementById('energy-text').innerText = `${i18n[currentLang].energy}: ${userState.energy}`;
     
-    // Подгрузка картинки и фона БЕЗ затемнения
-    const rankData = CONFIG.RANKS[userState.rank_id];
-    const catImg = document.getElementById('cat-img');
-    const bgLayer = document.getElementById('bg-layer');
-    
-    if (catImg.src !== rankData.img) {
-        catImg.src = rankData.img;
-        bgLayer.style.backgroundImage = `url(${rankData.img})`;
+    // Обновление фона и картинки
+    if (typeof CONFIG !== 'undefined' && CONFIG.RANKS) {
+        const rankData = CONFIG.RANKS[userState.rank_id];
+        document.getElementById('cat-img').src = rankData.img;
+        document.getElementById('bg-layer').style.backgroundImage = `url(${rankData.img})`;
     }
 }
 
+// Функции кнопок
 function openMarket() {
     tg.showPopup({
         title: i18n[currentLang].market,
@@ -92,7 +103,10 @@ function buyRank(amount, rankId) {
 }
 
 function showAds() {
-    if (!window.Adsgram) return;
+    if (!window.Adsgram) {
+        alert("Adsgram не загрузился");
+        return;
+    }
     const AdController = window.Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
     AdController.show().then(async () => {
         const res = await API.claimAdReward(userId);
@@ -100,7 +114,7 @@ function showAds() {
             tg.showAlert(i18n[currentLang].ads_ok);
             init(); 
         }
-    }).catch((err) => { console.error("Ads error:", err); });
+    }).catch((err) => alert("Ошибка рекламы: " + err));
 }
 
 function showRefs() {
@@ -109,30 +123,32 @@ function showRefs() {
 }
 
 function showLeaderboard() {
-    tg.showAlert(currentLang === 'RU' ? "Топ-10 хакеров формируется..." : "Top-10 hackers forming...");
+    tg.showAlert(currentLang === 'RU' ? "Топ-10 хакеров формируется..." : "Top-10 forming...");
 }
 
-function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
-}
+function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
 
 function setLang(lang) {
     currentLang = lang;
     document.getElementById('lang-ru').classList.toggle('active-lang', lang === 'RU');
     document.getElementById('lang-en').classList.toggle('active-lang', lang === 'EN');
     updateLangUI();
+    updateUI(); // Обновляем текст энергии сразу
     if (document.getElementById('sidebar').classList.contains('active')) toggleMenu();
 }
 
 function updateLangUI() {
     const t = i18n[currentLang];
-    document.getElementById('btn-rank').innerText = t.rank || "ROOT INJECTION";
-    document.getElementById('btn-ads').innerText = t.ads || "ADS INJECTION";
     document.getElementById('btn-refs').innerText = t.refs;
     document.getElementById('btn-top').innerText = t.top;
     document.getElementById('btn-market').innerText = t.market;
     document.getElementById('btn-close').innerText = t.close;
-    document.getElementById('energy-text').innerText = t.energy;
 }
+
+// Привязываем функции к глобальному объекту window (защита от ошибок изоляции)
+window.handleTap = handleTap; window.openMarket = openMarket;
+window.showAds = showAds; window.showRefs = showRefs;
+window.showLeaderboard = showLeaderboard; window.toggleMenu = toggleMenu;
+window.setLang = setLang;
 
 init();
