@@ -1,30 +1,40 @@
-body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #7fffd4; }
+body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: #7fffd4; }
 
-/* Сочный живой фон */
+/* Фикс фона: теперь он не будет так сильно увеличиваться */
 #bg-cat {
-    position: absolute; width: 100%; height: 100%; object-fit: cover; 
-    z-index: -1; animation: breathe 10s infinite alternate; 
-    filter: brightness(0.6) contrast(1.2); /* Добавил сочности */
+    position: absolute; 
+    top: 50%; left: 50%;
+    min-width: 100%; min-height: 100%;
+    width: auto; height: auto;
+    transform: translate(-50%, -50%);
+    z-index: -1; 
+    filter: brightness(0.5) contrast(1.1);
+    animation: breathe 12s infinite alternate ease-in-out;
 }
-@keyframes breathe { from { transform: scale(1); } to { transform: scale(1.15); } }
+@keyframes breathe { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.1); } }
 
 /* Верхняя панель */
-.top-bar { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 100; background: rgba(0,0,0,0.6); border-bottom: 1px solid #7fffd4; }
-#balance { font-size: 26px; font-weight: bold; color: #7fffd4; text-shadow: 0 0 15px #00ffff; }
+.top-bar { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 100; background: rgba(0,0,0,0.7); border-bottom: 1px solid #7fffd4; }
+#balance { font-size: 24px; font-weight: bold; text-shadow: 0 0 15px #00ffff; color: #7fffd4; }
+.hamburger { font-size: 30px; cursor: pointer; color: #e0e0e0; text-shadow: 0 0 5px #7fffd4; }
+.lang-switch { border: 1px solid #7fffd4; padding: 4px 8px; border-radius: 4px; font-size: 14px; cursor: pointer; background: rgba(0,255,255,0.1); }
 
-/* Шторка Металл */
-.side-menu { position: fixed; left: -85%; top: 0; width: 80%; height: 100%; background: rgba(200, 200, 200, 0.1); backdrop-filter: blur(8px); border-right: 2px solid #7fffd4; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; padding: 60px 20px; box-sizing: border-box; }
-.side-menu.active { left: 0; box-shadow: 10px 0 40px rgba(127, 255, 212, 0.3); }
+/* Шторка "Жидкий металл" БЕЗ БЛЮРА */
+.side-menu { position: fixed; left: -85%; top: 0; width: 80%; height: 100%; background: rgba(20, 20, 20, 0.95); border-right: 2px solid #7fffd4; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; padding: 60px 20px; box-sizing: border-box; }
+.side-menu.active { left: 0; box-shadow: 15px 0 50px rgba(0, 255, 255, 0.2); }
 
-/* Кнопки Жидкий Металл */
-.menu-btn { display: block; width: 100%; padding: 14px; margin-bottom: 15px; background: linear-gradient(145deg, #ffffff, #888, #ffffff); border: none; border-radius: 8px; color: #004d40; text-align: center; text-decoration: none; font-weight: 900; text-transform: uppercase; font-size: 13px; box-shadow: 0 4px 0 #444; }
-.menu-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #222; }
-.menu-btn.special { background: linear-gradient(145deg, #7fffd4, #00bfa5, #7fffd4); color: #fff; text-shadow: 0 0 5px #fff; box-shadow: 0 0 15px #7fffd4; }
+.menu-btn { display: block; width: 100%; padding: 14px; margin-bottom: 12px; background: linear-gradient(145deg, #ffffff, #999, #ffffff); border: none; border-radius: 6px; color: #004d40; text-align: center; text-decoration: none; font-weight: 900; font-size: 13px; text-transform: uppercase; box-shadow: 0 4px 0 #444; }
+.menu-btn.special { background: linear-gradient(145deg, #7fffd4, #00bfa5, #7fffd4); color: #fff; box-shadow: 0 0 20px #00bfa5; }
 
-/* Окно контента (модалка) */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: none; flex-direction: column; padding: 40px 20px; color: #7fffd4; border: 2px solid #7fffd4; margin: 20px; border-radius: 15px; overflow-y: auto; }
-.close-modal { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; }
+/* Зона тапа (Котик в центре) */
+.main-frame { height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+#tap-button { width: 70vw; max-width: 300px; filter: drop-shadow(0 0 25px rgba(127, 255, 212, 0.5)); transition: 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-/* Энергия */
-.energy-bar { width: 100%; height: 10px; background: #111; border: 1px solid #7fffd4; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+/* Статистика */
+.stats-zone { position: fixed; bottom: 30px; width: 85%; text-align: center; z-index: 5; }
+.energy-bar { width: 100%; height: 12px; background: #111; border: 1px solid #7fffd4; border-radius: 6px; margin-top: 8px; overflow: hidden; }
 #energy-fill { width: 100%; height: 100%; background: #7fffd4; box-shadow: 0 0 15px #7fffd4; transition: 0.3s; }
+
+/* Модалка для инфы */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 1px solid #7fffd4; }
+.close-modal { position: absolute; top: 20px; right: 20px; font-size: 40px; color: #7fffd4; cursor: pointer; }
