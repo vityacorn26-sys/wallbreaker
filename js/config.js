@@ -1,5 +1,5 @@
 window.CONFIG = {
-    ADSGRAM_BLOCK_ID: "25733",  // ← твой новый блок
+    ADSGRAM_BLOCK_ID: "25760",  // ← твой новый блок
     MY_TON_WALLET: "UQC_ZtfJoSzLPMCR7SdfjCI6-A5jOZ5VNbLPWjw99fvqreGj",  // ← если уже есть, оставь; если нет — вставь свой TON-адрес
     RANKS: {
         1: { name: "Newbie",   img: "assets/cat1.jpg", mult: 10 },
