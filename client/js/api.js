@@ -3,7 +3,11 @@ const API = {
 
     async getUser(id) {
         try {
-            const response = await fetch(`${this.BASE_URL}/api/user?id=${id}`);
+            const response = await fetch(`${this.BASE_URL}/api/user`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegramId: id, username: "user" })
+            });
             if (!response.ok) throw new Error('User fetch failed');
             return await response.json();
         } catch (e) {
@@ -20,7 +24,7 @@ const API = {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ id })
+                body: JSON.stringify({ telegramId: id })
             });
             if (!response.ok) throw new Error('Tap failed');
             return await response.json();
@@ -30,12 +34,27 @@ const API = {
         }
     },
 
+    async checkAdLimit(id) {
+        try {
+            const response = await fetch(`${this.BASE_URL}/api/ad-limit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegramId: id })
+            });
+            if (!response.ok) throw new Error('Limit check failed');
+            return await response.json();
+        } catch (e) {
+            console.error("API Error (checkAdLimit):", e);
+            return { canWatch: false };
+        }
+    },
+
     async claimAdReward(id) {
         try {
             const response = await fetch(`${this.BASE_URL}/api/ad-reward`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
+                body: JSON.stringify({ telegramId: id })
             });
             if (!response.ok) throw new Error('Ad reward failed');
             return await response.json();
