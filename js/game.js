@@ -1,14 +1,10 @@
-// WallBreaker game.js — восстановлен из рабочего коммита + фиксы (23 марта 2026)
-
 let tg, userId, userState = { balance: 0, energy: 100, rank_id: 1 };
 
-// Инициализация Telegram Web App
 tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
-// Загрузка юзера (с регеном энергии на сервере)
 async function loadUser() {
   try {
     const res = await fetch('https://api.setgot.qzz.io/api/user', {
@@ -16,22 +12,19 @@ async function loadUser() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
     });
-    if (!res.ok) throw new Error('User load failed');
     userState = await res.json();
     updateUI();
   } catch (e) {
-    console.error('Load user error:', e);
+    console.error('Load error:', e);
   }
 }
 
-// Обновление интерфейса
 function updateUI() {
   document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
   document.getElementById('energy-fill').style.width = userState.energy + '%';
   document.getElementById('energy-text').innerText = `ENERGY: ${userState.energy}`;
 }
 
-// Тап
 window.handleTap = async () => {
   if (userState.energy <= 0) return;
 
@@ -45,7 +38,6 @@ window.handleTap = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
     });
-    if (!res.ok) throw new Error('Tap failed');
     const data = await res.json();
     if (data.balance !== undefined) {
       userState = data;
@@ -56,10 +48,8 @@ window.handleTap = async () => {
   }
 };
 
-// Реклама (пока заглушка, потом привяжешь blockId)
-window.showAds = () => {
-  alert('Реклама пока в разработке. После привязки blockId будет показывать Adsgram.');
-};
+// Реген каждые 30 секунд
+setInterval(loadUser, 30000);
 
 // Кнопки шторки
 window.showRefs = () => {
@@ -75,18 +65,13 @@ window.openDarknetMarket = () => {
   alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
 };
 
-// Клик по server.jpg → бот-подписок
+// Клик по server.jpg
 document.getElementById('gateway')?.addEventListener('click', () => {
   window.open('https://t.me/hiddifyProxySale_bot', '_blank');
 });
 
-// Старт и реген каждые 30 секунд
+// Старт
 loadUser();
-setInterval(loadUser, 30000); // реген и обновление UI
-
-// Убираем loading через 3 секунды (на случай ошибок)
-setTimeout(() => {
-  document.getElementById('loading-screen')?.style.display = 'none';
-  document.getElementById('game-ui')?.style.display = 'block';
-  document.getElementById('menu-btn')?.style.display = 'flex';
-}, 3000);
+document.getElementById('loading-screen').style.display = 'none';
+document.getElementById('game-ui').style.display = 'block';
+document.getElementById('menu-btn').style.display = 'flex';
