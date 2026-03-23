@@ -1,4 +1,5 @@
-// Глобальные переменные
+// WallBreaker Game.js — полный рабочий вариант (23 марта 2026)
+
 let tg, userId, userState = { balance: 0, energy: 100, rank_id: 1 };
 
 // Инициализация Telegram Web App
@@ -7,20 +8,7 @@ tg.expand();
 tg.ready();
 userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
-// Обновление UI
-function updateUI() {
-  document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
-  document.getElementById('energy-fill').style.width = userState.energy + '%';
-  document.getElementById('energy-text').innerText = `ENERGY: ${userState.energy}`;
-
-  // Обновление кота по рангу (если есть CONFIG.RANKS)
-  if (window.CONFIG && CONFIG.RANKS && CONFIG.RANKS[userState.rank_id]) {
-    const rank = CONFIG.RANKS[userState.rank_id];
-    document.getElementById('cat-img').src = rank.img;
-  }
-}
-
-// Загрузка юзера с сервера (с регеном)
+// Загрузка юзера с сервера (с регеном энергии)
 async function loadUser() {
   try {
     const res = await fetch('https://api.setgot.qzz.io/api/user', {
@@ -28,14 +16,33 @@ async function loadUser() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
     });
-    const data = await res.json();
-    if (data.balance !== undefined) {
-      userState = data;
-      updateUI();
-    }
+    if (!res.ok) throw new Error('User load failed');
+    userState = await res.json();
+    updateUI();
   } catch (e) {
     console.error('Load user error:', e);
+    // Fallback чтобы не висело на loading
+    document.getElementById('loading-screen')?.style.display = 'none';
+    document.getElementById('game-ui')?.style.display = 'block';
   }
+}
+
+// Обновление интерфейса
+function updateUI() {
+  document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
+  document.getElementById('energy-fill').style.width = userState.energy + '%';
+  document.getElementById('energy-text').innerText = `ENERGY: ${userState.energy}`;
+
+  // Кот по рангу
+  const rankImgs = [
+    "assets/cat1.jpg",
+    "assets/cat2.jpg",
+    "assets/cat3.jpg",
+    "assets/cat4.jpg",
+    "assets/cat5.jpg"
+  ];
+  const img = rankImgs[userState.rank_id - 1] || "assets/cat1.jpg";
+  document.getElementById('cat-img').src = img;
 }
 
 // Тап
@@ -52,6 +59,7 @@ window.handleTap = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
     });
+    if (!res.ok) throw new Error('Tap failed');
     const data = await res.json();
     if (data.balance !== undefined) {
       userState = data;
@@ -65,12 +73,12 @@ window.handleTap = async () => {
 // Реклама
 window.showAds = async () => {
   if (!window.Adsgram) {
-    alert('Adsgram не загрузился. Перезагрузи бота.');
+    alert('Adsgram SDK не загрузился. Перезагрузи бота или проверь интернет.');
     return;
   }
 
   try {
-    const AdController = Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID || '25733' });
+    const AdController = Adsgram.init({ blockId: "25733" }); // твой blockId
     await AdController.show();
     // Награда после просмотра
     const res = await fetch('https://api.setgot.qzz.io/api/ad-reward', {
@@ -81,7 +89,7 @@ window.showAds = async () => {
     const data = await res.json();
     if (data.success) {
       userState.balance = data.balance;
-      userState.energy = data.energy || 100;
+      userState.energy = 100;
       updateUI();
       alert('Взломано! +1500 WBC');
     } else {
@@ -106,16 +114,23 @@ window.openDarknetMarket = () => {
   alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
 };
 
-// Клик по server.jpg → бот-подписок
-document.getElementById('gateway')?.addEventListener('click', () => {
-  window.open('https://t.me/hiddifyProxySale_bot', '_blank');
+// Переход по server.jpg
+document.addEventListener('DOMContentLoaded', () => {
+  const gateway = document.getElementById('gateway');
+  if (gateway) {
+    gateway.addEventListener('click', () => {
+      window.open('https://t.me/hiddifyProxySale_bot', '_blank');
+    });
+  }
 });
 
-// Автореген каждые 30 секунд
-setInterval(loadUser, 30000);
-
-// Старт
+// Старт и реген
 loadUser();
-document.getElementById('loading-screen')?.style.display = 'none';
-document.getElementById('game-ui')?.style.display = 'block';
-document.getElementById('menu-btn')?.style.display = 'flex';
+setInterval(loadUser, 30000); // реген каждые 30 сек
+
+// Скрываем loading после первой загрузки
+setTimeout(() => {
+  document.getElementById('loading-screen')?.style.display = 'none';
+  document.getElementById('game-ui')?.style.display = 'block';
+  document.getElementById('menu-btn')?.style.display = 'flex';
+}, 2000);
