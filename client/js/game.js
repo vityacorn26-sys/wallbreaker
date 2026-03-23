@@ -1,4 +1,4 @@
-// Оборачиваем старт в try-catch, чтобы скрипт не падал молча
+// Оборачиваем старт в try-catch
 let tg, userId;
 try {
     tg = window.Telegram.WebApp;
@@ -17,7 +17,7 @@ const i18n = {
     RU: {
         market: "ДАРКНЕТ-МАРКЕТ", close: "ЗАКРЫТЬ", energy: "ЭНЕРГИЯ",
         buy_msg: "ВЫБЕРИТЕ УРОВЕНЬ ИНЪЕКЦИИ:", ads_ok: "Взломано! +1500 WBC",
-        refs: "РЕФЕРАЛЫ (10%)", top: "ЛЕДЕРБОРД"
+        refs: "РЕФЕРАЛЫ (10%)", top: "ЛИДЕРБОРД"
     },
     EN: {
         market: "DARKNET-MARKET", close: "CLOSE", energy: "ENERGY",
@@ -32,6 +32,7 @@ async function init() {
         if (data) userState = data;
         
         updateUI();
+        updateAdButton();           // ← серая кнопка сразу
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('game-ui').style.display = 'block';
         document.getElementById('menu-btn').style.display = 'flex';
@@ -44,7 +45,6 @@ async function init() {
 async function handleTap() {
     if (userState.energy <= 0) return;
 
-    // Пружина кота
     const box = document.getElementById('cat-box');
     box.style.transform = "translateY(8px) scale(0.98)";
     setTimeout(() => { box.style.transform = "translateY(0) scale(1)"; }, 100);
@@ -58,28 +58,70 @@ async function handleTap() {
             alert("Сервер не вернул баланс. Проверь API.");
         }
     } catch (e) {
-        // ЭТОТ АЛЕРТ ПОКАЖЕТ НАМ РЕАЛЬНУЮ ПРИЧИНУ
         alert("Сбой отправки тапа: " + e.message);
     }
 }
 
 function updateUI() {
-    // Цифры баланса
     document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
-    
-    // Цифры энергии ВОЗВРАЩЕНЫ
     document.getElementById('energy-fill').style.width = userState.energy + "%";
     document.getElementById('energy-text').innerText = `${i18n[currentLang].energy}: ${userState.energy}`;
     
-    // Обновление фона и картинки
     if (typeof CONFIG !== 'undefined' && CONFIG.RANKS) {
-        const rankData = CONFIG.RANKS[userState.rank_id];
+        const rankData = CONFIG.RANKS[userState.rank_id || 1];
         document.getElementById('cat-img').src = rankData.img;
         document.getElementById('bg-layer').style.backgroundImage = `url(${rankData.img})`;
     }
 }
 
-// Функции кнопок
+async function updateAdButton() {
+    const limit = await API.checkAdLimit(userId);
+    const btn = document.getElementById('btn-ads');
+    if (btn) {
+        if (!limit.canWatch) {
+            btn.classList.add('disabled');
+        } else {
+            btn.classList.remove('disabled');
+        }
+    }
+}
+
+async function showAds() {
+    if (!window.Adsgram) {
+        alert("Adsgram не загрузился");
+        return;
+    }
+
+    const limit = await API.checkAdLimit(userId);
+    if (!limit.canWatch) {
+        alert(`Лимит рекламы:\n${limit.adsDay || 0}/${limit.maxDay} сегодня\n${limit.adsHour || 0}/${limit.maxHour} в час`);
+        return;
+    }
+
+    const AdController = window.Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
+    AdController.show().then(async () => {
+        const res = await API.claimAdReward(userId);
+        if (res.success) {
+            tg.showAlert(i18n[currentLang].ads_ok);
+            userState.balance = res.balance;
+            userState.energy = res.energy;
+            updateUI();
+            updateAdButton();
+        } else {
+            alert(res.message || "Ошибка награды");
+        }
+    }).catch((err) => alert("Ошибка рекламы: " + err));
+}
+
+function showRefs() {
+    const refLink = `https://t.me/WallBreakerGame_bot?start=${userId}`;
+    tg.showAlert(currentLang === 'RU' ? `Ссылка: ${refLink}\nБонус: 10% монет` : `Link: ${refLink}\nBonus: 10% coins`);
+}
+
+function showLeaderboard() {
+    tg.showAlert(currentLang === 'RU' ? "Топ-10 хакеров формируется..." : "Top-10 forming...");
+}
+
 function openMarket() {
     tg.showPopup({
         title: i18n[currentLang].market,
@@ -102,50 +144,17 @@ function buyRank(amount, rankId) {
     tg.openLink(tonUri);
 }
 
-function showAds() {
-    if (!window.Adsgram) {
-        alert("Adsgram не загрузился");
-        return;
-    }
-    const AdController = window.Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
-    AdController.show().then(async () => {
-        const res = await API.claimAdReward(userId);
-        if (res.success) {
-            tg.showAlert(i18n[currentLang].ads_ok);
-            init(); 
-        }
-    }).catch((err) => alert("Ошибка рекламы: " + err));
-}
-
-function showRefs() {
-    const refLink = `https://t.me/WallBreakerGame_bot?start=${userId}`;
-    tg.showAlert(currentLang === 'RU' ? `Ссылка: ${refLink}\nБонус: 10% монет` : `Link: ${refLink}\nBonus: 10% coins`);
-}
-
-function showLeaderboard() {
-    tg.showAlert(currentLang === 'RU' ? "Топ-10 хакеров формируется..." : "Top-10 forming...");
-}
-
 function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
 
 function setLang(lang) {
     currentLang = lang;
     document.getElementById('lang-ru').classList.toggle('active-lang', lang === 'RU');
     document.getElementById('lang-en').classList.toggle('active-lang', lang === 'EN');
-    updateLangUI();
-    updateUI(); // Обновляем текст энергии сразу
+    updateUI();
     if (document.getElementById('sidebar').classList.contains('active')) toggleMenu();
 }
 
-function updateLangUI() {
-    const t = i18n[currentLang];
-    document.getElementById('btn-refs').innerText = t.refs;
-    document.getElementById('btn-top').innerText = t.top;
-    document.getElementById('btn-market').innerText = t.market;
-    document.getElementById('btn-close').innerText = t.close;
-}
-
-// Привязываем функции к глобальному объекту window (защита от ошибок изоляции)
+// Глобальные функции
 window.handleTap = handleTap; window.openMarket = openMarket;
 window.showAds = showAds; window.showRefs = showRefs;
 window.showLeaderboard = showLeaderboard; window.toggleMenu = toggleMenu;
