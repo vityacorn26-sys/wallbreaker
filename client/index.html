@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WallBreaker | Tap to Unblock ⚡</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://sad.adsgram.ai/js/adsgram-sdk.js"></script>
+    <!-- Adsgram SDK — правильный путь, который грузится -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -21,19 +23,19 @@
 
     <div id="sidebar">
         <div class="lang-selector">
-            <span id="lang-ru" class="active-lang" onclick="window.setLang('RU')">RU</span> |
-            <span id="lang-en" onclick="window.setLang('EN')">EN</span>
+            <span id="lang-ru" class="active-lang" onclick="setLang('RU')">RU</span> |
+            <span id="lang-en" onclick="setLang('EN')">EN</span>
         </div>
        
-        <div class="menu-item ton-buy" id="btn-rank" onclick="window.openMarket()">ROOT INJECTION: 0.5 TON</div>
-        <div class="menu-item highlight" id="btn-ads" onclick="window.showAds()">ADS INJECTION (+1500)</div>
+        <div class="menu-item ton-buy" id="btn-rank" onclick="openMarket()">ROOT INJECTION: 0.5 TON</div>
+        <div class="menu-item highlight" id="btn-ads" onclick="showAds()">ADS INJECTION (+1500)</div>
        
-        <div class="menu-item" id="btn-refs" onclick="window.showRefs()">РЕФЕРАЛЫ (10%)</div>
-        <div class="menu-item" id="btn-top" onclick="window.showLeaderboard()">ЛИДЕРБОРД</div>
+        <div class="menu-item" id="btn-refs" onclick="showRefs()">РЕФЕРАЛЫ (10%)</div>
+        <div class="menu-item" id="btn-top" onclick="showLeaderboard()">ЛИДЕРБОРД</div>
        
-        <div class="menu-item" id="btn-market" onclick="window.openMarket()">ДАРКНЕТ-МАРКЕТ</div>
+        <div class="menu-item" id="btn-market" onclick="showRanks()">ДАРКНЕТ-МАРКЕТ</div>
        
-        <div class="menu-item" id="btn-close" style="margin-top: auto; border-color: #ff00aa;" onclick="window.toggleMenu()">ЗАКРЫТЬ</div>
+        <div class="menu-item" id="btn-close" style="margin-top: auto; border-color: #ff00aa;" onclick="toggleMenu()">ЗАКРЫТЬ</div>
     </div>
 
     <div id="game-ui" style="display:none;">
