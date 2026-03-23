@@ -78,6 +78,14 @@ html, body {
     -webkit-text-fill-color: #000 !important; box-shadow: 0 0 15px #00ffcc; border: none;
 }
 
+/* СЕРАЯ КНОПКА ПРИ ЛИМИТЕ */
+.menu-item.disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    background: #444 !important;
+    color: #888 !important;
+}
+
 #game-ui { text-align: center; width: 100vw; }
 #balance { font-size: 32px; margin-top: 20px; }
 
