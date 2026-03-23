@@ -1,4 +1,4 @@
-// WallBreaker game.js — полный рабочий вариант с регеном, кнопками и server-ботом
+// WallBreaker game.js — полный стабильный вариант (23 марта 2026)
 
 let tg, userId, userState = { balance: 0, energy: 100, rank_id: 1 };
 
@@ -8,7 +8,7 @@ tg.expand();
 tg.ready();
 userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
-// Загрузка юзера (с регеном энергии на сервере)
+// Загрузка юзера
 async function loadUser() {
   try {
     const res = await fetch('https://api.setgot.qzz.io/api/user', {
@@ -24,7 +24,7 @@ async function loadUser() {
   }
 }
 
-// Обновление интерфейса
+// Обновление UI
 function updateUI() {
   document.getElementById('balance-val').innerText = userState.balance.toLocaleString();
   document.getElementById('energy-fill').style.width = userState.energy + '%';
@@ -68,17 +68,45 @@ window.handleTap = async () => {
   }
 };
 
+// Меню-гамбургер
+window.toggleMenu = () => {
+  document.getElementById('sidebar').classList.toggle('active');
+};
+
+// Кнопки шторки
+window.showRefs = () => {
+  const link = `https://t.me/BypassWallBot/play?start=${userId}`;
+  alert(`Реферальная ссылка:\n${link}\nБонус: 10% монет`);
+};
+
+window.showLeaderboard = () => {
+  alert('Лидерборд формируется...');
+};
+
+window.openDarknetMarket = () => {
+  alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
+};
+
+// Клик по server.jpg
+document.addEventListener('DOMContentLoaded', () => {
+  const gateway = document.getElementById('gateway');
+  if (gateway) {
+    gateway.addEventListener('click', () => {
+      window.open('https://t.me/hiddifyProxySale_bot', '_blank');
+    });
+  }
+});
+
 // Реклама
 window.showAds = async () => {
   if (!window.Adsgram) {
-    alert('Adsgram SDK не загрузился. Перезагрузи бота или проверь интернет.');
+    alert('Adsgram SDK не загрузился. Перезагрузи бота.');
     return;
   }
 
   try {
-    const AdController = Adsgram.init({ blockId: "25733" }); // твой blockId
+    const AdController = Adsgram.init({ blockId: "25733" });
     await AdController.show();
-    // Награда после просмотра
     const res = await fetch('https://api.setgot.qzz.io/api/ad-reward', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,42 +126,13 @@ window.showAds = async () => {
   }
 };
 
-// Кнопки шторки
-window.showRefs = () => {
-  const link = `https://t.me/BypassWallBot/play?start=${userId}`;
-  alert(`Реферальная ссылка:\n${link}\nБонус: 10% монет`);
-};
-
-window.showLeaderboard = () => {
-  alert('Лидерборд формируется...');
-};
-
-window.openDarknetMarket = () => {
-  alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
-};
-
-// Клик по server.jpg → бот-подписок
-document.addEventListener('DOMContentLoaded', () => {
-  const gateway = document.getElementById('gateway');
-  if (gateway) {
-    gateway.addEventListener('click', () => {
-      window.open('https://t.me/hiddifyProxySale_bot', '_blank');
-    });
-  }
-});
-
-// Открытие меню-гамбургера
-window.toggleMenu = () => {
-  document.getElementById('sidebar').classList.toggle('active');
-};
-
-// Старт и реген каждые 30 секунд
+// Старт и реген
 loadUser();
-setInterval(loadUser, 30000); // реген и обновление UI
+setInterval(loadUser, 30000);
 
-// Убираем loading через 2 секунды (на случай ошибок)
+// Убираем loading
 setTimeout(() => {
-  document.getElementById('loading-screen')?.style.display = 'none';
-  document.getElementById('game-ui')?.style.display = 'block';
-  document.getElementById('menu-btn')?.style.display = 'flex';
-}, 2000);
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('game-ui').style.display = 'block';
+  document.getElementById('menu-btn').style.display = 'flex';
+}, 1500);
