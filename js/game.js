@@ -105,7 +105,7 @@ window.showAds = async () => {
   }
 
   try {
-    const AdController = Adsgram.init({ blockId: "25760" });
+    const AdController = Adsgram.init({ blockId: "25766" });
     await AdController.show();
     const res = await fetch('https://api.setgot.qzz.io/api/ad-reward', {
       method: 'POST',
