@@ -21,17 +21,19 @@
 
     <div id="sidebar">
         <div class="lang-selector">
-            <span onclick="setLang('RU')" id="lang-ru" class="active-lang">RU</span>
-            <span style="color: #444;">|</span>
-            <span onclick="setLang('EN')" id="lang-en">EN</span>
+            <span id="lang-ru" class="active-lang" onclick="window.setLang('RU')">RU</span> |
+            <span id="lang-en" onclick="window.setLang('EN')">EN</span>
         </div>
-        
-        <div class="menu-item highlight" onclick="buyRank3()" id="btn-rank">ROOT INJECTION: 0.5 TON</div>
-        <div class="menu-item highlight" onclick="showAds()" id="btn-ads">ADS INJECTION (+1500)</div>
-        <div class="menu-item" onclick="showRefs()" id="btn-refs">РЕФЕРАЛЫ / РАНГИ</div>
-        <div class="menu-item" onclick="showLeaderboard()" id="btn-top">ЛЕДЕРБОРД (Топ-10)</div>
-        <div class="menu-item" onclick="openMarket()" id="btn-market">ДАРКНЕТ-МАРКЕТ</div>
-        <div class="menu-item" onclick="toggleMenu()" style="border-color:#ff00aa; color:#ff00aa; margin-top: auto; margin-bottom: 30px;" id="btn-close">ЗАКРЫТЬ</div>
+       
+        <div class="menu-item ton-buy" id="btn-rank" onclick="window.openMarket()">ROOT INJECTION: 0.5 TON</div>
+        <div class="menu-item highlight" id="btn-ads" onclick="window.showAds()">ADS INJECTION (+1500)</div>
+       
+        <div class="menu-item" id="btn-refs" onclick="window.showRefs()">РЕФЕРАЛЫ (10%)</div>
+        <div class="menu-item" id="btn-top" onclick="window.showLeaderboard()">ЛИДЕРБОРД</div>
+       
+        <div class="menu-item" id="btn-market" onclick="window.openMarket()">ДАРКНЕТ-МАРКЕТ</div>
+       
+        <div class="menu-item" id="btn-close" style="margin-top: auto; border-color: #ff00aa;" onclick="window.toggleMenu()">ЗАКРЫТЬ</div>
     </div>
 
     <div id="game-ui" style="display:none;">
