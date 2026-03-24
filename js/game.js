@@ -99,31 +99,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Реклама
 window.showAds = async () => {
-  if (!window.Adsgram) {
-    alert('Adsgram SDK не загрузился. Перезагрузи бота.');
-    return;
-  }
-
-  try {
-    const AdController = Adsgram.init({ blockId: "25766" });
-    await AdController.show();
-    const res = await fetch('https://api.setgot.qzz.io/api/ad-reward', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telegramId: userId })
-    });
-    const data = await res.json();
-    if (data.success) {
-      userState.balance = data.balance;
-      userState.energy = 100;
-      updateUI();
-      alert('Взломано! +1500 WBC');
-    } else {
-      alert(data.message || 'Ошибка награды');
+    if (!window.Adsgram) {
+        alert("Adsgram SDK не загрузился. Перезагрузи бота.");
+        return;
     }
-  } catch (err) {
-    alert('Adsgram ошибка: ' + (err.message || 'Неизвестная ошибка'));
-  }
+
+    try {
+        const userId = Telegram.WebApp.initDataUnsafe.user.id;
+        console.log("Adsgram: начинаем показ, blockId =", CONFIG.ADSGRAM_BLOCK_ID);
+
+        const AdController = Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
+        await AdController.show();
+
+        console.log("Adsgram: реклама досмотрена, отправляю награду на сервер");
+
+        const response = await fetch(`${CONFIG.API_BASE}/api/ad-reward`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ telegramId: userId })
+        });
+
+        console.log("Adsgram: статус ответа =", response.status);
+
+        const data = await response.json();
+        console.log("Adsgram: ответ от сервера =", data);
+
+        if (data.success) {
+            userState.balance = data.balance || userState.balance;
+            userState.energy = 100;
+            updateUI();
+            alert("Взломано! +1500 WBC и полная энергия");
+        } else {
+            alert(data.message || "Ошибка начисления награды");
+        }
+    } catch (err) {
+        console.error("Adsgram ошибка:", err);
+        alert("Ошибка Adsgram: " + (err.message || "Неизвестная ошибка"));
+    }
 };
 
 // Старт и реген
