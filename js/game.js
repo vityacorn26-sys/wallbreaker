@@ -112,7 +112,7 @@ window.showAds = async () => {
         await AdController.show();
 
         console.log("Adsgram: реклама досмотрена, отправляю награду на сервер");
-
+        console.log("Отправляю запрос на:", `${CONFIG.API_BASE}/api/ad-reward`);
         const response = await fetch(`${CONFIG.API_BASE}/api/ad-reward`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
