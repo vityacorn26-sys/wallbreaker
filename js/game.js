@@ -11,7 +11,7 @@ userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 // Загрузка юзера
 async function loadUser() {
   try {
-    const res = await fetch('https://bot.corterbs.dpdns.org/api/user', {
+    const res = await fetch('https://api.setgot.qzz.io/api/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
@@ -52,7 +52,7 @@ window.handleTap = async () => {
   setTimeout(() => box.style.transform = 'scale(1)', 100);
 
   try {
-    const res = await fetch('https://bot.corterbs.dpdns.org/api/tap', {
+    const res = await fetch('https://api.setgot.qzz.io/api/tap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramId: userId })
