@@ -8,5 +8,5 @@ window.CONFIG = {
         4: { name: "Agent",    img: "assets/cat4.jpg", mult: 150 },
         5: { name: "CyberGod", img: "assets/cat5.jpg", mult: 400 }
     },
-    API_BASE: "https://api.setgot.qzz.io"  // ← твой текущий URL из дашборда Adsgram
+    API_BASE: "https://bot.corterbs.dpdns.org"  // ← твой текущий URL из дашборда Adsgram
 };
