@@ -4,6 +4,8 @@ let tg, userId, userState = { balance: 0, energy: 100, rank_id: 1 };
 
 // Инициализация Telegram Web App
 tg = window.Telegram.WebApp;
+console.log("INIT DATA:", tg.initData);
+console.log("UNSAFE:", tg.initDataUnsafe);
 tg.expand();
 tg.ready();
 userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
