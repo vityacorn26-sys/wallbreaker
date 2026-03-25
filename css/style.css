@@ -349,3 +349,76 @@ button[onclick*="showRanks"] {
   background: rgba(22, 28, 36, 0.82) !important;
   border: 1px solid rgba(70, 245, 220, 0.28) !important;
 }
+/* === FIX 2: убираем тёмную полосу, делаем текст ярче, смягчаем cat tap === */
+
+/* КНОПКИ МЕНЮ — без грязной центральной полосы */
+.menu-item:not(.highlight):not(.ton-buy),
+#btn-refs,
+#btn-top,
+#btn-market,
+#btn-close {
+  background: rgba(8, 14, 20, 0.58) !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #eef6ff !important;
+  color: #eef6ff !important;
+  text-shadow:
+    0 0 8px rgba(255,255,255,0.18),
+    0 0 16px rgba(120, 220, 255, 0.10) !important;
+  filter: none !important;
+}
+
+/* БАЛАНС — ярче и без металлической тёмной середины */
+#balance,
+#balance-val {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #f4f8ff !important;
+  color: #f4f8ff !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.55),
+    0 0 8px rgba(255,255,255,0.22),
+    0 0 18px rgba(120, 220, 255, 0.18) !important;
+  filter: none !important;
+}
+
+/* ENERGY — тоже без полосы и чуть ярче */
+#energy-text,
+#energy-value {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #f0f6ff !important;
+  color: #f0f6ff !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.42),
+    0 0 7px rgba(255,255,255,0.14) !important;
+  filter: none !important;
+}
+
+/* Полоса энергии — насыщеннее */
+.energy-bar,
+#energy-bar {
+  background: rgba(0, 0, 0, 0.34) !important;
+  border: 1px solid rgba(130, 255, 235, 0.34) !important;
+  box-shadow:
+    inset 0 0 10px rgba(255,255,255,0.05),
+    0 0 14px rgba(0,255,220,0.10) !important;
+}
+
+#energy-fill {
+  background: linear-gradient(90deg, #ff00aa 0%, #00ffd5 100%) !important;
+  box-shadow:
+    0 0 14px rgba(255, 0, 170, 0.26),
+    0 0 18px rgba(0, 255, 213, 0.22) !important;
+}
+
+/* CAT BOX — вот сюда и идёт тот кусок, про который ты спрашивал */
+#cat-box {
+  transition: transform 0.06s ease-out !important;
+  will-change: transform;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 0 20px rgba(255, 0, 170, 0.22),
+    0 0 26px rgba(0, 255, 220, 0.14) !important;
+}
