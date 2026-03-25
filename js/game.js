@@ -12,7 +12,7 @@ const I18N = {
   RU: {
     energy: 'ЭНЕРГИЯ',
     adLimit: 'Лимит рекламы достигнут',
-    adNotLoaded: 'Adsgram SDK не загрузился. Перезагрузи бота.',
+    adNotLoaded: 'Adsgram SDK не загрузился.\nПерезагрузи бота.',
     adRewardOk: 'Награда получена',
     adRewardFail: 'Ошибка начисления награды',
     adWatchFail: 'Реклама не была досмотрена',
@@ -29,7 +29,7 @@ const I18N = {
   EN: {
     energy: 'ENERGY',
     adLimit: 'Ad limit reached',
-    adNotLoaded: 'Adsgram SDK not loaded. Restart the bot.',
+    adNotLoaded: 'Adsgram SDK not loaded.\nRestart the bot.',
     adRewardOk: 'Reward received',
     adRewardFail: 'Reward credit error',
     adWatchFail: 'Ad was not fully watched',
@@ -117,7 +117,9 @@ function showFatalError(message) {
   if (balanceEl) balanceEl.innerText = 'ERROR';
   if (energyTextEl) energyTextEl.innerText = message;
 
-  if (tg?.showAlert) tg.showAlert(message);
+  if (tg?.showAlert) {
+    tg.showAlert(message);
+  }
 }
 
 function updateUI() {
@@ -159,7 +161,6 @@ async function loadUser() {
     }
 
     const data = await API.getUser();
-
     if (!data) {
       showFatalError('User loading failed');
       return;
@@ -192,7 +193,7 @@ async function sendTapRequest() {
     }, 100);
   }
 
-  // Мягкий локальный отклик сразу
+  // мягкий локальный отклик сразу
   userState.energy = Math.max(0, (userState.energy || 0) - 1);
   updateUI();
 
@@ -205,7 +206,6 @@ async function sendTapRequest() {
       userState.rank_id = data.rank_id;
       updateUI();
     } else {
-      // если сервер не ответил как надо, откатим профиль с сервера
       const fresh = await API.getUser();
       if (fresh) {
         userState = fresh;
@@ -290,7 +290,10 @@ window.showAds = async () => {
       return;
     }
 
-    const AdController = Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
+    const AdController = Adsgram.init({
+      blockId: CONFIG.ADSGRAM_BLOCK_ID
+    });
+
     await AdController.show();
 
     const reward = await API.claimAdReward();
