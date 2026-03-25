@@ -1,8 +1,9 @@
 let tg;
 let userState = { balance: 0, energy: 100, rank_id: 1 };
 let currentLang = 'RU';
-let tapInFlight = false;
-let pendingTap = false;
+
+let tapQueue = 0;
+let tapWorkerRunning = false;
 
 tg = window.Telegram.WebApp;
 tg.expand();
@@ -175,79 +176,68 @@ async function loadUser() {
   }
 }
 
-let tapSyncTimer = null;
-let queuedTapCount = 0;
-
-async function flushTapQueue() {
-  if (tapInFlight || queuedTapCount <= 0) return;
-
-  tapInFlight = true;
-  const tapsToSend = queuedTapCount;
-  queuedTapCount = 0;
+async function processTapQueue() {
+  if (tapWorkerRunning) return;
+  tapWorkerRunning = true;
 
   try {
-    let data = null;
+    while (tapQueue > 0) {
+      const data = await API.sendTap();
 
-    for (let i = 0; i < tapsToSend; i++) {
-      data = await API.sendTap();
-    }
-
-    if (data && data.balance !== undefined) {
-      userState.balance = data.balance;
-      userState.energy = data.energy;
-      userState.rank_id = data.rank_id;
-      updateUI();
-    } else {
-      const fresh = await API.getUser();
-      if (fresh) {
-        userState = fresh;
+      if (data && data.balance !== undefined) {
+        userState.balance = data.balance;
+        userState.energy = data.energy;
+        if (data.rank_id !== undefined) {
+          userState.rank_id = data.rank_id;
+        }
         updateUI();
+      } else {
+        const fresh = await API.getUser();
+        if (fresh) {
+          userState = fresh;
+          updateUI();
+        }
       }
+
+      tapQueue -= 1;
     }
   } catch (e) {
-    console.error('Tap sync error:', e);
+    console.error('Tap queue error:', e);
 
     const fresh = await API.getUser();
     if (fresh) {
       userState = fresh;
       updateUI();
     }
-  } finally {
-    tapInFlight = false;
 
-    if (queuedTapCount > 0) {
-      flushTapQueue();
-    }
+    tapQueue = 0;
+  } finally {
+    tapWorkerRunning = false;
   }
 }
 
-async function sendTapRequest() {
-  if ((userState.energy || 0) <= 0) return;
-
+function animateTap() {
   const box = document.getElementById('cat-box');
-  if (box) {
-    box.style.transform = 'scale(0.985)';
-    setTimeout(() => {
-      box.style.transform = 'scale(1)';
-    }, 55);
-  }
+  if (!box) return;
 
-  /* мгновенный локальный отклик */
-  userState.energy = Math.max(0, (userState.energy || 0) - 1);
-  userState.balance = Number(userState.balance || 0) + 1;
-  updateUI();
-
-  /* копим быстрые тапы в очередь */
-  queuedTapCount += 1;
-
-  if (tapSyncTimer) clearTimeout(tapSyncTimer);
-  tapSyncTimer = setTimeout(() => {
-    flushTapQueue();
-  }, 120);
+  box.style.transform = 'scale(0.985)';
+  setTimeout(() => {
+    box.style.transform = 'scale(1)';
+  }, 55);
 }
 
 window.handleTap = () => {
-  sendTapRequest();
+  if ((userState.energy || 0) <= 0) return;
+
+  animateTap();
+
+  /* Локально уменьшаем только энергию.
+     Баланс локально НЕ рисуем, его подтверждает сервер. */
+  userState.energy = Math.max(0, Number(userState.energy || 0) - 1);
+  updateUI();
+
+  tapQueue += 1;
+  processTapQueue();
 };
 
 window.toggleMenu = () => {
