@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>WallBreaker | Tap to Unblock ⚡</title>
 
-  <link rel="stylesheet" href="css/style.css">
-
-  <!-- Adsgram SDK -->
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-
-  <!-- Telegram Web App -->
+  <link rel="stylesheet" href="css/style.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
   <div id="loading-screen">
-    <img src="assets/loading.jpg" alt="SYSTEM START...">
+    <img src="assets/loading.jpg" alt="Loading" />
   </div>
 
   <div id="bg-layer" style="display:none;"></div>
 
-  <div id="menu-btn" onclick="toggleMenu()" style="display:none;" aria-label="Open menu">
-    <span></span><span></span><span></span>
-  </div>
+  <button id="menu-btn" onclick="toggleMenu()" style="display:none;" aria-label="menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 
   <div id="sidebar">
     <div class="lang-selector" id="lang-switch">
@@ -63,12 +61,12 @@
     </div>
 
     <div id="cat-box" onclick="handleTap()">
-      <img id="cat-img" src="assets/cat1.jpg" alt="Breaker">
+      <img id="cat-img" src="assets/cat1.jpg" alt="Breaker" />
     </div>
 
     <div class="energy-container">
       <div class="energy-meta">
-        <div id="energy-text">ENERGY</div>
+        <div id="energy-text">ENERGY: 100</div>
         <div id="energy-value">100 / 100</div>
       </div>
 
@@ -78,7 +76,7 @@
     </div>
 
     <div id="gateway" aria-label="Open subscription bot">
-      <img src="assets/server.jpg" alt="Gateway">
+      <img src="assets/server.jpg" alt="Gateway" />
     </div>
   </div>
 
