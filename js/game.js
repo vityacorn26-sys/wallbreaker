@@ -175,30 +175,22 @@ async function loadUser() {
   }
 }
 
-async function sendTapRequest() {
-  if (tapInFlight) {
-    pendingTap = true;
-    return;
-  }
+let tapSyncTimer = null;
+let queuedTapCount = 0;
 
-  if ((userState.energy || 0) <= 0) return;
+async function flushTapQueue() {
+  if (tapInFlight || queuedTapCount <= 0) return;
 
   tapInFlight = true;
-
-  const box = document.getElementById('cat-box');
-  if (box) {
-    box.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-      box.style.transform = 'scale(1)';
-    }, 100);
-  }
-
-  // мягкий локальный отклик сразу
-  userState.energy = Math.max(0, (userState.energy || 0) - 1);
-  updateUI();
+  const tapsToSend = queuedTapCount;
+  queuedTapCount = 0;
 
   try {
-    const data = await API.sendTap();
+    let data = null;
+
+    for (let i = 0; i < tapsToSend; i++) {
+      data = await API.sendTap();
+    }
 
     if (data && data.balance !== undefined) {
       userState.balance = data.balance;
@@ -213,7 +205,7 @@ async function sendTapRequest() {
       }
     }
   } catch (e) {
-    console.error('Tap error:', e);
+    console.error('Tap sync error:', e);
 
     const fresh = await API.getUser();
     if (fresh) {
@@ -223,11 +215,35 @@ async function sendTapRequest() {
   } finally {
     tapInFlight = false;
 
-    if (pendingTap) {
-      pendingTap = false;
-      sendTapRequest();
+    if (queuedTapCount > 0) {
+      flushTapQueue();
     }
   }
+}
+
+async function sendTapRequest() {
+  if ((userState.energy || 0) <= 0) return;
+
+  const box = document.getElementById('cat-box');
+  if (box) {
+    box.style.transform = 'scale(0.985)';
+    setTimeout(() => {
+      box.style.transform = 'scale(1)';
+    }, 55);
+  }
+
+  /* мгновенный локальный отклик */
+  userState.energy = Math.max(0, (userState.energy || 0) - 1);
+  userState.balance = Number(userState.balance || 0) + 1;
+  updateUI();
+
+  /* копим быстрые тапы в очередь */
+  queuedTapCount += 1;
+
+  if (tapSyncTimer) clearTimeout(tapSyncTimer);
+  tapSyncTimer = setTimeout(() => {
+    flushTapQueue();
+  }, 120);
 }
 
 window.handleTap = () => {
