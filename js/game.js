@@ -2,10 +2,9 @@ let tg;
 let userState = { balance: 0, energy: 100, rank_id: 1 };
 let currentLang = 'RU';
 
-const TAP_REWARD = 10;
-
 let tapQueue = 0;
 let tapWorkerRunning = false;
+let tapAnimLocked = false;
 
 tg = window.Telegram.WebApp;
 tg.expand();
@@ -125,14 +124,6 @@ function showFatalError(message) {
   }
 }
 
-function getPredictedBalance() {
-  return Number(userState.balance || 0) + (tapQueue * TAP_REWARD);
-}
-
-function getPredictedEnergy() {
-  return Math.max(0, Number(userState.energy || 0) - tapQueue);
-}
-
 function updateUI() {
   const balanceEl = document.getElementById('balance-val');
   const energyFillEl = document.getElementById('energy-fill');
@@ -141,13 +132,13 @@ function updateUI() {
   const catImgEl = document.getElementById('cat-img');
   const bgLayerEl = document.getElementById('bg-layer');
 
-  const displayBalance = getPredictedBalance();
-  const displayEnergy = Math.max(0, Math.min(100, getPredictedEnergy()));
+  const safeBalance = Number(userState.balance || 0);
+  const safeEnergy = Math.max(0, Math.min(100, Number(userState.energy || 0)));
 
-  if (balanceEl) balanceEl.innerText = displayBalance.toLocaleString();
-  if (energyFillEl) energyFillEl.style.width = `${displayEnergy}%`;
-  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${displayEnergy}`;
-  if (energyValueEl) energyValueEl.innerText = `${displayEnergy} / 100`;
+  if (balanceEl) balanceEl.innerText = safeBalance.toLocaleString();
+  if (energyFillEl) energyFillEl.style.width = `${safeEnergy}%`;
+  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${safeEnergy}`;
+  if (energyValueEl) energyValueEl.innerText = `${safeEnergy} / 100`;
 
   const rankImgs = [
     'assets/cat1.jpg',
@@ -188,6 +179,21 @@ async function loadUser() {
   }
 }
 
+function animateTap() {
+  const box = document.getElementById('cat-box');
+  if (!box) return;
+
+  if (tapAnimLocked) return;
+  tapAnimLocked = true;
+
+  box.style.transform = 'scale(0.985)';
+
+  setTimeout(() => {
+    box.style.transform = 'scale(1)';
+    tapAnimLocked = false;
+  }, 45);
+}
+
 async function processTapQueue() {
   if (tapWorkerRunning) return;
   tapWorkerRunning = true;
@@ -196,8 +202,7 @@ async function processTapQueue() {
     while (tapQueue > 0) {
       const data = await API.sendTap();
 
-      /* один pending-тап подтверждён сервером */
-      tapQueue = Math.max(0, tapQueue - 1);
+      tapQueue -= 1;
 
       if (data && data.balance !== undefined) {
         userState.balance = data.balance;
@@ -229,26 +234,12 @@ async function processTapQueue() {
   }
 }
 
-function animateTap() {
-  const box = document.getElementById('cat-box');
-  if (!box) return;
-
-  box.style.transform = 'scale(0.985)';
-  setTimeout(() => {
-    box.style.transform = 'scale(1)';
-  }, 55);
-}
-
 window.handleTap = () => {
-  if (getPredictedEnergy() <= 0) return;
+  if ((userState.energy || 0) <= 0) return;
 
   animateTap();
 
-  /* Ничего не пишем в userState руками.
-     Просто увеличиваем очередь pending-тапов,
-     а UI рисуем как serverState - tapQueue. */
   tapQueue += 1;
-  updateUI();
   processTapQueue();
 };
 
