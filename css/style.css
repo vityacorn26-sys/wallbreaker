@@ -303,3 +303,13 @@ button[onclick*="showRanks"] {
     font-size: 0.95rem !important;
   }
 }
+/* Close button */
+#btn-close,
+.menu-close {
+  background: rgba(22, 28, 36, 0.72) !important;
+  color: #d7e3ea !important;
+  border: 1px solid rgba(70, 245, 220, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 0 10px rgba(0, 255, 220, 0.08) !important;
+}
