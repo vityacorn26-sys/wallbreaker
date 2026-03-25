@@ -313,3 +313,39 @@ button[onclick*="showRanks"] {
     inset 0 1px 0 rgba(255,255,255,0.05),
     0 0 10px rgba(0, 255, 220, 0.08) !important;
 }
+/* --- FIX: RU|EN и Закрыть всегда видимы --- */
+.lang-selector,
+.lang-selector span,
+#btn-close {
+  -webkit-background-clip: initial !important;
+  background: none !important;
+  -webkit-text-fill-color: #d7e3ea !important;
+  color: #d7e3ea !important;
+  text-shadow: 0 0 8px rgba(0,255,220,0.18);
+}
+
+.lang-selector {
+  margin-bottom: 18px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.lang-selector span {
+  cursor: pointer;
+  opacity: 0.72;
+}
+
+.lang-selector .active-lang,
+#lang-ru.active-lang,
+#lang-en.active-lang {
+  color: #00ffcc !important;
+  -webkit-text-fill-color: #00ffcc !important;
+  opacity: 1;
+}
+
+#btn-close {
+  margin-top: auto;
+  background: rgba(22, 28, 36, 0.82) !important;
+  border: 1px solid rgba(70, 245, 220, 0.28) !important;
+}
