@@ -8,6 +8,24 @@ console.log("INIT DATA:", tg.initData);
 console.log("UNSAFE:", tg.initDataUnsafe);
 tg.expand();
 tg.ready();
+// === DEBUG INIT DATA (ВСТАВИТЬ СЮДА) ===
+document.body.innerHTML += `
+<div style="
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#000;
+color:#0f0;
+font-size:10px;
+z-index:9999;
+max-height:150px;
+overflow:auto;
+">
+INIT: ${tg.initData ? 'YES' : 'NO'}<br>
+USER: ${JSON.stringify(tg.initDataUnsafe?.user)}
+</div>
+`;
 userId = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
 // Загрузка юзера
