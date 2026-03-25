@@ -1,14 +1,84 @@
-// WallBreaker game.js — secure initData version
-
 let tg;
 let userState = { balance: 0, energy: 100, rank_id: 1 };
+let currentLang = 'RU';
+let tapInFlight = false;
+let pendingTap = false;
 
 tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
-console.log('INIT DATA:', tg.initData);
-console.log('UNSAFE:', tg.initDataUnsafe);
+const I18N = {
+  RU: {
+    energy: 'ЭНЕРГИЯ',
+    adLimit: 'Лимит рекламы достигнут',
+    adNotLoaded: 'Adsgram SDK не загрузился. Перезагрузи бота.',
+    adRewardOk: 'Награда получена',
+    adRewardFail: 'Ошибка начисления награды',
+    adWatchFail: 'Реклама не была досмотрена',
+    refs: 'РЕФЕРАЛЫ (10%)',
+    top: 'ЛИДЕРБОРД',
+    market: 'ДАРКНЕТ-МАРКЕТ',
+    close: 'ЗАКРЫТЬ',
+    rank: 'ROOT INJECTION: 0.5 TON',
+    ads: 'ADS INJECTION (+1500)',
+    leaderboardSoon: 'Лидерборд формируется...',
+    marketText: 'Даркнет-маркет:\nRANK 2 — скоро\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC',
+    refsText: (link) => `Реферальная ссылка:\n${link}\nБонус: 10% от рекламы`
+  },
+  EN: {
+    energy: 'ENERGY',
+    adLimit: 'Ad limit reached',
+    adNotLoaded: 'Adsgram SDK not loaded. Restart the bot.',
+    adRewardOk: 'Reward received',
+    adRewardFail: 'Reward credit error',
+    adWatchFail: 'Ad was not fully watched',
+    refs: 'REFERRALS (10%)',
+    top: 'LEADERBOARD',
+    market: 'DARKNET MARKET',
+    close: 'CLOSE',
+    rank: 'ROOT INJECTION: 0.5 TON',
+    ads: 'ADS INJECTION (+1500)',
+    leaderboardSoon: 'Leaderboard is coming soon...',
+    marketText: 'Darknet market:\nRANK 2 — soon\nRANK 3 — 0.5 TON\nRANK 4–5 — TON or WBC',
+    refsText: (link) => `Referral link:\n${link}\nBonus: 10% from ads`
+  }
+};
+
+function t() {
+  return I18N[currentLang] || I18N.RU;
+}
+
+function applyTexts() {
+  const tr = t();
+
+  const refs = document.getElementById('btn-refs');
+  const top = document.getElementById('btn-top');
+  const market = document.getElementById('btn-market');
+  const close = document.getElementById('btn-close');
+  const rank = document.getElementById('btn-rank');
+  const ads = document.getElementById('btn-ads');
+
+  if (refs) refs.textContent = tr.refs;
+  if (top) top.textContent = tr.top;
+  if (market) market.textContent = tr.market;
+  if (close) close.textContent = tr.close;
+  if (rank) rank.textContent = tr.rank;
+  if (ads) ads.textContent = tr.ads;
+
+  const ru = document.getElementById('lang-ru');
+  const en = document.getElementById('lang-en');
+
+  if (ru) ru.classList.toggle('active-lang', currentLang === 'RU');
+  if (en) en.classList.toggle('active-lang', currentLang === 'EN');
+
+  updateUI();
+}
+
+window.setLang = (lang) => {
+  currentLang = lang === 'EN' ? 'EN' : 'RU';
+  applyTexts();
+};
 
 function showLoadingScreen() {
   const loadingEl = document.getElementById('loading-screen');
@@ -47,21 +117,23 @@ function showFatalError(message) {
   if (balanceEl) balanceEl.innerText = 'ERROR';
   if (energyTextEl) energyTextEl.innerText = message;
 
-  if (tg?.showAlert) {
-    tg.showAlert(message);
-  }
+  if (tg?.showAlert) tg.showAlert(message);
 }
 
 function updateUI() {
   const balanceEl = document.getElementById('balance-val');
   const energyFillEl = document.getElementById('energy-fill');
   const energyTextEl = document.getElementById('energy-text');
+  const energyValueEl = document.getElementById('energy-value');
   const catImgEl = document.getElementById('cat-img');
   const bgLayerEl = document.getElementById('bg-layer');
 
+  const safeEnergy = Math.max(0, Math.min(100, Number(userState.energy || 0)));
+
   if (balanceEl) balanceEl.innerText = Number(userState.balance || 0).toLocaleString();
-  if (energyFillEl) energyFillEl.style.width = `${Math.max(0, Math.min(100, userState.energy || 0))}%`;
-  if (energyTextEl) energyTextEl.innerText = `ENERGY: ${userState.energy || 0}`;
+  if (energyFillEl) energyFillEl.style.width = `${safeEnergy}%`;
+  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${safeEnergy}`;
+  if (energyValueEl) energyValueEl.innerText = `${safeEnergy} / 100`;
 
   const rankImgs = [
     'assets/cat1.jpg',
@@ -94,7 +166,7 @@ async function loadUser() {
     }
 
     userState = data;
-    updateUI();
+    applyTexts();
     showGameScreen();
   } catch (e) {
     console.error('Load user error:', e);
@@ -102,8 +174,15 @@ async function loadUser() {
   }
 }
 
-window.handleTap = async () => {
+async function sendTapRequest() {
+  if (tapInFlight) {
+    pendingTap = true;
+    return;
+  }
+
   if ((userState.energy || 0) <= 0) return;
+
+  tapInFlight = true;
 
   const box = document.getElementById('cat-box');
   if (box) {
@@ -113,6 +192,10 @@ window.handleTap = async () => {
     }, 100);
   }
 
+  // Мягкий локальный отклик сразу
+  userState.energy = Math.max(0, (userState.energy || 0) - 1);
+  updateUI();
+
   try {
     const data = await API.sendTap();
 
@@ -121,34 +204,55 @@ window.handleTap = async () => {
       userState.energy = data.energy;
       userState.rank_id = data.rank_id;
       updateUI();
+    } else {
+      // если сервер не ответил как надо, откатим профиль с сервера
+      const fresh = await API.getUser();
+      if (fresh) {
+        userState = fresh;
+        updateUI();
+      }
     }
   } catch (e) {
     console.error('Tap error:', e);
+
+    const fresh = await API.getUser();
+    if (fresh) {
+      userState = fresh;
+      updateUI();
+    }
+  } finally {
+    tapInFlight = false;
+
+    if (pendingTap) {
+      pendingTap = false;
+      sendTapRequest();
+    }
   }
+}
+
+window.handleTap = () => {
+  sendTapRequest();
 };
 
 window.toggleMenu = () => {
   const sidebar = document.getElementById('sidebar');
-  if (sidebar) {
-    sidebar.classList.toggle('active');
-  }
+  if (sidebar) sidebar.classList.toggle('active');
 };
 
 window.showRefs = () => {
   const userId = tg.initDataUnsafe?.user?.id?.toString() || '';
   const link = `https://t.me/BypassWallBot/play?start=${userId}`;
-  alert(`Реферальная ссылка:\n${link}\nБонус: 10% монет`);
+  alert(t().refsText(link));
 };
 
 window.showLeaderboard = () => {
-  alert('Лидерборд формируется...');
+  alert(t().leaderboardSoon);
 };
 
 window.openDarknetMarket = () => {
-  alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
+  alert(t().marketText);
 };
 
-// Чтобы не падало из-за onclick в index.html
 window.openMarket = () => {
   window.openDarknetMarket();
 };
@@ -161,11 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const gateway = document.getElementById('gateway');
 
   if (gateway) {
-    gateway.addEventListener('click', () => {
+    gateway.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       window.open('https://t.me/hiddifyProxySale_bot', '_blank');
     });
   }
 
+  applyTexts();
   loadUser();
 });
 
@@ -174,21 +281,17 @@ window.showAds = async () => {
     const limit = await API.checkAdLimit();
 
     if (!limit?.canWatch) {
-      if (tg?.showAlert) tg.showAlert('Лимит рекламы достигнут');
+      if (tg?.showAlert) tg.showAlert(t().adLimit);
       return;
     }
 
     if (!window.Adsgram) {
-      if (tg?.showAlert) tg.showAlert('Adsgram SDK не загрузился. Перезагрузи бота.');
+      if (tg?.showAlert) tg.showAlert(t().adNotLoaded);
       return;
     }
 
-    console.log('Adsgram: начинаем показ, blockId =', CONFIG.ADSGRAM_BLOCK_ID);
-
     const AdController = Adsgram.init({ blockId: CONFIG.ADSGRAM_BLOCK_ID });
     await AdController.show();
-
-    console.log('Adsgram: реклама досмотрена, отправляю награду на сервер');
 
     const reward = await API.claimAdReward();
 
@@ -197,12 +300,12 @@ window.showAds = async () => {
       userState.energy = reward.energy;
       updateUI();
 
-      if (tg?.showAlert) tg.showAlert('Награда получена');
+      if (tg?.showAlert) tg.showAlert(t().adRewardOk);
     } else {
-      if (tg?.showAlert) tg.showAlert('Ошибка начисления награды');
+      if (tg?.showAlert) tg.showAlert(t().adRewardFail);
     }
   } catch (e) {
     console.error('Adsgram/showAds error:', e);
-    if (tg?.showAlert) tg.showAlert('Реклама не была досмотрена');
+    if (tg?.showAlert) tg.showAlert(t().adWatchFail);
   }
 };
