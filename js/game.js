@@ -10,12 +10,40 @@ tg.ready();
 console.log('INIT DATA:', tg.initData);
 console.log('UNSAFE:', tg.initDataUnsafe);
 
+function showLoadingScreen() {
+  const loadingEl = document.getElementById('loading-screen');
+  const gameUiEl = document.getElementById('game-ui');
+  const bgLayerEl = document.getElementById('bg-layer');
+  const menuBtnEl = document.getElementById('menu-btn');
+
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (gameUiEl) gameUiEl.style.display = 'none';
+  if (bgLayerEl) bgLayerEl.style.display = 'none';
+  if (menuBtnEl) menuBtnEl.style.display = 'none';
+}
+
+function showGameScreen() {
+  const loadingEl = document.getElementById('loading-screen');
+  const gameUiEl = document.getElementById('game-ui');
+  const bgLayerEl = document.getElementById('bg-layer');
+  const menuBtnEl = document.getElementById('menu-btn');
+
+  if (loadingEl) loadingEl.style.display = 'none';
+  if (gameUiEl) gameUiEl.style.display = 'block';
+  if (bgLayerEl) bgLayerEl.style.display = 'block';
+  if (menuBtnEl) menuBtnEl.style.display = 'flex';
+}
+
 function showFatalError(message) {
   console.error(message);
 
+  const loadingEl = document.getElementById('loading-screen');
+  const gameUiEl = document.getElementById('game-ui');
   const balanceEl = document.getElementById('balance-val');
   const energyTextEl = document.getElementById('energy-text');
 
+  if (loadingEl) loadingEl.style.display = 'none';
+  if (gameUiEl) gameUiEl.style.display = 'block';
   if (balanceEl) balanceEl.innerText = 'ERROR';
   if (energyTextEl) energyTextEl.innerText = message;
 
@@ -51,6 +79,8 @@ function updateUI() {
 
 async function loadUser() {
   try {
+    showLoadingScreen();
+
     if (!tg.initData) {
       showFatalError('Telegram initData not found');
       return;
@@ -65,6 +95,7 @@ async function loadUser() {
 
     userState = data;
     updateUI();
+    showGameScreen();
   } catch (e) {
     console.error('Load user error:', e);
     showFatalError('User loading error');
@@ -115,6 +146,15 @@ window.showLeaderboard = () => {
 
 window.openDarknetMarket = () => {
   alert('Даркнет-маркет:\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC');
+};
+
+// Чтобы не падало из-за onclick в index.html
+window.openMarket = () => {
+  window.openDarknetMarket();
+};
+
+window.showRanks = () => {
+  window.openDarknetMarket();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
