@@ -2,6 +2,8 @@ let tg;
 let userState = { balance: 0, energy: 100, rank_id: 1 };
 let currentLang = 'RU';
 
+const TAP_REWARD = 10;
+
 let tapQueue = 0;
 let tapWorkerRunning = false;
 
@@ -123,6 +125,14 @@ function showFatalError(message) {
   }
 }
 
+function getPredictedBalance() {
+  return Number(userState.balance || 0) + (tapQueue * TAP_REWARD);
+}
+
+function getPredictedEnergy() {
+  return Math.max(0, Number(userState.energy || 0) - tapQueue);
+}
+
 function updateUI() {
   const balanceEl = document.getElementById('balance-val');
   const energyFillEl = document.getElementById('energy-fill');
@@ -131,12 +141,13 @@ function updateUI() {
   const catImgEl = document.getElementById('cat-img');
   const bgLayerEl = document.getElementById('bg-layer');
 
-  const safeEnergy = Math.max(0, Math.min(100, Number(userState.energy || 0)));
+  const displayBalance = getPredictedBalance();
+  const displayEnergy = Math.max(0, Math.min(100, getPredictedEnergy()));
 
-  if (balanceEl) balanceEl.innerText = Number(userState.balance || 0).toLocaleString();
-  if (energyFillEl) energyFillEl.style.width = `${safeEnergy}%`;
-  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${safeEnergy}`;
-  if (energyValueEl) energyValueEl.innerText = `${safeEnergy} / 100`;
+  if (balanceEl) balanceEl.innerText = displayBalance.toLocaleString();
+  if (energyFillEl) energyFillEl.style.width = `${displayEnergy}%`;
+  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${displayEnergy}`;
+  if (energyValueEl) energyValueEl.innerText = `${displayEnergy} / 100`;
 
   const rankImgs = [
     'assets/cat1.jpg',
@@ -168,6 +179,7 @@ async function loadUser() {
     }
 
     userState = data;
+    tapQueue = 0;
     applyTexts();
     showGameScreen();
   } catch (e) {
@@ -184,6 +196,9 @@ async function processTapQueue() {
     while (tapQueue > 0) {
       const data = await API.sendTap();
 
+      /* один pending-тап подтверждён сервером */
+      tapQueue = Math.max(0, tapQueue - 1);
+
       if (data && data.balance !== undefined) {
         userState.balance = data.balance;
         userState.energy = data.energy;
@@ -198,19 +213,17 @@ async function processTapQueue() {
           updateUI();
         }
       }
-
-      tapQueue -= 1;
     }
   } catch (e) {
     console.error('Tap queue error:', e);
+
+    tapQueue = 0;
 
     const fresh = await API.getUser();
     if (fresh) {
       userState = fresh;
       updateUI();
     }
-
-    tapQueue = 0;
   } finally {
     tapWorkerRunning = false;
   }
@@ -227,16 +240,15 @@ function animateTap() {
 }
 
 window.handleTap = () => {
-  if ((userState.energy || 0) <= 0) return;
+  if (getPredictedEnergy() <= 0) return;
 
   animateTap();
 
-  /* Локально уменьшаем только энергию.
-     Баланс локально НЕ рисуем, его подтверждает сервер. */
-  userState.energy = Math.max(0, Number(userState.energy || 0) - 1);
-  updateUI();
-
+  /* Ничего не пишем в userState руками.
+     Просто увеличиваем очередь pending-тапов,
+     а UI рисуем как serverState - tapQueue. */
   tapQueue += 1;
+  updateUI();
   processTapQueue();
 };
 
@@ -307,6 +319,7 @@ window.showAds = async () => {
     if (reward?.success) {
       userState.balance = reward.balance;
       userState.energy = reward.energy;
+      tapQueue = 0;
       updateUI();
 
       if (tg?.showAlert) tg.showAlert(t().adRewardOk);
