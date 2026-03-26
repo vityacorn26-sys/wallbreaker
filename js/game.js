@@ -1,50 +1,155 @@
-let tg;
-let userState = { balance: 0, energy: 100, rank_id: 1 };
-let currentLang = 'RU';
+const tg = window.Telegram?.WebApp || null;
+
+let currentLang = "RU";
+
+let userState = {
+  balance: 0,
+  energy: 100,
+  rank_id: 1
+};
 
 let tapQueue = 0;
 let tapWorkerRunning = false;
 let tapAnimLocked = false;
 let tapFlushTimer = null;
 
-tg = window.Telegram.WebApp;
-tg.expand();
-tg.ready();
+let localEnergyTicker = null;
+let lastServerSyncTs = Date.now();
+let lastServerEnergy = 100;
+
+const MAX_ENERGY = 100;
+const ENERGY_REGEN_SECONDS = 12;
+
+if (tg) {
+  try {
+    tg.expand();
+    tg.ready();
+  } catch (e) {
+    console.warn("Telegram WebApp init warning:", e);
+  }
+}
+
+function getConfig() {
+  return window.CONFIG || {};
+}
+
+function getGameConfig() {
+  return getConfig().GAME || {};
+}
+
+function getMenuConfig() {
+  return getConfig().MENU || {};
+}
+
+function getMenuRuConfig() {
+  return getConfig().MENU_RU || {};
+}
+
+function getRanksConfig() {
+  return getConfig().RANKS || {};
+}
+
+function getCurrency() {
+  return getGameConfig().CURRENCY || "$WBC";
+}
+
+function getEnergyLabel() {
+  return getGameConfig().ENERGY_LABEL || "CPU";
+}
+
+function getAdRewardValue() {
+  return Number(getGameConfig().ADS_REWARD_WBC || 1500);
+}
+
+function getReferralPercent() {
+  return Number(getGameConfig().REFERRAL_PERCENT || 10);
+}
+
+function getZeroDayKeyPrice() {
+  return Number(getGameConfig().ZERO_DAY_KEY_PRICE || 2000000);
+}
+
+function getRootInjectionTon() {
+  return Number(getGameConfig().ROOT_INJECTION_TON || 0.5);
+}
+
+function getRankDurationDays() {
+  return Number(getGameConfig().RANK_DURATION_DAYS || 7);
+}
+
+function getRankById(rankId) {
+  const ranks = getRanksConfig();
+  return ranks[String(rankId)] || ranks[rankId] || ranks["1"] || ranks[1] || null;
+}
 
 const I18N = {
   RU: {
-    energy: 'ЭНЕРГИЯ',
-    adLimit: 'Лимит рекламы достигнут',
-    adNotLoaded: 'Adsgram SDK не загрузился.\nПерезагрузи бота.',
-    adRewardOk: 'Награда получена',
-    adRewardFail: 'Ошибка начисления награды',
-    adWatchFail: 'Реклама не была досмотрена',
-    refs: 'РЕФЕРАЛЫ (10%)',
-    top: 'ЛИДЕРБОРД',
-    market: 'ДАРКНЕТ-МАРКЕТ',
-    close: 'ЗАКРЫТЬ',
-    rank: 'ROOT INJECTION: 0.5 TON',
-    ads: 'ADS INJECTION (+1500)',
-    leaderboardSoon: 'Лидерборд формируется...',
-    marketText: 'Даркнет-маркет:\nRANK 2 — скоро\nRANK 3 — 0.5 TON\nRANK 4–5 — выбор TON или WBC',
-    refsText: (link) => `Реферальная ссылка:\n${link}\nБонус: 10% от рекламы`
+    adLimit: "Лимит рекламы достигнут",
+    adNotLoaded: "AdsGram SDK не загрузился. Перезапусти бота.",
+    adOpenFail: "Реклама сейчас не открылась. Попробуй ещё раз.",
+    adRewardOk: "Награда получена",
+    adRewardFail: "Ошибка начисления награды",
+    adWatchFail: "Реклама не была досмотрена",
+    userLoadFail: "Ошибка загрузки профиля",
+    initDataFail: "Telegram initData не найден",
+    refsText: (link) =>
+      `Referral Node:\n${link}\n\nБонус: ${getReferralPercent()}% от рекламной награды приглашённых.`,
+    leaderboardSoon:
+      "Breach Board уже на линии, но панель ещё собирается.",
+    marketTitle: "Darknet Market",
+    marketText:
+      `Darknet Market\n\n` +
+      `2,000,000 ${getCurrency()} = 1 Zero-Day Key\n` +
+      `Срок рангов: ${getRankDurationDays()} дней\n\n` +
+      `RANK 2 — Tunnel Master\n` +
+      `RANK 3 — Firewall Breaker\n` +
+      `RANK 4 — Root Operator\n` +
+      `RANK 5 — Cyber Legend`,
+    rankTitle: "Root Injection",
+    rankText:
+      `Root Injection\n\n` +
+      `${getRootInjectionTon()} TON — premium-support entry.\n` +
+      `Панель покупки будет подключена следующим пакетом.`,
+    adCooldownHint:
+      "Проверь, что реклама реально стартовала. Если нет — попробуй ещё раз через пару секунд.",
+    fatalError: "Ошибка запуска",
+    accountSoon:
+      "Account panel уже в очереди. Подключим её следующим этапом.",
+    close: "ЗАКРЫТЬ"
   },
   EN: {
-    energy: 'ENERGY',
-    adLimit: 'Ad limit reached',
-    adNotLoaded: 'Adsgram SDK not loaded.\nRestart the bot.',
-    adRewardOk: 'Reward received',
-    adRewardFail: 'Reward credit error',
-    adWatchFail: 'Ad was not fully watched',
-    refs: 'REFERRALS (10%)',
-    top: 'LEADERBOARD',
-    market: 'DARKNET MARKET',
-    close: 'CLOSE',
-    rank: 'ROOT INJECTION: 0.5 TON',
-    ads: 'ADS INJECTION (+1500)',
-    leaderboardSoon: 'Leaderboard is coming soon...',
-    marketText: 'Darknet market:\nRANK 2 — soon\nRANK 3 — 0.5 TON\nRANK 4–5 — TON or WBC',
-    refsText: (link) => `Referral link:\n${link}\nBonus: 10% from ads`
+    adLimit: "Ad limit reached",
+    adNotLoaded: "AdsGram SDK not loaded. Restart the bot.",
+    adOpenFail: "Ad failed to open. Please try again.",
+    adRewardOk: "Reward received",
+    adRewardFail: "Reward credit error",
+    adWatchFail: "Ad was not fully watched",
+    userLoadFail: "User loading error",
+    initDataFail: "Telegram initData not found",
+    refsText: (link) =>
+      `Referral Node:\n${link}\n\nBonus: ${getReferralPercent()}% from invited users' ad rewards.`,
+    leaderboardSoon:
+      "Breach Board is being assembled. The panel is coming soon.",
+    marketTitle: "Darknet Market",
+    marketText:
+      `Darknet Market\n\n` +
+      `2,000,000 ${getCurrency()} = 1 Zero-Day Key\n` +
+      `Rank duration: ${getRankDurationDays()} days\n\n` +
+      `RANK 2 — Tunnel Master\n` +
+      `RANK 3 — Firewall Breaker\n` +
+      `RANK 4 — Root Operator\n` +
+      `RANK 5 — Cyber Legend`,
+    rankTitle: "Root Injection",
+    rankText:
+      `Root Injection\n\n` +
+      `${getRootInjectionTon()} TON — premium-support entry.\n` +
+      `The purchase panel will be connected in the next package.`,
+    adCooldownHint:
+      "Make sure the ad actually started. If it did not, try again in a few seconds.",
+    fatalError: "Launch error",
+    accountSoon:
+      "Account panel is queued next. It will be connected in the next step.",
+    close: "CLOSE"
   }
 };
 
@@ -52,147 +157,219 @@ function t() {
   return I18N[currentLang] || I18N.RU;
 }
 
-function applyTexts() {
-  const tr = t();
-
-  const refs = document.getElementById('btn-refs');
-  const top = document.getElementById('btn-top');
-  const market = document.getElementById('btn-market');
-  const close = document.getElementById('btn-close');
-  const rank = document.getElementById('btn-rank');
-  const ads = document.getElementById('btn-ads');
-
-  if (refs) refs.textContent = tr.refs;
-  if (top) top.textContent = tr.top;
-  if (market) market.textContent = tr.market;
-  if (close) close.textContent = tr.close;
-  if (rank) rank.textContent = tr.rank;
-  if (ads) ads.textContent = tr.ads;
-
-  const ru = document.getElementById('lang-ru');
-  const en = document.getElementById('lang-en');
-
-  if (ru) ru.classList.toggle('active-lang', currentLang === 'RU');
-  if (en) en.classList.toggle('active-lang', currentLang === 'EN');
-
-  updateUI();
+function safeAlert(message) {
+  if (tg?.showAlert) {
+    tg.showAlert(String(message));
+  } else {
+    alert(String(message));
+  }
 }
 
-window.setLang = (lang) => {
-  currentLang = lang === 'EN' ? 'EN' : 'RU';
-  applyTexts();
-};
-
 function showLoadingScreen() {
-  const loadingEl = document.getElementById('loading-screen');
-  const gameUiEl = document.getElementById('game-ui');
-  const bgLayerEl = document.getElementById('bg-layer');
-  const menuBtnEl = document.getElementById('menu-btn');
+  const loadingEl = document.getElementById("loading-screen");
+  const gameUiEl = document.getElementById("game-ui");
+  const bgLayerEl = document.getElementById("bg-layer");
+  const menuBtnEl = document.getElementById("menu-btn");
 
-  if (loadingEl) loadingEl.style.display = 'flex';
-  if (gameUiEl) gameUiEl.style.display = 'none';
-  if (bgLayerEl) bgLayerEl.style.display = 'none';
-  if (menuBtnEl) menuBtnEl.style.display = 'none';
+  if (loadingEl) loadingEl.style.display = "flex";
+  if (gameUiEl) gameUiEl.style.display = "none";
+  if (bgLayerEl) bgLayerEl.style.display = "none";
+  if (menuBtnEl) menuBtnEl.style.display = "none";
 }
 
 function showGameScreen() {
-  const loadingEl = document.getElementById('loading-screen');
-  const gameUiEl = document.getElementById('game-ui');
-  const bgLayerEl = document.getElementById('bg-layer');
-  const menuBtnEl = document.getElementById('menu-btn');
+  const loadingEl = document.getElementById("loading-screen");
+  const gameUiEl = document.getElementById("game-ui");
+  const bgLayerEl = document.getElementById("bg-layer");
+  const menuBtnEl = document.getElementById("menu-btn");
 
-  if (loadingEl) loadingEl.style.display = 'none';
-  if (gameUiEl) gameUiEl.style.display = 'block';
-  if (bgLayerEl) bgLayerEl.style.display = 'block';
-  if (menuBtnEl) menuBtnEl.style.display = 'flex';
+  if (loadingEl) loadingEl.style.display = "none";
+  if (gameUiEl) gameUiEl.style.display = "block";
+  if (bgLayerEl) bgLayerEl.style.display = "block";
+  if (menuBtnEl) menuBtnEl.style.display = "flex";
 }
 
 function showFatalError(message) {
   console.error(message);
 
-  const loadingEl = document.getElementById('loading-screen');
-  const gameUiEl = document.getElementById('game-ui');
-  const balanceEl = document.getElementById('balance-val');
-  const energyTextEl = document.getElementById('energy-text');
+  const loadingEl = document.getElementById("loading-screen");
+  const gameUiEl = document.getElementById("game-ui");
+  const balanceEl = document.getElementById("balance-val");
+  const energyTextEl = document.getElementById("energy-text");
 
-  if (loadingEl) loadingEl.style.display = 'none';
-  if (gameUiEl) gameUiEl.style.display = 'block';
-  if (balanceEl) balanceEl.innerText = 'ERROR';
+  if (loadingEl) loadingEl.style.display = "none";
+  if (gameUiEl) gameUiEl.style.display = "block";
+  if (balanceEl) balanceEl.innerText = "ERROR";
   if (energyTextEl) energyTextEl.innerText = message;
 
-  if (tg?.showAlert) {
-    tg.showAlert(message);
-  }
+  safeAlert(message);
+}
+
+function normalizeUserState(data) {
+  return {
+    ...userState,
+    ...data,
+    balance: Number(data?.balance || 0),
+    energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy || 0))),
+    rank_id: Number(data?.rank_id || 1)
+  };
+}
+
+function syncEnergyBase() {
+  lastServerEnergy = Math.max(
+    0,
+    Math.min(MAX_ENERGY, Number(userState.energy || 0))
+  );
+  lastServerSyncTs = Date.now();
+}
+
+function getRenderedEnergy() {
+  const elapsedMs = Date.now() - lastServerSyncTs;
+  const gained = Math.floor(elapsedMs / (ENERGY_REGEN_SECONDS * 1000));
+  return Math.max(0, Math.min(MAX_ENERGY, lastServerEnergy + gained));
 }
 
 function updateUI() {
-  const balanceEl = document.getElementById('balance-val');
-  const energyFillEl = document.getElementById('energy-fill');
-  const energyTextEl = document.getElementById('energy-text');
-  const energyValueEl = document.getElementById('energy-value');
-  const catImgEl = document.getElementById('cat-img');
-  const bgLayerEl = document.getElementById('bg-layer');
+  const balanceEl = document.getElementById("balance-val");
+  const balanceCurrencyEl = document.getElementById("balance-currency");
+  const energyFillEl = document.getElementById("energy-fill");
+  const energyTextEl = document.getElementById("energy-text");
+  const energyValueEl = document.getElementById("energy-value");
+  const catImgEl = document.getElementById("cat-img");
+  const bgLayerEl = document.getElementById("bg-layer");
 
   const safeBalance = Number(userState.balance || 0);
-  const safeEnergy = Math.max(0, Math.min(100, Number(userState.energy || 0)));
+  const safeEnergy = getRenderedEnergy();
+  const rank = getRankById(userState.rank_id);
+  const img = rank?.img || "assets/cat1.jpg";
 
   if (balanceEl) balanceEl.innerText = safeBalance.toLocaleString();
+  if (balanceCurrencyEl) balanceCurrencyEl.innerText = getCurrency();
+
   if (energyFillEl) energyFillEl.style.width = `${safeEnergy}%`;
-  if (energyTextEl) energyTextEl.innerText = `${t().energy}: ${safeEnergy}`;
-  if (energyValueEl) energyValueEl.innerText = `${safeEnergy} / 100`;
+  if (energyTextEl) energyTextEl.innerText = `${getEnergyLabel()}: ${safeEnergy}`;
+  if (energyValueEl) energyValueEl.innerText = `${safeEnergy} / ${MAX_ENERGY}`;
 
-  const rankImgs = [
-    'assets/cat1.jpg',
-    'assets/cat2.jpg',
-    'assets/cat3.jpg',
-    'assets/cat4.jpg',
-    'assets/cat5.jpg'
-  ];
+  if (catImgEl && catImgEl.getAttribute("src") !== img) {
+    catImgEl.src = img;
+  }
 
-  const img = rankImgs[(userState.rank_id || 1) - 1] || 'assets/cat1.jpg';
-
-  if (catImgEl) catImgEl.src = img;
-  if (bgLayerEl) bgLayerEl.style.backgroundImage = `url(${img})`;
+  if (bgLayerEl) {
+    const nextBg = `url(${img})`;
+    if (bgLayerEl.style.backgroundImage !== nextBg) {
+      bgLayerEl.style.backgroundImage = nextBg;
+    }
+  }
 }
+
+function applyTexts() {
+  const menu = currentLang === "RU" ? getMenuRuConfig() : getMenuConfig();
+
+  const refs = document.getElementById("btn-refs");
+  const top = document.getElementById("btn-top");
+  const market = document.getElementById("btn-market");
+  const close = document.getElementById("btn-close");
+  const rank = document.getElementById("btn-rank");
+  const ads = document.getElementById("btn-ads");
+  const balanceCurrencyEl = document.getElementById("balance-currency");
+
+  if (refs) refs.textContent = menu.referralNode || "REFERRAL NODE";
+  if (top) top.textContent = menu.breachBoard || "BREACH BOARD";
+  if (market) market.textContent = menu.darknetMarket || "DARKNET MARKET";
+  if (close) close.textContent = menu.close || t().close;
+  if (rank) rank.textContent = menu.rootInjection || "ROOT INJECTION: 0.5 TON";
+  if (ads) ads.textContent = menu.codeInjection || "CODE INJECTION (+1500)";
+  if (balanceCurrencyEl) balanceCurrencyEl.textContent = getCurrency();
+
+  const ru = document.getElementById("lang-ru");
+  const en = document.getElementById("lang-en");
+
+  if (ru) ru.classList.toggle("active-lang", currentLang === "RU");
+  if (en) en.classList.toggle("active-lang", currentLang === "EN");
+
+  updateUI();
+}
+
+window.setLang = (lang) => {
+  currentLang = lang === "EN" ? "EN" : "RU";
+  applyTexts();
+};
 
 async function loadUser() {
   try {
     showLoadingScreen();
 
-    if (!tg.initData) {
-      showFatalError('Telegram initData not found');
+    if (!tg?.initData) {
+      showFatalError(t().initDataFail);
       return;
     }
 
     const data = await API.getUser();
+
     if (!data) {
-      showFatalError('User loading failed');
+      showFatalError(t().userLoadFail);
       return;
     }
 
-    userState = data;
+    userState = normalizeUserState(data);
     tapQueue = 0;
+    syncEnergyBase();
     applyTexts();
+    startLocalEnergyTicker();
     showGameScreen();
   } catch (e) {
-    console.error('Load user error:', e);
-    showFatalError('User loading error');
+    console.error("Load user error:", e);
+    showFatalError(t().userLoadFail);
   }
 }
 
+function startLocalEnergyTicker() {
+  if (localEnergyTicker) {
+    clearInterval(localEnergyTicker);
+  }
+
+  localEnergyTicker = setInterval(() => {
+    const renderedEnergy = getRenderedEnergy();
+
+    if (renderedEnergy !== Number(userState.energy || 0)) {
+      userState.energy = renderedEnergy;
+      updateUI();
+    }
+  }, 1000);
+}
+
 function animateTap() {
-  const box = document.getElementById('cat-box');
+  const box = document.getElementById("cat-box");
   if (!box) return;
-
   if (tapAnimLocked) return;
-  tapAnimLocked = true;
 
-  box.style.transform = 'scale(0.985)';
+  tapAnimLocked = true;
+  box.style.transform = "scale(0.985)";
 
   setTimeout(() => {
-    box.style.transform = 'scale(1)';
+    box.style.transform = "scale(1)";
     tapAnimLocked = false;
   }, 45);
+}
+
+function getTapValueForCurrentRank() {
+  const rank = getRankById(userState.rank_id);
+  return Number(rank?.mult || 10);
+}
+
+async function refreshUserSilently() {
+  try {
+    const fresh = await API.getUser();
+    if (!fresh) return false;
+
+    userState = normalizeUserState(fresh);
+    syncEnergyBase();
+    updateUI();
+    return true;
+  } catch (e) {
+    console.error("refreshUserSilently error:", e);
+    return false;
+  }
 }
 
 async function processTapQueue() {
@@ -201,51 +378,45 @@ async function processTapQueue() {
 
   try {
     while (tapQueue > 0) {
-      const data = await API.sendTap(); // 🔥 ОБРАТНО К ОДИНОЧНОМУ ТАПУ
-
+      const data = await API.sendTap();
       tapQueue -= 1;
 
       if (data && data.balance !== undefined) {
-        userState.balance = data.balance;
-        userState.energy = data.energy;
+        userState = normalizeUserState({
+          ...userState,
+          balance: data.balance,
+          energy: data.energy,
+          rank_id: data.rank_id ?? userState.rank_id
+        });
 
-        if (data.rank_id !== undefined) {
-          userState.rank_id = data.rank_id;
-        }
-
+        syncEnergyBase();
         updateUI();
       } else {
-        const fresh = await API.getUser();
-        if (fresh) {
-          userState = fresh;
-          tapQueue = 0;
-          updateUI();
-        } else {
-          tapQueue = 0;
-        }
+        tapQueue = 0;
+        await refreshUserSilently();
       }
     }
   } catch (e) {
-    console.error('Tap queue error:', e);
-
+    console.error("Tap queue error:", e);
     tapQueue = 0;
-
-    const fresh = await API.getUser();
-    if (fresh) {
-      userState = fresh;
-      updateUI();
-    }
+    await refreshUserSilently();
   } finally {
     tapWorkerRunning = false;
   }
 }
 
 window.handleTap = () => {
-  if ((userState.energy - tapQueue) <= 0) return;
+  const visibleEnergy = getRenderedEnergy();
+  if ((visibleEnergy - tapQueue) <= 0) return;
 
   animateTap();
 
   tapQueue += 1;
+
+  // Лёгкий локальный отклик по энергии без доверия клиенту как источнику истины.
+  userState.energy = Math.max(0, visibleEnergy - 1);
+  syncEnergyBase();
+  updateUI();
 
   if (tapFlushTimer) clearTimeout(tapFlushTimer);
   tapFlushTimer = setTimeout(() => {
@@ -254,81 +425,154 @@ window.handleTap = () => {
 };
 
 window.toggleMenu = () => {
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar) sidebar.classList.toggle('active');
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.toggle("active");
 };
 
 window.showRefs = () => {
-  const userId = tg.initDataUnsafe?.user?.id?.toString() || '';
+  const userId = tg?.initDataUnsafe?.user?.id?.toString() || "";
   const link = `https://t.me/BypassWallBot/play?start=${userId}`;
-  alert(t().refsText(link));
+  safeAlert(t().refsText(link));
 };
 
-window.showLeaderboard = () => {
-  alert(t().leaderboardSoon);
+window.showLeaderboard = async () => {
+  try {
+    const rows = await API.getLeaderboard();
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      safeAlert(t().leaderboardSoon);
+      return;
+    }
+
+    const topRows = rows.slice(0, 10).map((row, index) => {
+      const name =
+        row?.username?.trim()
+          ? `@${row.username}`
+          : `ID ${row?.telegramId || "unknown"}`;
+
+      const balance = Number(row?.balance || 0).toLocaleString();
+      return `${index + 1}. ${name} — ${balance} ${getCurrency()}`;
+    });
+
+    safeAlert(topRows.join("\n"));
+  } catch (e) {
+    console.error("showLeaderboard error:", e);
+    safeAlert(t().leaderboardSoon);
+  }
 };
 
 window.openDarknetMarket = () => {
-  alert(t().marketText);
+  safeAlert(t().marketText);
 };
 
 window.openMarket = () => {
-  window.openDarknetMarket();
+  safeAlert(t().rankText);
 };
 
 window.showRanks = () => {
   window.openDarknetMarket();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  const gateway = document.getElementById('gateway');
+window.showAccount = () => {
+  safeAlert(t().accountSoon);
+};
 
-  if (gateway) {
-    gateway.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.open('https://t.me/hiddifyProxySale_bot', '_blank');
-    });
+function getAdsgramController() {
+  if (!window.Adsgram || typeof window.Adsgram.init !== "function") {
+    return null;
   }
 
-  applyTexts();
-  loadUser();
-});
+  try {
+    return window.Adsgram.init({
+      blockId: getConfig().ADSGRAM_BLOCK_ID || "25766"
+    });
+  } catch (e) {
+    console.error("AdsGram init error:", e);
+    return null;
+  }
+}
+
+function parseAdErrorMessage(error) {
+  const raw = String(error?.message || error || "").toLowerCase();
+
+  if (!raw) return t().adOpenFail;
+  if (raw.includes("not fully watched")) return t().adWatchFail;
+  if (raw.includes("cancel")) return t().adWatchFail;
+  if (raw.includes("close")) return t().adWatchFail;
+  if (raw.includes("sdk")) return t().adNotLoaded;
+  if (raw.includes("block")) return t().adOpenFail;
+  if (raw.includes("init")) return t().adOpenFail;
+
+  return t().adOpenFail;
+}
 
 window.showAds = async () => {
   try {
     const limit = await API.checkAdLimit();
 
     if (!limit?.canWatch) {
-      if (tg?.showAlert) tg.showAlert(t().adLimit);
+      safeAlert(t().adLimit);
       return;
     }
 
-    if (!window.Adsgram) {
-      if (tg?.showAlert) tg.showAlert(t().adNotLoaded);
+    const adController = getAdsgramController();
+
+    if (!adController || typeof adController.show !== "function") {
+      safeAlert(t().adNotLoaded);
       return;
     }
 
-    const AdController = Adsgram.init({
-      blockId: CONFIG.ADSGRAM_BLOCK_ID
-    });
+    let adOpened = false;
 
-    await AdController.show();
+    try {
+      await adController.show();
+      adOpened = true;
+    } catch (adErr) {
+      console.error("Adsgram show error:", adErr);
+      safeAlert(parseAdErrorMessage(adErr));
+      return;
+    }
+
+    if (!adOpened) {
+      safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
+      return;
+    }
 
     const reward = await API.claimAdReward();
 
     if (reward?.success) {
-      userState.balance = reward.balance;
-      userState.energy = reward.energy;
-      tapQueue = 0;
-      updateUI();
+      userState = normalizeUserState({
+        ...userState,
+        balance: reward.balance,
+        energy: reward.energy,
+        rank_id: reward.rank_id ?? userState.rank_id
+      });
 
-      if (tg?.showAlert) tg.showAlert(t().adRewardOk);
-    } else {
-      if (tg?.showAlert) tg.showAlert(t().adRewardFail);
+      tapQueue = 0;
+      syncEnergyBase();
+      updateUI();
+      safeAlert(t().adRewardOk);
+      return;
     }
+
+    safeAlert(t().adRewardFail);
   } catch (e) {
-    console.error('Adsgram/showAds error:', e);
-    if (tg?.showAlert) tg.showAlert(t().adWatchFail);
+    console.error("showAds fatal error:", e);
+    safeAlert(t().adOpenFail);
   }
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+  const gateway = document.getElementById("gateway");
+
+  if (gateway) {
+    gateway.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open("https://t.me/hiddifyProxySale_bot", "_blank");
+    });
+  }
+
+  applyTexts();
+  loadUser();
+});
