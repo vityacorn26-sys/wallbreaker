@@ -5,6 +5,7 @@ let currentLang = 'RU';
 let tapQueue = 0;
 let tapWorkerRunning = false;
 let tapAnimLocked = false;
+let tapFlushTimer = null;
 
 tg = window.Telegram.WebApp;
 tg.expand();
@@ -198,13 +199,10 @@ async function processTapQueue() {
   if (tapWorkerRunning) return;
   tapWorkerRunning = true;
 
-  const DELAY = 35; // скорость (чем меньше — тем быстрее, но не ставь <20)
-
   try {
     while (tapQueue > 0) {
-      const data = await API.sendTap();
-
-      tapQueue -= 1;
+      const batchSize = Math.min(tapQueue, 15);
+      const data = await API.sendTapBatch(batchSize);
 
       if (data && data.balance !== undefined) {
         userState.balance = data.balance;
@@ -212,11 +210,19 @@ async function processTapQueue() {
         if (data.rank_id !== undefined) {
           userState.rank_id = data.rank_id;
         }
-        updateUI();
-      }
 
-      // 🔥 КЛЮЧ: даём UI “вдохнуть”
-      await new Promise(res => setTimeout(res, DELAY));
+        tapQueue = Math.max(0, tapQueue - Number(data.tapsProcessed || batchSize));
+        updateUI();
+      } else {
+        const fresh = await API.getUser();
+        if (fresh) {
+          userState = fresh;
+          tapQueue = 0;
+          updateUI();
+        } else {
+          tapQueue = 0;
+        }
+      }
     }
   } catch (e) {
     console.error('Tap queue error:', e);
@@ -234,12 +240,16 @@ async function processTapQueue() {
 }
 
 window.handleTap = () => {
-  if ((userState.energy || 0) <= 0) return;
+  if ((userState.energy - tapQueue) <= 0) return;
 
   animateTap();
 
   tapQueue += 1;
-  processTapQueue();
+
+  if (tapFlushTimer) clearTimeout(tapFlushTimer);
+  tapFlushTimer = setTimeout(() => {
+    processTapQueue();
+  }, 90);
 };
 
 window.toggleMenu = () => {
