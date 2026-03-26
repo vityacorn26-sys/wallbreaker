@@ -9,16 +9,20 @@ const API = {
     }
   },
 
-  async post(endpoint, extraBody = {}) {
-  try {
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-
-    const telegramId = tgUser?.id?.toString();
-    const username = tgUser?.username || '';
-
-    if (!telegramId) {
-      throw new Error('Telegram user not found');
+  getTelegramUser() {
+    try {
+      return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+    } catch (e) {
+      return null;
     }
+  },
+
+  async post(endpoint, extraBody = {}) {
+    const initData = this.getInitData();
+    const tgUser = this.getTelegramUser();
+
+    const telegramId = tgUser?.id ? String(tgUser.id) : '';
+    const username = tgUser?.username || '';
 
     const response = await fetch(`${this.BASE_URL}${endpoint}`, {
       method: 'POST',
@@ -27,6 +31,7 @@ const API = {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
+        initData,
         telegramId,
         username,
         ...extraBody
@@ -48,12 +53,7 @@ const API = {
     }
 
     return data;
-
-  } catch (e) {
-    console.error('API POST error:', endpoint, e);
-    return null;
-  }
-  }
+  },
 
   async getUser() {
     try {
@@ -69,16 +69,6 @@ const API = {
       return await this.post('/api/tap');
     } catch (e) {
       console.error('API Error (sendTap):', e);
-      return null;
-    }
-  },
-
-  /* НОВОЕ */
-  async sendTapBatch(count) {
-    try {
-      return await this.post('/api/tap-batch', { count });
-    } catch (e) {
-      console.error('API Error (sendTapBatch):', e);
       return null;
     }
   },
