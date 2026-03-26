@@ -201,17 +201,18 @@ async function processTapQueue() {
 
   try {
     while (tapQueue > 0) {
-      const batchSize = Math.min(tapQueue, 15);
-      const data = await API.sendTapBatch(batchSize);
+      const data = await API.sendTap(); // 🔥 ОБРАТНО К ОДИНОЧНОМУ ТАПУ
+
+      tapQueue -= 1;
 
       if (data && data.balance !== undefined) {
         userState.balance = data.balance;
         userState.energy = data.energy;
+
         if (data.rank_id !== undefined) {
           userState.rank_id = data.rank_id;
         }
 
-        tapQueue = Math.max(0, tapQueue - Number(data.tapsProcessed || batchSize));
         updateUI();
       } else {
         const fresh = await API.getUser();
