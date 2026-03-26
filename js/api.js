@@ -10,7 +10,15 @@ const API = {
   },
 
   async post(endpoint, extraBody = {}) {
-    const initData = this.getInitData();
+  try {
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+    const telegramId = tgUser?.id?.toString();
+    const username = tgUser?.username || '';
+
+    if (!telegramId) {
+      throw new Error('Telegram user not found');
+    }
 
     const response = await fetch(`${this.BASE_URL}${endpoint}`, {
       method: 'POST',
@@ -18,7 +26,11 @@ const API = {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ initData, ...extraBody })
+      body: JSON.stringify({
+        telegramId,
+        username,
+        ...extraBody
+      })
     });
 
     let data = null;
@@ -36,7 +48,12 @@ const API = {
     }
 
     return data;
-  },
+
+  } catch (e) {
+    console.error('API POST error:', endpoint, e);
+    return null;
+  }
+  }
 
   async getUser() {
     try {
