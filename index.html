@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
   <title>WallBreaker | Tap to Unblock ⚡</title>
 
   <link rel="stylesheet" href="css/style.css" />
@@ -14,9 +17,15 @@
     <img src="assets/loading.jpg" alt="Loading" />
   </div>
 
-  <div id="bg-layer" style="display:none;"></div>
+  <div id="bg-layer" style="display: none;"></div>
 
-  <button id="menu-btn" onclick="toggleMenu()" style="display:none;" aria-label="menu">
+  <button
+    id="menu-btn"
+    onclick="toggleMenu()"
+    style="display: none;"
+    aria-label="menu"
+    type="button"
+  >
     <span></span>
     <span></span>
     <span></span>
@@ -29,32 +38,36 @@
       <span id="lang-en" onclick="setLang('EN')">EN</span>
     </div>
 
-    <div class="menu-item ton-buy" id="btn-rank" onclick="openMarket()">
+    <button class="menu-item ton-buy" id="btn-rank" onclick="openMarket()" type="button">
       ROOT INJECTION: 0.5 TON
-    </div>
+    </button>
 
-    <div class="menu-item highlight" id="btn-ads" onclick="showAds()">
-      ADS INJECTION (+1500)
-    </div>
+    <button class="menu-item highlight" id="btn-ads" onclick="showAds()" type="button">
+      CODE INJECTION (+1500)
+    </button>
 
-    <div class="menu-item" id="btn-refs" onclick="showRefs()">
-      РЕФЕРАЛЫ (10%)
-    </div>
+    <button class="menu-item" id="btn-refs" onclick="showRefs()" type="button">
+      REFERRAL NODE
+    </button>
 
-    <div class="menu-item" id="btn-top" onclick="showLeaderboard()">
-      ЛИДЕРБОРД
-    </div>
+    <button class="menu-item" id="btn-top" onclick="showLeaderboard()" type="button">
+      BREACH BOARD
+    </button>
 
-    <div class="menu-item" id="btn-market" onclick="showRanks()">
-      ДАРКНЕТ-МАРКЕТ
-    </div>
+    <button class="menu-item" id="btn-market" onclick="showRanks()" type="button">
+      DARKNET MARKET
+    </button>
 
-    <div class="menu-item menu-close" id="btn-close" onclick="toggleMenu()">
-      ЗАКРЫТЬ
-    </div>
+    <button class="menu-item" id="btn-account" onclick="showAccount()" type="button">
+      ACCOUNT
+    </button>
+
+    <button class="menu-item menu-close" id="btn-close" onclick="toggleMenu()" type="button">
+      CLOSE
+    </button>
   </div>
 
-  <div id="game-ui" style="display:none;">
+  <div id="game-ui" style="display: none;">
     <div id="balance" class="ui-top-block">
       <span id="balance-val">0</span>
       <span id="balance-currency">$WBC</span>
@@ -66,7 +79,7 @@
 
     <div class="energy-container">
       <div class="energy-meta">
-        <div id="energy-text">ENERGY: 100</div>
+        <div id="energy-text">CPU: 100</div>
         <div id="energy-value">100 / 100</div>
       </div>
 
@@ -77,6 +90,124 @@
 
     <div id="gateway" aria-label="Open subscription bot">
       <img src="assets/server.jpg" alt="Gateway" />
+    </div>
+  </div>
+
+  <!-- FUTURE PANELS / CARCASS -->
+
+  <div id="market-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel" role="dialog" aria-labelledby="market-panel-title">
+      <h2 id="market-panel-title">Darknet Market</h2>
+
+      <div class="info-card">
+        <p><strong>Zero-Day Key</strong></p>
+        <p>2,000,000 $WBC = 1 Zero-Day Key</p>
+        <p>Ranks stay active for 7 days.</p>
+      </div>
+
+      <div class="rank-card">
+        <p><strong>Tunnel Master</strong></p>
+        <p>25 $WBC per tap</p>
+        <p>Secure route operator for stable bypass throughput.</p>
+        <button class="wb-button ghost" type="button">Acquire Rank</button>
+      </div>
+
+      <div class="rank-card">
+        <p><strong>Firewall Breaker</strong></p>
+        <p>60 $WBC per tap</p>
+        <p>Breaks deeper defense layers and increases breach yield.</p>
+        <button class="wb-button ghost" type="button">Acquire Rank</button>
+      </div>
+
+      <div class="rank-card">
+        <p><strong>Root Operator</strong></p>
+        <p>150 $WBC per tap</p>
+        <p>Deep system access for heavy extraction cycles.</p>
+        <button class="wb-button ghost" type="button">Acquire Rank</button>
+      </div>
+
+      <div class="rank-card">
+        <p><strong>Cyber Legend</strong></p>
+        <p>400 $WBC per tap</p>
+        <p>Maximum offensive output for prize-pool assault.</p>
+        <button class="wb-button premium" type="button">Acquire Rank</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="account-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel" role="dialog" aria-labelledby="account-panel-title">
+      <h2 id="account-panel-title">Account</h2>
+
+      <div class="account-card">
+        <p><strong>Current Rank</strong></p>
+        <p id="account-rank-value">Proxy Hacker</p>
+      </div>
+
+      <div class="account-card">
+        <p><strong>Tap Power</strong></p>
+        <p id="account-tap-value">10 $WBC / tap</p>
+      </div>
+
+      <div class="account-card">
+        <p><strong>Zero-Day Keys</strong></p>
+        <p id="account-keys-value">0</p>
+      </div>
+
+      <div class="account-card">
+        <p><strong>Prize Pool</strong></p>
+        <p id="account-prize-pool-value">Loading...</p>
+      </div>
+
+      <div class="account-card">
+        <p><strong>Wallet Status</strong></p>
+        <p id="account-wallet-status">Not connected</p>
+      </div>
+
+      <div class="account-card">
+        <p><strong>Withdraw Status</strong></p>
+        <p id="account-withdraw-status">No withdraw requests</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="rank-details-overlay" class="modal-overlay hidden" aria-hidden="true">
+    <div class="wb-modal" role="dialog" aria-labelledby="rank-details-title">
+      <h2 id="rank-details-title">Rank Details</h2>
+
+      <div class="info-card">
+        <p><strong id="rank-details-name">Tunnel Master</strong></p>
+        <p id="rank-details-price">250,000 $WBC</p>
+        <p id="rank-details-duration">Duration: 7 days</p>
+        <p id="rank-details-desc">
+          Secure route operator. Gains stable bypass throughput and higher breach yield.
+        </p>
+      </div>
+
+      <button class="wb-button primary" type="button">Acquire Rank</button>
+    </div>
+  </div>
+
+  <div id="prize-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel" role="dialog" aria-labelledby="prize-panel-title">
+      <h2 id="prize-panel-title">Prize Pool</h2>
+
+      <div class="info-card">
+        <p><strong>Zero-Day Key</strong></p>
+        <p>2,000,000 $WBC = 1 Zero-Day Key</p>
+      </div>
+
+      <div class="info-card">
+        <p><strong>Draw Logic</strong></p>
+        <p>
+          The draw is not tied to a fixed date. It is driven by the live prize pool fed by ad revenue.
+        </p>
+      </div>
+
+      <div class="info-card">
+        <p><strong>Pool Status</strong></p>
+        <p id="prize-pool-live-value">Loading...</p>
+      </div>
     </div>
   </div>
 
