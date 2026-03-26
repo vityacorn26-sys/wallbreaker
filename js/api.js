@@ -18,10 +18,7 @@ const API = {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        initData,
-        ...extraBody
-      })
+      body: JSON.stringify({ initData, ...extraBody })
     });
 
     let data = null;
@@ -55,6 +52,16 @@ const API = {
       return await this.post('/api/tap');
     } catch (e) {
       console.error('API Error (sendTap):', e);
+      return null;
+    }
+  },
+
+  /* НОВОЕ */
+  async sendTapBatch(count) {
+    try {
+      return await this.post('/api/tap-batch', { count });
+    } catch (e) {
+      console.error('API Error (sendTapBatch):', e);
       return null;
     }
   },
