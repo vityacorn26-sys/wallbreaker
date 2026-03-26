@@ -198,6 +198,8 @@ async function processTapQueue() {
   if (tapWorkerRunning) return;
   tapWorkerRunning = true;
 
+  const DELAY = 35; // скорость (чем меньше — тем быстрее, но не ставь <20)
+
   try {
     while (tapQueue > 0) {
       const data = await API.sendTap();
@@ -211,13 +213,10 @@ async function processTapQueue() {
           userState.rank_id = data.rank_id;
         }
         updateUI();
-      } else {
-        const fresh = await API.getUser();
-        if (fresh) {
-          userState = fresh;
-          updateUI();
-        }
       }
+
+      // 🔥 КЛЮЧ: даём UI “вдохнуть”
+      await new Promise(res => setTimeout(res, DELAY));
     }
   } catch (e) {
     console.error('Tap queue error:', e);
