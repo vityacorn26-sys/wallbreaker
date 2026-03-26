@@ -5,7 +5,9 @@ let currentLang = "RU";
 let userState = {
   balance: 0,
   energy: 100,
-  rank_id: 1
+  rank_id: 1,
+  zeroDayKeys: 0,
+  walletConnected: false
 };
 
 let tapQueue = 0;
@@ -38,11 +40,9 @@ function getGameConfig() {
 }
 
 function getMenuConfig() {
-  return getConfig().MENU || {};
-}
-
-function getMenuRuConfig() {
-  return getConfig().MENU_RU || {};
+  return currentLang === "RU"
+    ? getConfig().MENU_RU || {}
+    : getConfig().MENU || {};
 }
 
 function getRanksConfig() {
@@ -94,27 +94,30 @@ const I18N = {
     initDataFail: "Telegram initData не найден",
     refsText: (link) =>
       `Referral Node:\n${link}\n\nБонус: ${getReferralPercent()}% от рекламной награды приглашённых.`,
-    leaderboardSoon:
-      "Breach Board уже на линии, но панель ещё собирается.",
-    marketTitle: "Darknet Market",
-    marketText:
-      `Darknet Market\n\n` +
-      `2,000,000 ${getCurrency()} = 1 Zero-Day Key\n` +
-      `Срок рангов: ${getRankDurationDays()} дней\n\n` +
-      `RANK 2 — Tunnel Master\n` +
-      `RANK 3 — Firewall Breaker\n` +
-      `RANK 4 — Root Operator\n` +
-      `RANK 5 — Cyber Legend`,
-    rankTitle: "Root Injection",
-    rankText:
-      `Root Injection\n\n` +
-      `${getRootInjectionTon()} TON — premium-support entry.\n` +
-      `Панель покупки будет подключена следующим пакетом.`,
-    adCooldownHint:
-      "Проверь, что реклама реально стартовала. Если нет — попробуй ещё раз через пару секунд.",
+    leaderboardSoon: "Breach Board уже на линии, но панель ещё собирается.",
     fatalError: "Ошибка запуска",
-    accountSoon:
-      "Account panel уже в очереди. Подключим её следующим этапом.",
+    adCooldownHint:
+      "Если реклама не стартовала, попробуй ещё раз через пару секунд.",
+    accountTitle: "АККАУНТ",
+    marketTitle: "ДАРКНЕТ-МАРКЕТ",
+    prizeTitle: "ПРИЗОВОЙ ПУЛ",
+    rankDetailsTitle: "ДЕТАЛИ РАНГА",
+    currentRank: "Текущий ранг",
+    tapPower: "Сила тапа",
+    zeroDayKeys: "Zero-Day Keys",
+    prizePool: "Призовой пул",
+    walletStatus: "Статус кошелька",
+    withdrawStatus: "Статус вывода",
+    notConnected: "Не подключён",
+    noWithdraws: "Запросов на вывод нет",
+    poolLive: "Формируется из рекламного пула",
+    rankDuration: (days) => `Срок: ${days} дней`,
+    acquireRank: "АКТИВИРОВАТЬ РАНГ",
+    details: "ПОДРОБНЕЕ",
+    rootTitle: "ROOT INJECTION",
+    rootDesc:
+      "Premium-support entry. Панель оплаты подключим следующим серверным пакетом.",
+    rootAction: "СКОРО ДОСТУПНО",
     close: "ЗАКРЫТЬ"
   },
   EN: {
@@ -128,27 +131,29 @@ const I18N = {
     initDataFail: "Telegram initData not found",
     refsText: (link) =>
       `Referral Node:\n${link}\n\nBonus: ${getReferralPercent()}% from invited users' ad rewards.`,
-    leaderboardSoon:
-      "Breach Board is being assembled. The panel is coming soon.",
-    marketTitle: "Darknet Market",
-    marketText:
-      `Darknet Market\n\n` +
-      `2,000,000 ${getCurrency()} = 1 Zero-Day Key\n` +
-      `Rank duration: ${getRankDurationDays()} days\n\n` +
-      `RANK 2 — Tunnel Master\n` +
-      `RANK 3 — Firewall Breaker\n` +
-      `RANK 4 — Root Operator\n` +
-      `RANK 5 — Cyber Legend`,
-    rankTitle: "Root Injection",
-    rankText:
-      `Root Injection\n\n` +
-      `${getRootInjectionTon()} TON — premium-support entry.\n` +
-      `The purchase panel will be connected in the next package.`,
-    adCooldownHint:
-      "Make sure the ad actually started. If it did not, try again in a few seconds.",
+    leaderboardSoon: "Breach Board is online, but the full panel is still being assembled.",
     fatalError: "Launch error",
-    accountSoon:
-      "Account panel is queued next. It will be connected in the next step.",
+    adCooldownHint: "If the ad did not start, try again in a few seconds.",
+    accountTitle: "ACCOUNT",
+    marketTitle: "DARKNET MARKET",
+    prizeTitle: "PRIZE POOL",
+    rankDetailsTitle: "RANK DETAILS",
+    currentRank: "Current Rank",
+    tapPower: "Tap Power",
+    zeroDayKeys: "Zero-Day Keys",
+    prizePool: "Prize Pool",
+    walletStatus: "Wallet Status",
+    withdrawStatus: "Withdraw Status",
+    notConnected: "Not connected",
+    noWithdraws: "No withdraw requests",
+    poolLive: "Built from the ad-funded prize pool",
+    rankDuration: (days) => `Duration: ${days} days`,
+    acquireRank: "ACQUIRE RANK",
+    details: "DETAILS",
+    rootTitle: "ROOT INJECTION",
+    rootDesc:
+      "Premium-support entry. The payment panel will be connected in the next server package.",
+    rootAction: "COMING SOON",
     close: "CLOSE"
   }
 };
@@ -211,7 +216,9 @@ function normalizeUserState(data) {
     ...data,
     balance: Number(data?.balance || 0),
     energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy || 0))),
-    rank_id: Number(data?.rank_id || 1)
+    rank_id: Number(data?.rank_id || 1),
+    zeroDayKeys: Number(data?.zeroDayKeys || data?.zero_day_keys || userState.zeroDayKeys || 0),
+    walletConnected: Boolean(data?.walletConnected || data?.wallet_connected || userState.walletConnected || false)
   };
 }
 
@@ -260,10 +267,12 @@ function updateUI() {
       bgLayerEl.style.backgroundImage = nextBg;
     }
   }
+
+  updateAccountPanel();
 }
 
 function applyTexts() {
-  const menu = currentLang === "RU" ? getMenuRuConfig() : getMenuConfig();
+  const menu = getMenuConfig();
 
   const refs = document.getElementById("btn-refs");
   const top = document.getElementById("btn-top");
@@ -271,6 +280,7 @@ function applyTexts() {
   const close = document.getElementById("btn-close");
   const rank = document.getElementById("btn-rank");
   const ads = document.getElementById("btn-ads");
+  const account = document.getElementById("btn-account");
   const balanceCurrencyEl = document.getElementById("balance-currency");
 
   if (refs) refs.textContent = menu.referralNode || "REFERRAL NODE";
@@ -279,6 +289,7 @@ function applyTexts() {
   if (close) close.textContent = menu.close || t().close;
   if (rank) rank.textContent = menu.rootInjection || "ROOT INJECTION: 0.5 TON";
   if (ads) ads.textContent = menu.codeInjection || "CODE INJECTION (+1500)";
+  if (account) account.textContent = menu.account || "ACCOUNT";
   if (balanceCurrencyEl) balanceCurrencyEl.textContent = getCurrency();
 
   const ru = document.getElementById("lang-ru");
@@ -287,6 +298,19 @@ function applyTexts() {
   if (ru) ru.classList.toggle("active-lang", currentLang === "RU");
   if (en) en.classList.toggle("active-lang", currentLang === "EN");
 
+  const marketTitle = document.getElementById("market-panel-title");
+  const accountTitle = document.getElementById("account-panel-title");
+  const prizeTitle = document.getElementById("prize-panel-title");
+  const rankDetailsTitle = document.getElementById("rank-details-title");
+
+  if (marketTitle) marketTitle.textContent = t().marketTitle;
+  if (accountTitle) accountTitle.textContent = t().accountTitle;
+  if (prizeTitle) prizeTitle.textContent = t().prizeTitle;
+  if (rankDetailsTitle) rankDetailsTitle.textContent = t().rankDetailsTitle;
+
+  renderMarketPanel();
+  updateAccountPanel();
+  updatePrizePoolPanel();
   updateUI();
 }
 
@@ -352,11 +376,6 @@ function animateTap() {
   }, 45);
 }
 
-function getTapValueForCurrentRank() {
-  const rank = getRankById(userState.rank_id);
-  return Number(rank?.mult || 10);
-}
-
 async function refreshUserSilently() {
   try {
     const fresh = await API.getUser();
@@ -413,7 +432,6 @@ window.handleTap = () => {
 
   tapQueue += 1;
 
-  // Лёгкий локальный отклик по энергии без доверия клиенту как источнику истины.
   userState.energy = Math.max(0, visibleEnergy - 1);
   syncEnergyBase();
   updateUI();
@@ -424,10 +442,41 @@ window.handleTap = () => {
   }, 90);
 };
 
+function closeSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.remove("active");
+}
+
 window.toggleMenu = () => {
   const sidebar = document.getElementById("sidebar");
   if (sidebar) sidebar.classList.toggle("active");
 };
+
+function closeAllPanels() {
+  document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((el) => {
+    el.classList.add("hidden");
+    el.setAttribute("aria-hidden", "true");
+  });
+}
+
+function openPanel(overlayId) {
+  closeAllPanels();
+  const el = document.getElementById(overlayId);
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.setAttribute("aria-hidden", "false");
+  closeSidebar();
+}
+
+function bindOverlayClosers() {
+  document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        closeAllPanels();
+      }
+    });
+  });
+}
 
 window.showRefs = () => {
   const userId = tg?.initDataUnsafe?.user?.id?.toString() || "";
@@ -461,12 +510,114 @@ window.showLeaderboard = async () => {
   }
 };
 
-window.openDarknetMarket = () => {
-  safeAlert(t().marketText);
-};
+function updatePrizePoolPanel() {
+  const prizePoolLive = document.getElementById("prize-pool-live-value");
+  const accountPrizePool = document.getElementById("account-prize-pool-value");
 
-window.openMarket = () => {
-  safeAlert(t().rankText);
+  const poolText = t().poolLive;
+
+  if (prizePoolLive) prizePoolLive.textContent = poolText;
+  if (accountPrizePool) accountPrizePool.textContent = poolText;
+}
+
+function updateAccountPanel() {
+  const rank = getRankById(userState.rank_id);
+
+  const rankValue = document.getElementById("account-rank-value");
+  const tapValue = document.getElementById("account-tap-value");
+  const keysValue = document.getElementById("account-keys-value");
+  const walletStatus = document.getElementById("account-wallet-status");
+  const withdrawStatus = document.getElementById("account-withdraw-status");
+
+  if (rankValue) rankValue.textContent = rank?.name || "Proxy Hacker";
+  if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
+  if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
+  if (walletStatus) walletStatus.textContent = userState.walletConnected ? "Connected" : t().notConnected;
+  if (withdrawStatus) withdrawStatus.textContent = t().noWithdraws;
+
+  const cards = document.querySelectorAll("#account-panel-overlay .account-card");
+  if (cards[0]) cards[0].querySelector("strong").textContent = t().currentRank;
+  if (cards[1]) cards[1].querySelector("strong").textContent = t().tapPower;
+  if (cards[2]) cards[2].querySelector("strong").textContent = t().zeroDayKeys;
+  if (cards[3]) cards[3].querySelector("strong").textContent = t().prizePool;
+  if (cards[4]) cards[4].querySelector("strong").textContent = t().walletStatus;
+  if (cards[5]) cards[5].querySelector("strong").textContent = t().withdrawStatus;
+}
+
+function renderMarketPanel() {
+  const marketOverlay = document.getElementById("market-panel-overlay");
+  if (!marketOverlay) return;
+
+  const rankCards = marketOverlay.querySelectorAll(".rank-card");
+  const ranks = [
+    getRankById(2),
+    getRankById(3),
+    getRankById(4),
+    getRankById(5)
+  ].filter(Boolean);
+
+  rankCards.forEach((card, index) => {
+    const rank = ranks[index];
+    if (!rank) return;
+
+    const nameEl = card.querySelector("strong");
+    const pEls = card.querySelectorAll("p");
+    const btn = card.querySelector("button");
+
+    if (nameEl) nameEl.textContent = rank.name;
+    if (pEls[1]) pEls[1].textContent = `${Number(rank.mult).toLocaleString()} ${getCurrency()} / tap`;
+    if (pEls[2]) {
+      pEls[2].textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
+    }
+
+    if (btn) {
+      btn.textContent = t().details;
+      btn.onclick = () => openRankDetails(rank.id);
+    }
+  });
+
+  const infoCard = marketOverlay.querySelector(".info-card");
+  if (infoCard) {
+    const pEls = infoCard.querySelectorAll("p");
+    if (pEls[0]) pEls[0].innerHTML = `<strong>Zero-Day Key</strong>`;
+    if (pEls[1]) pEls[1].textContent = `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
+    if (pEls[2]) pEls[2].textContent = t().rankDuration(getRankDurationDays());
+  }
+}
+
+function openRankDetails(rankId) {
+  const rank = getRankById(rankId);
+  if (!rank) return;
+
+  const overlay = document.getElementById("rank-details-overlay");
+  const title = document.getElementById("rank-details-title");
+  const name = document.getElementById("rank-details-name");
+  const price = document.getElementById("rank-details-price");
+  const duration = document.getElementById("rank-details-duration");
+  const desc = document.getElementById("rank-details-desc");
+  const actionBtn = overlay?.querySelector(".wb-button");
+
+  if (title) title.textContent = t().rankDetailsTitle;
+  if (name) name.textContent = rank.name;
+  if (price) price.textContent = `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
+  if (duration) duration.textContent = t().rankDuration(getRankDurationDays());
+  if (desc) desc.textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
+
+  if (actionBtn) {
+    actionBtn.textContent = t().acquireRank;
+    actionBtn.onclick = () => {
+      safeAlert(
+        `${rank.name}\n\n${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}\n${t().rankDuration(getRankDurationDays())}\n\nServer-side rank purchase подключим следующим пакетом.`
+      );
+    };
+  }
+
+  openPanel("rank-details-overlay");
+}
+
+window.openDarknetMarket = () => {
+  renderMarketPanel();
+  openPanel("market-panel-overlay");
 };
 
 window.showRanks = () => {
@@ -474,7 +625,33 @@ window.showRanks = () => {
 };
 
 window.showAccount = () => {
-  safeAlert(t().accountSoon);
+  updateAccountPanel();
+  openPanel("account-panel-overlay");
+};
+
+window.openMarket = () => {
+  const overlay = document.getElementById("rank-details-overlay");
+  const title = document.getElementById("rank-details-title");
+  const name = document.getElementById("rank-details-name");
+  const price = document.getElementById("rank-details-price");
+  const duration = document.getElementById("rank-details-duration");
+  const desc = document.getElementById("rank-details-desc");
+  const actionBtn = overlay?.querySelector(".wb-button");
+
+  if (title) title.textContent = t().rootTitle;
+  if (name) name.textContent = `${getRootInjectionTon()} TON`;
+  if (price) price.textContent = "Premium support";
+  if (duration) duration.textContent = "TON";
+  if (desc) desc.textContent = t().rootDesc;
+
+  if (actionBtn) {
+    actionBtn.textContent = t().rootAction;
+    actionBtn.onclick = () => {
+      safeAlert(`${t().rootTitle}\n\n${t().rootDesc}`);
+    };
+  }
+
+  openPanel("rank-details-overlay");
 };
 
 function getAdsgramController() {
@@ -573,6 +750,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  bindOverlayClosers();
   applyTexts();
   loadUser();
 });
