@@ -546,6 +546,17 @@ function renderMarketPanel() {
     const rank = ranks[index];
     if (!rank) return;
 
+    const currentRankId = userState.rank_id;
+    const activeBadge = card.querySelector(".rank-active-badge");
+
+    if (activeBadge) {
+      if (rank.id === currentRankId) {
+        activeBadge.classList.remove("hidden");
+      } else {
+        activeBadge.classList.add("hidden");
+      }
+    }
+    
     const badgeEl = card.querySelector(".market-rank-badge");
     const iconEl = card.querySelector(".market-rank-icon");
     const pEls = card.querySelectorAll("p");
