@@ -665,10 +665,12 @@ window.showAccount = () => {
   openPanel("account-panel-overlay");
 };
 window.closePanel = () => {
-  document.querySelectorAll(".panel-overlay").forEach(el => {
-    el.classList.add("hidden");
-    el.setAttribute("aria-hidden", "true");
-  });
+  closeAllPanels();
+
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.classList.add("active");
+  }
 };
 
 function getAdsgramController() {
