@@ -891,3 +891,19 @@ img {
     height: 72px;
   }
 }
+.wb-back-btn {
+  background: transparent;
+  border: none;
+  color: rgba(120, 220, 255, 0.9);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+  padding: 6px 4px;
+}
+
+.wb-back-btn:hover {
+  color: #7dfcff;
+  text-shadow: 0 0 6px rgba(125, 252, 255, 0.4);
+}
