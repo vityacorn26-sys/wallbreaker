@@ -776,18 +776,27 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 function updateRankLabel() {
   const el = document.getElementById("current-rank-label");
-  if (!el || !window.state) return;
+  if (!el) return;
 
-  const rank = window.state.rank || 1;
+  const rank = getRankById(userState.rank_id);
+  if (!rank) {
+    el.textContent = "";
+    el.className = "rank-label";
+    return;
+  }
 
-  const names = {
-    1: "Proxy Hacker",
-    2: "Tunnel Master",
-    3: "Firewall Breaker",
-    4: "Root Operator",
-    5: "Core Overlord"
+  el.textContent = rank.name;
+
+  const accentMap = {
+    silver: "r1",
+    cyan: "r2",
+    magenta: "r3"
   };
 
-  el.textContent = names[rank] || "";
-  el.className = "rank-label r" + rank;
+  let rankClass = accentMap[rank.accent] || "r1";
+
+  if (rank.id === 4) rankClass = "r4";
+  if (rank.id === 5) rankClass = "r5";
+
+  el.className = "rank-label " + rankClass;
 }
