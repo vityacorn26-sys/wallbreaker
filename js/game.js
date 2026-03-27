@@ -20,7 +20,8 @@ let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
 const MAX_ENERGY = 100;
-const ENERGY_REGEN_SECONDS = 12;
+const ENERGY_REGEN_SECONDS =
+  Number(getGameConfig().ENERGY_REGEN_SECONDS || 30);
 
 if (tg) {
   try {
@@ -577,13 +578,20 @@ function renderMarketPanel() {
   });
 
   const infoCard = marketOverlay.querySelector(".info-card");
-  if (infoCard) {
+    if (infoCard) {
     const pEls = infoCard.querySelectorAll("p");
     if (pEls[0]) pEls[0].innerHTML = `<strong>Zero-Day Key</strong>`;
-    if (pEls[1]) pEls[1].textContent = `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
-    if (pEls[2]) pEls[2].textContent = t().rankDuration(getRankDurationDays());
-  }
-}
+    if (pEls[1]) {
+      pEls[1].textContent =
+        `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
+    }
+    if (pEls[2]) {
+      pEls[2].textContent =
+        currentLang === "RU"
+          ? "Сохраняется до розыгрыша. Максимум 2 ключа на один draw."
+          : "Persists until draw. Maximum 2 keys per draw.";
+    }
+    }
 
 function openRankDetails(rankId) {
   const rank = getRankById(rankId);
@@ -599,15 +607,27 @@ function openRankDetails(rankId) {
 
   if (title) title.textContent = t().rankDetailsTitle;
   if (name) name.textContent = rank.name;
-  if (price) price.textContent = `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
+  
+  if (price) {
+    if (rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0) {
+      price.textContent = `${Number(rank.priceTON)} TON`;
+    } else {
+      price.textContent = `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
+    }
+  }
   if (duration) duration.textContent = t().rankDuration(getRankDurationDays());
   if (desc) desc.textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
 
   if (actionBtn) {
     actionBtn.textContent = t().acquireRank;
-    actionBtn.onclick = () => {
+        actionBtn.onclick = () => {
+      const priceText =
+        rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0
+          ? `${Number(rank.priceTON)} TON`
+          : `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
+
       safeAlert(
-        `${rank.name}\n\n${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}\n${t().rankDuration(getRankDurationDays())}\n\nServer-side rank purchase подключим следующим пакетом.`
+        `${rank.name}\n\n${priceText}\n${t().rankDuration(getRankDurationDays())}\n\nServer-side rank purchase подключим следующим пакетом.`
       );
     };
   }
