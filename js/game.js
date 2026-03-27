@@ -664,29 +664,6 @@ window.showAccount = () => {
   updateAccountPanel();
   openPanel("account-panel-overlay");
 };
-  const overlay = document.getElementById("rank-details-overlay");
-  const title = document.getElementById("rank-details-title");
-  const name = document.getElementById("rank-details-name");
-  const price = document.getElementById("rank-details-price");
-  const duration = document.getElementById("rank-details-duration");
-  const desc = document.getElementById("rank-details-desc");
-  const actionBtn = overlay?.querySelector(".wb-button");
-
-  if (title) title.textContent = t().rootTitle;
-  if (name) name.textContent = `${getRootInjectionTon()} TON`;
-  if (price) price.textContent = "Premium support";
-  if (duration) duration.textContent = "TON";
-  if (desc) desc.textContent = t().rootDesc;
-
-  if (actionBtn) {
-    actionBtn.textContent = t().rootAction;
-    actionBtn.onclick = () => {
-      safeAlert(`${t().rootTitle}\n\n${t().rootDesc}`);
-    };
-  }
-
-  openPanel("rank-details-overlay");
-};
 
 function getAdsgramController() {
   if (!window.Adsgram || typeof window.Adsgram.init !== "function") {
