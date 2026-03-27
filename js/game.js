@@ -20,8 +20,6 @@ let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
 const MAX_ENERGY = 100;
-const ENERGY_REGEN_SECONDS =
-  Number(getGameConfig().ENERGY_REGEN_SECONDS || 30);
 
 if (tg) {
   try {
@@ -58,8 +56,8 @@ function getEnergyLabel() {
   return getGameConfig().ENERGY_LABEL || "CPU";
 }
 
-function getAdRewardValue() {
-  return Number(getGameConfig().ADS_REWARD_WBC || 1500);
+function getEnergyRegenSeconds() {
+  return Number(getGameConfig().ENERGY_REGEN_SECONDS || 30);
 }
 
 function getReferralPercent() {
@@ -97,8 +95,7 @@ const I18N = {
       `Referral Node:\n${link}\n\nБонус: ${getReferralPercent()}% от рекламной награды приглашённых.`,
     leaderboardSoon: "Breach Board уже на линии, но панель ещё собирается.",
     fatalError: "Ошибка запуска",
-    adCooldownHint:
-      "Если реклама не стартовала, попробуй ещё раз через пару секунд.",
+    adCooldownHint: "Если реклама не стартовала, попробуй ещё раз через пару секунд.",
     accountTitle: "АККАУНТ",
     marketTitle: "ДАРКНЕТ-МАРКЕТ",
     prizeTitle: "ПРИЗОВОЙ ПУЛ",
@@ -119,7 +116,7 @@ const I18N = {
     rootDesc:
       "Premium-support entry. Панель оплаты подключим следующим серверным пакетом.",
     rootAction: "СКОРО ДОСТУПНО",
-    close: "ЗАКРЫТЬ"
+    zeroDayPersist: "Сохраняется до розыгрыша. Максимум 2 ключа на один draw."
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -155,7 +152,7 @@ const I18N = {
     rootDesc:
       "Premium-support entry. The payment panel will be connected in the next server package.",
     rootAction: "COMING SOON",
-    close: "CLOSE"
+    zeroDayPersist: "Persists until draw. Maximum 2 keys per draw."
   }
 };
 
@@ -233,8 +230,41 @@ function syncEnergyBase() {
 
 function getRenderedEnergy() {
   const elapsedMs = Date.now() - lastServerSyncTs;
-  const gained = Math.floor(elapsedMs / (ENERGY_REGEN_SECONDS * 1000));
+  const gained = Math.floor(elapsedMs / (getEnergyRegenSeconds() * 1000));
   return Math.max(0, Math.min(MAX_ENERGY, lastServerEnergy + gained));
+}
+
+function updatePrizePoolPanel() {
+  const prizePoolLive = document.getElementById("prize-pool-live-value");
+  const accountPrizePool = document.getElementById("account-prize-pool-value");
+  const poolText = t().poolLive;
+
+  if (prizePoolLive) prizePoolLive.textContent = poolText;
+  if (accountPrizePool) accountPrizePool.textContent = poolText;
+}
+
+function updateAccountPanel() {
+  const rank = getRankById(userState.rank_id);
+
+  const rankValue = document.getElementById("account-rank-value");
+  const tapValue = document.getElementById("account-tap-value");
+  const keysValue = document.getElementById("account-keys-value");
+  const walletStatus = document.getElementById("account-wallet-status");
+  const withdrawStatus = document.getElementById("account-withdraw-status");
+
+  if (rankValue) rankValue.textContent = rank?.name || "Proxy Hacker";
+  if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
+  if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
+  if (walletStatus) walletStatus.textContent = userState.walletConnected ? "Connected" : t().notConnected;
+  if (withdrawStatus) withdrawStatus.textContent = t().noWithdraws;
+
+  const cards = document.querySelectorAll("#account-panel-overlay .account-card");
+  if (cards[0]) cards[0].querySelector("strong").textContent = t().currentRank;
+  if (cards[1]) cards[1].querySelector("strong").textContent = t().tapPower;
+  if (cards[2]) cards[2].querySelector("strong").textContent = t().zeroDayKeys;
+  if (cards[3]) cards[3].querySelector("strong").textContent = t().prizePool;
+  if (cards[4]) cards[4].querySelector("strong").textContent = t().walletStatus;
+  if (cards[5]) cards[5].querySelector("strong").textContent = t().withdrawStatus;
 }
 
 function updateUI() {
@@ -270,6 +300,7 @@ function updateUI() {
   }
 
   updateAccountPanel();
+  updatePrizePoolPanel();
 }
 
 function applyTexts() {
@@ -287,7 +318,7 @@ function applyTexts() {
   if (refs) refs.textContent = menu.referralNode || "REFERRAL NODE";
   if (top) top.textContent = menu.breachBoard || "BREACH BOARD";
   if (market) market.textContent = menu.darknetMarket || "DARKNET MARKET";
-  if (close) close.textContent = menu.close || t().close;
+  if (close) close.textContent = menu.close || "CLOSE";
   if (rank) rank.textContent = menu.rootInjection || "ROOT INJECTION: 0.5 TON";
   if (ads) ads.textContent = menu.codeInjection || "CODE INJECTION (+1500)";
   if (account) account.textContent = menu.account || "ACCOUNT";
@@ -432,7 +463,6 @@ window.handleTap = () => {
   animateTap();
 
   tapQueue += 1;
-
   userState.energy = Math.max(0, visibleEnergy - 1);
   syncEnergyBase();
   updateUI();
@@ -495,10 +525,9 @@ window.showLeaderboard = async () => {
     }
 
     const topRows = rows.slice(0, 10).map((row, index) => {
-      const name =
-        row?.username?.trim()
-          ? `@${row.username}`
-          : `ID ${row?.telegramId || "unknown"}`;
+      const name = row?.username?.trim()
+        ? `@${row.username}`
+        : `ID ${row?.telegramId || "unknown"}`;
 
       const balance = Number(row?.balance || 0).toLocaleString();
       return `${index + 1}. ${name} — ${balance} ${getCurrency()}`;
@@ -511,51 +540,12 @@ window.showLeaderboard = async () => {
   }
 };
 
-function updatePrizePoolPanel() {
-  const prizePoolLive = document.getElementById("prize-pool-live-value");
-  const accountPrizePool = document.getElementById("account-prize-pool-value");
-
-  const poolText = t().poolLive;
-
-  if (prizePoolLive) prizePoolLive.textContent = poolText;
-  if (accountPrizePool) accountPrizePool.textContent = poolText;
-}
-
-function updateAccountPanel() {
-  const rank = getRankById(userState.rank_id);
-
-  const rankValue = document.getElementById("account-rank-value");
-  const tapValue = document.getElementById("account-tap-value");
-  const keysValue = document.getElementById("account-keys-value");
-  const walletStatus = document.getElementById("account-wallet-status");
-  const withdrawStatus = document.getElementById("account-withdraw-status");
-
-  if (rankValue) rankValue.textContent = rank?.name || "Proxy Hacker";
-  if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
-  if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
-  if (walletStatus) walletStatus.textContent = userState.walletConnected ? "Connected" : t().notConnected;
-  if (withdrawStatus) withdrawStatus.textContent = t().noWithdraws;
-
-  const cards = document.querySelectorAll("#account-panel-overlay .account-card");
-  if (cards[0]) cards[0].querySelector("strong").textContent = t().currentRank;
-  if (cards[1]) cards[1].querySelector("strong").textContent = t().tapPower;
-  if (cards[2]) cards[2].querySelector("strong").textContent = t().zeroDayKeys;
-  if (cards[3]) cards[3].querySelector("strong").textContent = t().prizePool;
-  if (cards[4]) cards[4].querySelector("strong").textContent = t().walletStatus;
-  if (cards[5]) cards[5].querySelector("strong").textContent = t().withdrawStatus;
-}
-
 function renderMarketPanel() {
   const marketOverlay = document.getElementById("market-panel-overlay");
   if (!marketOverlay) return;
 
   const rankCards = marketOverlay.querySelectorAll(".rank-card");
-  const ranks = [
-    getRankById(2),
-    getRankById(3),
-    getRankById(4),
-    getRankById(5)
-  ].filter(Boolean);
+  const ranks = [getRankById(2), getRankById(3), getRankById(4), getRankById(5)].filter(Boolean);
 
   rankCards.forEach((card, index) => {
     const rank = ranks[index];
@@ -566,7 +556,15 @@ function renderMarketPanel() {
     const btn = card.querySelector("button");
 
     if (nameEl) nameEl.textContent = rank.name;
-    if (pEls[1]) pEls[1].textContent = `${Number(rank.mult).toLocaleString()} ${getCurrency()} / tap`;
+
+    if (pEls[1]) {
+      if (rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0) {
+        pEls[1].textContent = `${Number(rank.priceTON)} TON`;
+      } else {
+        pEls[1].textContent = `${Number(rank.mult).toLocaleString()} ${getCurrency()} / tap`;
+      }
+    }
+
     if (pEls[2]) {
       pEls[2].textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
     }
@@ -578,20 +576,17 @@ function renderMarketPanel() {
   });
 
   const infoCard = marketOverlay.querySelector(".info-card");
-    if (infoCard) {
+  if (infoCard) {
     const pEls = infoCard.querySelectorAll("p");
-    if (pEls[0]) pEls[0].innerHTML = `<strong>Zero-Day Key</strong>`;
+    if (pEls[0]) pEls[0].innerHTML = "<strong>Zero-Day Key</strong>";
     if (pEls[1]) {
-      pEls[1].textContent =
-        `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
+      pEls[1].textContent = `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
     }
     if (pEls[2]) {
-      pEls[2].textContent =
-        currentLang === "RU"
-          ? "Сохраняется до розыгрыша. Максимум 2 ключа на один draw."
-          : "Persists until draw. Maximum 2 keys per draw.";
+      pEls[2].textContent = t().zeroDayPersist;
     }
-    }
+  }
+}
 
 function openRankDetails(rankId) {
   const rank = getRankById(rankId);
@@ -607,7 +602,7 @@ function openRankDetails(rankId) {
 
   if (title) title.textContent = t().rankDetailsTitle;
   if (name) name.textContent = rank.name;
-  
+
   if (price) {
     if (rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0) {
       price.textContent = `${Number(rank.priceTON)} TON`;
@@ -615,12 +610,18 @@ function openRankDetails(rankId) {
       price.textContent = `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
     }
   }
-  if (duration) duration.textContent = t().rankDuration(getRankDurationDays());
-  if (desc) desc.textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
+
+  if (duration) {
+    duration.textContent = t().rankDuration(getRankDurationDays());
+  }
+
+  if (desc) {
+    desc.textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
+  }
 
   if (actionBtn) {
     actionBtn.textContent = t().acquireRank;
-        actionBtn.onclick = () => {
+    actionBtn.onclick = () => {
       const priceText =
         rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0
           ? `${Number(rank.priceTON)} TON`
