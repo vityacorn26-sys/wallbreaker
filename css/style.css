@@ -1004,15 +1004,15 @@ img {
 }
 .rank-label {
   position: absolute;
-  top: 126px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
   width: 180px;
   text-align: center;
   font-size: 10px;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   font-weight: 800;
-  opacity: 0.92;
+  opacity: 0.85;
   pointer-events: none;
   text-transform: uppercase;
   color: rgba(236, 244, 255, 0.88);
