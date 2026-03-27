@@ -593,12 +593,23 @@ function renderMarketPanel() {
     }
 
     if (btn) {
-      btn.textContent = t().details;
-      btn.classList.toggle("premium", rank.unlockMode === "ton" || rank.id === 5);
-      btn.classList.toggle("ghost", !(rank.unlockMode === "ton" || rank.id === 5));
-      btn.onclick = () => openRankDetails(rank.id);
+      const isActiveSellRank = Number(userState.rank_id || 1) === Number(rank.id);
+
+      if (isActiveSellRank) {
+        btn.textContent = "ACTIVE";
+        btn.classList.remove("ghost");
+        btn.classList.remove("premium");
+        btn.classList.add("is-active-rank");
+        btn.onclick = null;
+      } else {
+        btn.textContent = t().details;
+        btn.classList.remove("is-active-rank");
+        btn.classList.toggle("premium", rank.unlockMode === "ton" || rank.id === 5);
+        btn.classList.toggle("ghost", !(rank.unlockMode === "ton" || rank.id === 5));
+        btn.onclick = () => openRankDetails(rank.id);
+      }
     }
-  });
+    });
 
   const infoCard = marketOverlay.querySelector(".info-card");
   if (infoCard) {
