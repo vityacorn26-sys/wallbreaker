@@ -904,16 +904,17 @@ img {
   color: rgba(120, 220, 255, 0.9);
   font-size: 13px;
   letter-spacing: 1px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   cursor: pointer;
   text-align: left;
-  padding: 6px 4px;
+  padding: 4px 2px 8px;
 }
 
 .wb-back-btn:hover {
   color: #7dfcff;
   text-shadow: 0 0 6px rgba(125, 252, 255, 0.4);
 }
+
 .market-panel-glass {
   background:
     linear-gradient(180deg, rgba(7, 14, 28, 0.94), rgba(5, 10, 20, 0.97)),
@@ -986,41 +987,23 @@ img {
   }
 }
 
-.wb-back-btn {
-  background: transparent;
-  border: none;
-  color: rgba(120, 220, 255, 0.9);
-  font-size: 13px;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  text-align: left;
-  padding: 4px 2px 8px;
-}
-
-.wb-back-btn:hover {
-  color: #7dfcff;
-  text-shadow: 0 0 6px rgba(125, 252, 255, 0.4);
-}
 .rank-label {
   width: 100%;
   text-align: center;
   margin-top: 10px;
   margin-bottom: 6px;
-
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.8px;
   line-height: 1;
-
   color: rgba(236, 244, 255, 0.88);
   text-transform: uppercase;
   text-shadow:
     0 0 6px rgba(120, 220, 255, 0.08),
     0 1px 2px rgba(0, 0, 0, 0.32);
-
   pointer-events: none;
   white-space: nowrap;
+  opacity: 0.85;
 }
 
 .rank-label.r1 { color: rgba(236, 244, 255, 0.88); }
@@ -1050,13 +1033,48 @@ img {
   display: none;
 }
 
+.panel-button,
+.modal-button,
+.action-button,
+.wb-button {
+  position: relative;
+  overflow: hidden;
+}
+
 .wb-button.is-active-rank {
-  color: #041016;
-  background: linear-gradient(180deg, #49ffe2, #00d7c7);
+  background: linear-gradient(90deg, #00ff9c, #00e0ff);
+  color: #001a12;
+  font-weight: 700;
   box-shadow:
-    0 0 14px rgba(0, 255, 200, 0.18),
-    0 8px 18px rgba(0, 215, 199, 0.16);
-  border-color: rgba(73, 255, 226, 0.32);
+    0 0 12px rgba(0, 255, 156, 0.6),
+    0 0 24px rgba(0, 224, 255, 0.4);
+  border: none;
   cursor: default;
   pointer-events: none;
+}
+
+.wb-button.is-active-rank::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 20px rgba(0, 255, 156, 0.5);
+  opacity: 0.6;
+  animation: activePulse 1.8s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes activePulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
 }
