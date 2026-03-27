@@ -297,6 +297,7 @@ function updateUI() {
 
   updateAccountPanel();
   updatePrizePoolPanel();
+  updateRankLabel();
 }
 
 function applyTexts() {
@@ -773,3 +774,20 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTexts();
   loadUser();
 });
+function updateRankLabel() {
+  const el = document.getElementById("current-rank-label");
+  if (!el || !window.state) return;
+
+  const rank = window.state.rank || 1;
+
+  const names = {
+    1: "Proxy Hacker",
+    2: "Tunnel Master",
+    3: "Firewall Breaker",
+    4: "Root Operator",
+    5: "Core Overlord"
+  };
+
+  el.textContent = names[rank] || "";
+  el.className = "rank-label r" + rank;
+}
