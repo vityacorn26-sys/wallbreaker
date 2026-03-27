@@ -651,6 +651,11 @@ function openRankDetails(rankId) {
   openPanel("rank-details-overlay");
 }
 
+window.openDarknetMarket = () => {
+  renderMarketPanel();
+  openPanel("market-panel-overlay");
+};
+
 window.showRanks = () => {
   window.openDarknetMarket();
 };
@@ -659,8 +664,6 @@ window.showAccount = () => {
   updateAccountPanel();
   openPanel("account-panel-overlay");
 };
-
-window.openMarket = () => {
   const overlay = document.getElementById("rank-details-overlay");
   const title = document.getElementById("rank-details-title");
   const name = document.getElementById("rank-details-name");
