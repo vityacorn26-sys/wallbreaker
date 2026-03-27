@@ -1004,21 +1004,21 @@ img {
 }
 .rank-label {
   position: absolute;
-  top: 120px;
+  top: 126px;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
+  width: 180px;
   text-align: center;
-  font-size: 11px;
-  letter-spacing: 1.2px;
-  font-weight: 700;
-  opacity: 0.9;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  font-weight: 800;
+  opacity: 0.92;
   pointer-events: none;
   text-transform: uppercase;
-  color: rgba(232, 242, 255, 0.90);
+  color: rgba(236, 244, 255, 0.88);
   text-shadow:
-    0 0 8px rgba(120, 220, 255, 0.10),
-    0 1px 2px rgba(0, 0, 0, 0.28);
+    0 0 6px rgba(120, 220, 255, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.34);
   white-space: nowrap;
   z-index: 11;
 }
