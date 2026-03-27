@@ -1049,3 +1049,14 @@ img {
 .rank-active-badge.hidden {
   display: none;
 }
+
+.wb-button.is-active-rank {
+  color: #041016;
+  background: linear-gradient(180deg, #49ffe2, #00d7c7);
+  box-shadow:
+    0 0 14px rgba(0, 255, 200, 0.18),
+    0 8px 18px rgba(0, 215, 199, 0.16);
+  border-color: rgba(73, 255, 226, 0.32);
+  cursor: default;
+  pointer-events: none;
+}
