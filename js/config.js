@@ -10,7 +10,6 @@ window.CONFIG = {
     REFERRAL_PERCENT: 10,
     ZERO_DAY_KEY_PRICE: 2000000,
     ZERO_DAY_KEY_MAX_PER_DRAW: 2,
-    ROOT_INJECTION_TON: 0.5,
     RANK_DURATION_DAYS: 7
   },
 
@@ -43,10 +42,8 @@ window.CONFIG = {
       accent: "cyan",
       shortRU: "Мастер безопасных туннелей.",
       shortEN: "Master of secure tunnels.",
-      descRU:
-        "Открывает стабильный bypass-режим и усиливает добычу $WBC. Активен 7 дней.",
-      descEN:
-        "Unlocks a stable bypass mode and boosts $WBC extraction. Active for 7 days."
+      descRU: "Стабилизирует обход, усиливает extraction и держит линию под контролем. Активен 7 дней.",
+      descEN: "Stabilizes bypass, boosts extraction and keeps the line under control. Active for 7 days."
     },
 
     3: {
@@ -61,10 +58,8 @@ window.CONFIG = {
       accent: "magenta",
       shortRU: "Золотая середина для пробоя защиты.",
       shortEN: "The golden-middle breach rank.",
-      descRU:
-        "Премиальный ранг для уверенного прорыва защитных слоёв. Активен 7 дней.",
-      descEN:
-        "Premium rank for confident breach through defensive layers. Active for 7 days."
+      descRU: "Премиальный ранг для уверенного пробоя защитных слоёв и мощного роста tap-output. Активен 7 дней.",
+      descEN: "Premium rank for confident breach through defensive layers and stronger tap output. Active for 7 days."
     },
 
     4: {
@@ -74,15 +69,13 @@ window.CONFIG = {
       img: "assets/cat4.jpg",
       mult: 150,
       unlockMode: "wbc",
-      priceWBC: 800000,
+      priceWBC: 750000,
       priceTON: 0,
       accent: "cyan",
       shortRU: "Глубокий доступ к системному ядру.",
       shortEN: "Deep access to the system core.",
-      descRU:
-        "Продвинутый ранг для тяжёлых взломов и ускоренного накопления $WBC. Активен 7 дней.",
-      descEN:
-        "Advanced rank for heavy breaches and accelerated $WBC accumulation. Active for 7 days."
+      descRU: "Продвинутый ранг для тяжёлых взломов, ускоренного накопления и жёсткого давления на prize pool. Активен 7 дней.",
+      descEN: "Advanced rank for heavy breaches, faster accumulation and stronger pressure on the prize pool. Active for 7 days."
     },
 
     5: {
@@ -97,15 +90,12 @@ window.CONFIG = {
       accent: "magenta",
       shortRU: "Легенда яркого кибер-вторжения.",
       shortEN: "Legend of vivid cyber intrusion.",
-      descRU:
-        "Максимальный боевой ранг с экстремальным tap-output для штурма prize pool. Активен 7 дней.",
-      descEN:
-        "Maximum combat rank with extreme tap output for assaulting the prize pool. Active for 7 days."
+      descRU: "Максимальный боевой ранг с экстремальным tap-output для штурма prize pool. Активен 7 дней.",
+      descEN: "Maximum combat rank with extreme tap output for assaulting the prize pool. Active for 7 days."
     }
   },
 
   MENU: {
-    rootInjection: "ROOT INJECTION: 0.5 TON",
     codeInjection: "CODE INJECTION (+1500)",
     referralNode: "REFERRAL NODE",
     breachBoard: "BREACH BOARD",
@@ -115,7 +105,6 @@ window.CONFIG = {
   },
 
   MENU_RU: {
-    rootInjection: "ROOT INJECTION: 0.5 TON",
     codeInjection: "CODE INJECTION (+1500)",
     referralNode: "РЕФЕРАЛЬНЫЙ УЗЕЛ",
     breachBoard: "ДОСКА ВЗЛОМА",
@@ -127,7 +116,7 @@ window.CONFIG = {
   SYSTEM_TEXT: {
     zeroDayKeyName: "Zero-Day Key",
     zeroDayKeyNameRU: "Zero-Day Key",
-    zeroDayKeyPersistEN: "Persists until draw",
+    zeroDayKeyPersistEN: "Сохраняется до розыгрыша",
     zeroDayKeyPersistRU: "Сохраняется до розыгрыша",
     prizePoolName: "Prize Pool",
     prizePoolNameRU: "Призовой пул",
