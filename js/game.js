@@ -664,6 +664,12 @@ window.showAccount = () => {
   updateAccountPanel();
   openPanel("account-panel-overlay");
 };
+window.closePanel = () => {
+  document.querySelectorAll(".panel-overlay").forEach(el => {
+    el.classList.add("hidden");
+    el.setAttribute("aria-hidden", "true");
+  });
+};
 
 function getAdsgramController() {
   if (!window.Adsgram || typeof window.Adsgram.init !== "function") {
