@@ -32,35 +32,35 @@
   </button>
 
   <div id="sidebar">
-  <div class="lang-selector" id="lang-switch">
-    <span id="lang-ru" class="active-lang" onclick="setLang('RU')">RU</span>
-    <span class="lang-divider">|</span>
-    <span id="lang-en" onclick="setLang('EN')">EN</span>
-  </div>
+    <div class="lang-selector" id="lang-switch">
+      <span id="lang-ru" class="active-lang" onclick="setLang('RU')">RU</span>
+      <span class="lang-divider">|</span>
+      <span id="lang-en" onclick="setLang('EN')">EN</span>
+    </div>
 
-  <button class="menu-item highlight" id="btn-ads" onclick="showAds()" type="button">
-    CODE INJECTION (+1500)
-  </button>
+    <button class="menu-item highlight" id="btn-ads" onclick="showAds()" type="button">
+      CODE INJECTION (+1500)
+    </button>
 
-  <button class="menu-item" id="btn-refs" onclick="showRefs()" type="button">
-    REFERRAL NODE
-  </button>
+    <button class="menu-item" id="btn-refs" onclick="showRefs()" type="button">
+      REFERRAL NODE
+    </button>
 
-  <button class="menu-item" id="btn-top" onclick="showLeaderboard()" type="button">
-    BREACH BOARD
-  </button>
+    <button class="menu-item" id="btn-top" onclick="showLeaderboard()" type="button">
+      BREACH BOARD
+    </button>
 
-  <button class="menu-item" id="btn-market" onclick="showRanks()" type="button">
-    DARKNET MARKET
-  </button>
+    <button class="menu-item" id="btn-market" onclick="showRanks()" type="button">
+      DARKNET MARKET
+    </button>
 
-  <button class="menu-item" id="btn-account" onclick="showAccount()" type="button">
-    ACCOUNT
-  </button>
+    <button class="menu-item" id="btn-account" onclick="showAccount()" type="button">
+      ACCOUNT
+    </button>
 
-  <button class="menu-item menu-close" id="btn-close" onclick="toggleMenu()" type="button">
-    CLOSE
-  </button>
+    <button class="menu-item menu-close" id="btn-close" onclick="toggleMenu()" type="button">
+      CLOSE
+    </button>
   </div>
 
   <div id="game-ui" style="display: none;">
@@ -92,71 +92,71 @@
   <!-- FUTURE PANELS / CARCASS -->
 
   <div id="market-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
-   <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="market-panel-title">
-    <h2 id="market-panel-title">Darknet Market</h2>
-    <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
-    
-    <div class="info-card market-info-card">
-      <p><strong>Zero-Day Key</strong></p>
-      <p>2,000,000 $WBC = 1 Zero-Day Key</p>
-      <p>Сохраняется до розыгрыша. Максимум 2 ключа на один draw.</p>
-    </div>
+    <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="market-panel-title">
+      <h2 id="market-panel-title">Darknet Market</h2>
+      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
 
-    <div class="rank-card market-rank-card" data-rank-id="2">
-      <div class="market-rank-head">
-        <div class="market-rank-badge">R2</div>
-        <img class="market-rank-icon" src="assets/cat2.jpg" alt="Tunnel Master" />
+      <div class="info-card market-info-card">
+        <p><strong>Zero-Day Key</strong></p>
+        <p>2,000,000 $WBC = 1 Zero-Day Key</p>
+        <p>Сохраняется до розыгрыша. Максимум 2 ключа на один draw.</p>
       </div>
-      <p><strong>Tunnel Master</strong></p>
-      <p>25 $WBC / tap</p>
-      <p>250,000 $WBC</p>
-      <p>Активен 7 дней.</p>
-      <button class="wb-button ghost" type="button">DETAILS</button>
-    </div>
 
-    <div class="rank-card market-rank-card" data-rank-id="3">
-      <div class="market-rank-head">
-        <div class="market-rank-badge market-rank-badge-ton">R3</div>
-        <img class="market-rank-icon" src="assets/cat3.jpg" alt="Firewall Breaker" />
+      <div class="rank-card market-rank-card" data-rank-id="2">
+        <div class="market-rank-head">
+          <div class="market-rank-badge">R2</div>
+          <img class="market-rank-icon" src="assets/cat2.jpg" alt="Tunnel Master" />
+        </div>
+        <p><strong>Tunnel Master</strong></p>
+        <p>25 $WBC / tap</p>
+        <p>250,000 $WBC</p>
+        <p>Активен 7 дней.</p>
+        <button class="wb-button ghost" type="button">DETAILS</button>
       </div>
-      <p><strong>Firewall Breaker</strong></p>
-      <p>60 $WBC / tap</p>
-      <p>0.5 TON</p>
-      <p>Активен 7 дней.</p>
-      <button class="wb-button premium" type="button">DETAILS</button>
-    </div>
 
-    <div class="rank-card market-rank-card" data-rank-id="4">
-      <div class="market-rank-head">
-        <div class="market-rank-badge">R4</div>
-        <img class="market-rank-icon" src="assets/cat4.jpg" alt="Root Operator" />
+      <div class="rank-card market-rank-card" data-rank-id="3">
+        <div class="market-rank-head">
+          <div class="market-rank-badge market-rank-badge-ton">R3</div>
+          <img class="market-rank-icon" src="assets/cat3.jpg" alt="Firewall Breaker" />
+        </div>
+        <p><strong>Firewall Breaker</strong></p>
+        <p>60 $WBC / tap</p>
+        <p>0.5 TON</p>
+        <p>Активен 7 дней.</p>
+        <button class="wb-button premium" type="button">DETAILS</button>
       </div>
-      <p><strong>Root Operator</strong></p>
-      <p>150 $WBC / tap</p>
-      <p>750,000 $WBC</p>
-      <p>Активен 7 дней.</p>
-      <button class="wb-button ghost" type="button">DETAILS</button>
-    </div>
 
-    <div class="rank-card market-rank-card" data-rank-id="5">
-      <div class="market-rank-head">
-        <div class="market-rank-badge market-rank-badge-ton">R5</div>
-        <img class="market-rank-icon" src="assets/cat5.jpg" alt="Cyber Legend" />
+      <div class="rank-card market-rank-card" data-rank-id="4">
+        <div class="market-rank-head">
+          <div class="market-rank-badge">R4</div>
+          <img class="market-rank-icon" src="assets/cat4.jpg" alt="Root Operator" />
+        </div>
+        <p><strong>Root Operator</strong></p>
+        <p>150 $WBC / tap</p>
+        <p>750,000 $WBC</p>
+        <p>Активен 7 дней.</p>
+        <button class="wb-button ghost" type="button">DETAILS</button>
       </div>
-      <p><strong>Cyber Legend</strong></p>
-      <p>400 $WBC / tap</p>
-      <p>1,300,000 $WBC</p>
-      <p>Активен 7 дней.</p>
-      <button class="wb-button premium" type="button">DETAILS</button>
+
+      <div class="rank-card market-rank-card" data-rank-id="5">
+        <div class="market-rank-head">
+          <div class="market-rank-badge market-rank-badge-ton">R5</div>
+          <img class="market-rank-icon" src="assets/cat5.jpg" alt="Cyber Legend" />
+        </div>
+        <p><strong>Cyber Legend</strong></p>
+        <p>400 $WBC / tap</p>
+        <p>1,300,000 $WBC</p>
+        <p>Активен 7 дней.</p>
+        <button class="wb-button premium" type="button">DETAILS</button>
+      </div>
     </div>
-  </div>
   </div>
 
   <div id="account-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
     <div class="wb-panel" role="dialog" aria-labelledby="account-panel-title">
       <h2 id="account-panel-title">Account</h2>
       <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
-      
+
       <div class="account-card">
         <p><strong>Current Rank</strong></p>
         <p id="account-rank-value">Proxy Hacker</p>
@@ -193,7 +193,7 @@
     <div class="wb-modal" role="dialog" aria-labelledby="rank-details-title">
       <h2 id="rank-details-title">Rank Details</h2>
       <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
-      
+
       <div class="info-card">
         <p><strong id="rank-details-name">Tunnel Master</strong></p>
         <p id="rank-details-price">250,000 $WBC</p>
