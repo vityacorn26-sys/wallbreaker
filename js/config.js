@@ -5,9 +5,11 @@ window.CONFIG = {
   GAME: {
     CURRENCY: "$WBC",
     ENERGY_LABEL: "CPU",
+    ENERGY_REGEN_SECONDS: 30,
     ADS_REWARD_WBC: 1500,
     REFERRAL_PERCENT: 10,
     ZERO_DAY_KEY_PRICE: 2000000,
+    ZERO_DAY_KEY_MAX_PER_DRAW: 2,
     ROOT_INJECTION_TON: 0.5,
     RANK_DURATION_DAYS: 7
   },
@@ -21,6 +23,7 @@ window.CONFIG = {
       mult: 10,
       unlockMode: "default",
       priceWBC: 0,
+      priceTON: 0,
       accent: "silver",
       shortRU: "Стартовый оператор сети.",
       shortEN: "Entry-level network operator.",
@@ -36,6 +39,7 @@ window.CONFIG = {
       mult: 25,
       unlockMode: "wbc",
       priceWBC: 250000,
+      priceTON: 0,
       accent: "cyan",
       shortRU: "Мастер безопасных туннелей.",
       shortEN: "Master of secure tunnels.",
@@ -51,15 +55,16 @@ window.CONFIG = {
       name: "Firewall Breaker",
       img: "assets/cat3.jpg",
       mult: 60,
-      unlockMode: "wbc",
-      priceWBC: 750000,
+      unlockMode: "ton",
+      priceWBC: 0,
+      priceTON: 0.5,
       accent: "magenta",
-      shortRU: "Ломает активную защиту.",
-      shortEN: "Breaks active defense layers.",
+      shortRU: "Золотая середина для пробоя защиты.",
+      shortEN: "The golden-middle breach rank.",
       descRU:
-        "Ускоряет прорыв сквозь защитные слои и резко повышает доход с тапа. Активен 7 дней.",
+        "Премиальный ранг для уверенного прорыва защитных слоёв. Активен 7 дней.",
       descEN:
-        "Speeds up breach through defensive layers and sharply increases tap income. Active for 7 days."
+        "Premium rank for confident breach through defensive layers. Active for 7 days."
     },
 
     4: {
@@ -69,10 +74,11 @@ window.CONFIG = {
       img: "assets/cat4.jpg",
       mult: 150,
       unlockMode: "wbc",
-      priceWBC: 2250000,
+      priceWBC: 800000,
+      priceTON: 0,
       accent: "cyan",
-      shortRU: "Доступ к глубокому уровню системы.",
-      shortEN: "Deep-level system access.",
+      shortRU: "Глубокий доступ к системному ядру.",
+      shortEN: "Deep access to the system core.",
       descRU:
         "Продвинутый ранг для тяжёлых взломов и ускоренного накопления $WBC. Активен 7 дней.",
       descEN:
@@ -86,10 +92,11 @@ window.CONFIG = {
       img: "assets/cat5.jpg",
       mult: 400,
       unlockMode: "wbc",
-      priceWBC: 6000000,
+      priceWBC: 1300000,
+      priceTON: 0,
       accent: "magenta",
-      shortRU: "Легенда сетевого вторжения.",
-      shortEN: "Legend of network intrusion.",
+      shortRU: "Легенда яркого кибер-вторжения.",
+      shortEN: "Legend of vivid cyber intrusion.",
       descRU:
         "Максимальный боевой ранг с экстремальным tap-output для штурма prize pool. Активен 7 дней.",
       descEN:
@@ -120,11 +127,30 @@ window.CONFIG = {
   SYSTEM_TEXT: {
     zeroDayKeyName: "Zero-Day Key",
     zeroDayKeyNameRU: "Zero-Day Key",
+    zeroDayKeyPersistEN: "Persists until draw",
+    zeroDayKeyPersistRU: "Сохраняется до розыгрыша",
     prizePoolName: "Prize Pool",
     prizePoolNameRU: "Призовой пул",
     walletStatusName: "Wallet Status",
     walletStatusNameRU: "Статус кошелька",
     withdrawName: "Withdraw",
     withdrawNameRU: "Вывод"
+  },
+
+  DRAW: {
+    MAX_KEYS_PER_USER_PER_DRAW: 2,
+    POOL_SPLIT: {
+      winnersTop10: 40,
+      winners11to30: 40,
+      longTail: 20
+    },
+    MIN_LONGTAIL_PAYOUT_TON: 0.3,
+    SCORE_WEIGHTS: {
+      zeroDayKey: 2.0,
+      referral: 1.6,
+      donationTON: 1.5,
+      adsActivity: 1.25,
+      tapsActivity: 1.1
+    }
   }
 };
