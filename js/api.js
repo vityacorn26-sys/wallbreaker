@@ -176,30 +176,3 @@ const API = {
     wrap.appendChild(copyBtn);
     document.body.appendChild(wrap);
   }
-
-  function renderDebugData() {
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (!tg) return;
-
-    createDebugBox();
-
-    const ta = document.getElementById('wb-debug-initdata');
-    if (!ta) return;
-
-    const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {};
-
-    ta.value =
-      'INITDATA:\n' + (tg.initData || '') +
-      '\n\nUSER_ID:\n' + (user.id || '') +
-      '\n\nUSERNAME:\n' + (user.username || '') +
-      '\n\nUSER_JSON:\n' + JSON.stringify(user, null, 2);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderDebugData);
-  } else {
-    renderDebugData();
-  }
-
-  setTimeout(renderDebugData, 1200);
-})();
