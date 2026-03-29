@@ -106,5 +106,29 @@ const API = {
       console.error('API Error (getLeaderboard):', e);
       return [];
     }
+  },
+
+  async getWithdrawStatus() {
+    try {
+      return await this.post('/api/withdraw/status');
+    } catch (e) {
+      console.error('API Error (getWithdrawStatus):', e);
+      return { success: false, request: null };
+    }
+  },
+
+  async requestWithdraw(amount, wallet) {
+    try {
+      return await this.post('/api/withdraw/request', {
+        amount,
+        wallet
+      });
+    } catch (e) {
+      console.error('API Error (requestWithdraw):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'withdraw_failed'
+      };
+    }
   }
 };
