@@ -7,7 +7,9 @@ let userState = {
   energy: 100,
   rank_id: 1,
   zeroDayKeys: 0,
-  walletConnected: false
+  walletConnected: false,
+  withdrawStatus: "none",
+  lastWithdraw: null
 };
 
 let tapQueue = 0;
@@ -20,6 +22,11 @@ let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
 const MAX_ENERGY = 100;
+
+const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
+const withdrawAmountInput = document.getElementById("withdraw-amount-input");
+const withdrawBtn = document.getElementById("withdraw-btn");
+const withdrawMessage = document.getElementById("withdraw-message");
 
 if (tg) {
   try {
@@ -212,7 +219,10 @@ function normalizeUserState(data) {
     energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy || 0))),
     rank_id: Number(data?.rank_id || 1),
     zeroDayKeys: Number(data?.zeroDayKeys || data?.zero_day_keys || userState.zeroDayKeys || 0),
-    walletConnected: Boolean(data?.walletConnected || data?.wallet_connected || userState.walletConnected || false)
+    walletConnected: Boolean(data?.walletConnected || data?.wallet_connected || userState.walletConnected || false),
+    withdrawStatus: String(data?.withdrawStatus || data?.withdraw_status || userState.withdrawStatus || "none"),
+    lastWithdraw: data?.lastWithdraw || data?.last_withdraw || userState.lastWithdraw || null,
+    ton_balance: Number(data?.ton_balance || userState.ton_balance || 0)
   };
 }
 
@@ -251,8 +261,30 @@ function updateAccountPanel() {
   if (rankValue) rankValue.textContent = rank?.name || "Proxy Hacker";
   if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
   if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
-  if (walletStatus) walletStatus.textContent = userState.walletConnected ? "Connected" : t().notConnected;
-  if (withdrawStatus) withdrawStatus.textContent = t().noWithdraws;
+
+  const enteredWallet = withdrawWalletInput?.value?.trim() || "";
+  const sessionWallet = userState.lastWithdraw?.wallet || "";
+
+  if (walletStatus) {
+    if (sessionWallet) {
+      walletStatus.textContent = sessionWallet;
+    } else if (enteredWallet) {
+      walletStatus.textContent = enteredWallet;
+    } else {
+      walletStatus.textContent = t().notConnected;
+    }
+  }
+
+  if (withdrawStatus) {
+    if (userState.lastWithdraw) {
+      const amount = Number(userState.lastWithdraw.amount || 0);
+      const currency = userState.lastWithdraw.currency || "TON";
+      const status = userState.lastWithdraw.status || userState.withdrawStatus || "pending";
+      withdrawStatus.textContent = `${status} • ${amount} ${currency}`;
+    } else {
+      withdrawStatus.textContent = t().noWithdraws;
+    }
+  }
 
   const cards = document.querySelectorAll("#account-panel-overlay .account-card");
   if (cards[0]) cards[0].querySelector("strong").textContent = t().currentRank;
@@ -365,12 +397,97 @@ async function loadUser() {
     userState = normalizeUserState(data);
     tapQueue = 0;
     syncEnergyBase();
+    await loadWithdrawStatus();
     applyTexts();
     startLocalEnergyTicker();
     showGameScreen();
   } catch (e) {
     console.error("Load user error:", e);
     showFatalError(t().userLoadFail);
+  }
+}
+
+async function loadWithdrawStatus() {
+  try {
+    const result = await API.getWithdrawStatus();
+
+    if (result?.success) {
+      userState.lastWithdraw = result.request || null;
+      userState.withdrawStatus = result.request?.status || "none";
+      userState.walletConnected = Boolean(result.request?.wallet);
+    } else {
+      userState.lastWithdraw = null;
+      userState.withdrawStatus = "none";
+    }
+
+    updateAccountPanel();
+  } catch (e) {
+    console.error("loadWithdrawStatus error:", e);
+  }
+}
+
+async function handleWithdrawRequest() {
+  try {
+    const wallet = (withdrawWalletInput?.value || "").trim();
+    const amount = Number(withdrawAmountInput?.value || 0);
+
+    if (withdrawMessage) withdrawMessage.textContent = "";
+
+    if (!wallet) {
+      if (withdrawMessage) withdrawMessage.textContent = "Enter TON wallet first";
+      return;
+    }
+
+    if (!amount || amount < 2.5) {
+      if (withdrawMessage) withdrawMessage.textContent = "Minimum withdraw is 2.5 TON";
+      return;
+    }
+
+    if (withdrawBtn) {
+      withdrawBtn.disabled = true;
+      withdrawBtn.textContent = "PROCESSING...";
+    }
+
+    const result = await API.requestWithdraw(amount, wallet);
+
+    if (!result?.success) {
+      const errorCode = result?.error || "withdraw_failed";
+
+      if (errorCode === "pending_exists") {
+        if (withdrawMessage) withdrawMessage.textContent = "You already have a pending withdraw request";
+      } else if (errorCode === "invalid_wallet") {
+        if (withdrawMessage) withdrawMessage.textContent = "Invalid TON wallet address";
+      } else if (errorCode === "insufficient_balance") {
+        if (withdrawMessage) withdrawMessage.textContent = "Insufficient TON balance";
+      } else if (errorCode === "min_amount") {
+        if (withdrawMessage) withdrawMessage.textContent = "Minimum withdraw is 2.5 TON";
+      } else {
+        if (withdrawMessage) withdrawMessage.textContent = "Withdraw request failed";
+      }
+
+      return;
+    }
+
+    userState.ton_balance = Number(result.ton_balance || userState.ton_balance || 0);
+    userState.lastWithdraw = {
+      amount: result.amount,
+      wallet: result.wallet,
+      currency: result.currency || "TON",
+      status: "pending"
+    };
+    userState.withdrawStatus = "pending";
+    userState.walletConnected = true;
+
+    if (withdrawMessage) withdrawMessage.textContent = "Withdraw request created";
+    updateAccountPanel();
+  } catch (e) {
+    console.error("handleWithdrawRequest error:", e);
+    if (withdrawMessage) withdrawMessage.textContent = "Withdraw request failed";
+  } finally {
+    if (withdrawBtn) {
+      withdrawBtn.disabled = false;
+      withdrawBtn.textContent = "REQUEST WITHDRAW";
+    }
   }
 }
 
@@ -790,6 +907,10 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       window.open("https://t.me/hiddifyProxySale_bot", "_blank");
     });
+  }
+
+  if (withdrawBtn) {
+    withdrawBtn.addEventListener("click", handleWithdrawRequest);
   }
 
   bindOverlayClosers();
