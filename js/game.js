@@ -30,6 +30,9 @@ const withdrawAmountInput = document.getElementById("withdraw-amount-input");
 const withdrawBtn = document.getElementById("withdraw-btn");
 const withdrawMessage = document.getElementById("withdraw-message");
 
+const rankBuyPrimaryBtn = document.getElementById("rank-buy-primary-btn");
+const rankBuySecondaryBtn = document.getElementById("rank-buy-secondary-btn");
+
 if (tg) {
   try {
     tg.expand();
@@ -95,18 +98,13 @@ function formatDurationLeft(expiresAt) {
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
 
-  if (days > 0) {
-    return `${days}d ${hours}h`;
+  if (currentLang === "RU") {
+    if (days > 0) return `${days}д ${hours}ч`;
+    return `${Math.max(totalHours, 0)}ч`;
   }
 
+  if (days > 0) return `${days}d ${hours}h`;
   return `${Math.max(totalHours, 0)}h`;
-}
-
-function getPreferredRankCurrency(rank) {
-  if (!rank) return "WBC";
-  if (rank.id >= 3 && rank.priceTON > 0) return "TON";
-  if (rank.priceWBC > 0) return "WBC";
-  return "TON";
 }
 
 function getRankPriceLabel(rank) {
@@ -154,7 +152,7 @@ const I18N = {
     noWithdraws: "Запросов на вывод нет",
     poolLive: "Пул заряжается в сети",
     rankDuration: (days) => `Срок действия: ${days} дней`,
-    acquireRank: "АКТИВИРОВАТЬ",
+    acquireRank: "КУПИТЬ ЗА $WBC",
     activateTon: "КУПИТЬ ЗА TON",
     details: "ПОДРОБНЕЕ",
     zeroDayPersist: "Сохраняется до розыгрыша. Максимум 2 ключа на один draw.",
@@ -166,8 +164,7 @@ const I18N = {
     rankBuyOk: "Ранг активирован",
     rankBuyFail: "Покупка ранга не удалась",
     notEnoughTon: "Недостаточно TON",
-    notEnoughWbc: "Недостаточно $WBC",
-    alreadyPending: "У вас уже есть pending-статус"
+    notEnoughWbc: "Недостаточно $WBC"
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -197,7 +194,7 @@ const I18N = {
     noWithdraws: "No withdraw requests",
     poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
-    acquireRank: "ACTIVATE",
+    acquireRank: "BUY FOR $WBC",
     activateTon: "BUY FOR TON",
     details: "DETAILS",
     zeroDayPersist: "Persists until draw. Maximum 2 keys per draw.",
@@ -209,8 +206,7 @@ const I18N = {
     rankBuyOk: "Rank activated",
     rankBuyFail: "Rank purchase failed",
     notEnoughTon: "Not enough TON",
-    notEnoughWbc: "Not enough $WBC",
-    alreadyPending: "You already have pending status"
+    notEnoughWbc: "Not enough $WBC"
   }
 };
 
@@ -283,10 +279,7 @@ function normalizeUserState(data) {
 }
 
 function syncEnergyBase() {
-  lastServerEnergy = Math.max(
-    0,
-    Math.min(MAX_ENERGY, Number(userState.energy || 0))
-  );
+  lastServerEnergy = Math.max(0, Math.min(MAX_ENERGY, Number(userState.energy || 0)));
   lastServerSyncTs = Date.now();
 }
 
@@ -554,20 +547,18 @@ async function handleWithdrawRequest() {
   }
 }
 
-async function handleRankPurchase(rankId, forcedCurrency = null) {
+async function handleRankPurchase(rankId, currency) {
   const rank = getRankById(rankId);
   if (!rank || rank.id <= 1) return;
-
-  const currency = forcedCurrency || getPreferredRankCurrency(rank);
 
   const result = await API.buyRank(rank.id, currency);
 
   if (!result?.success) {
     const errorCode = result?.error || "rank_buy_failed";
 
-    if (errorCode.includes("TON")) {
+    if (String(errorCode).toUpperCase().includes("TON")) {
       safeAlert(t().notEnoughTon);
-    } else if (errorCode.includes("WBC")) {
+    } else if (String(errorCode).toUpperCase().includes("WBC")) {
       safeAlert(t().notEnoughWbc);
     } else {
       safeAlert(t().rankBuyFail);
@@ -652,7 +643,8 @@ async function processTapQueue() {
           balance: data.balance,
           energy: data.energy,
           rank_id: data.rank_id ?? userState.rank_id,
-          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at
+          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
+          ton_balance: data.ton_balance ?? userState.ton_balance
         });
 
         syncEnergyBase();
@@ -804,11 +796,7 @@ function renderMarketPanel() {
     }
 
     if (pEls[2]) {
-      if (rank.id >= 3 && rank.priceTON > 0) {
-        pEls[2].textContent = `${rank.priceTON} TON`;
-      } else {
-        pEls[2].textContent = getRankPriceLabel(rank);
-      }
+      pEls[2].textContent = getRankPriceLabel(rank);
     }
 
     if (pEls[3]) {
@@ -822,7 +810,8 @@ function renderMarketPanel() {
       if (rank.id === currentRankId) {
         btn.textContent = "ACTIVE";
         btn.disabled = true;
-      } else if (rank.id >= 3 && rank.priceTON > 0) {
+        btn.onclick = null;
+      } else if (rank.id === 3) {
         btn.textContent = t().activateTon;
         btn.disabled = false;
         btn.onclick = () => handleRankPurchase(rank.id, "TON");
@@ -953,7 +942,6 @@ function showRankDetails(rankId) {
   const priceEl = document.getElementById("rank-details-price");
   const durationEl = document.getElementById("rank-details-duration");
   const descEl = document.getElementById("rank-details-desc");
-  const actionBtn = document.querySelector("#rank-details-overlay .wb-button");
 
   if (nameEl) nameEl.textContent = rank.name;
   if (priceEl) priceEl.textContent = `${t().activationPrice}: ${getRankPriceLabel(rank)}`;
@@ -972,18 +960,65 @@ function showRankDetails(rankId) {
         : (rank.descEN || rank.shortEN || "");
   }
 
-  if (actionBtn) {
-    if (rank.id === userState.rank_id) {
-      actionBtn.textContent = "ACTIVE";
-      actionBtn.disabled = true;
-      actionBtn.onclick = null;
-    } else {
-      const purchaseCurrency = getPreferredRankCurrency(rank);
-      actionBtn.textContent = purchaseCurrency === "TON" ? t().activateTon : t().acquireRank;
-      actionBtn.disabled = false;
-      actionBtn.onclick = async () => {
-        await handleRankPurchase(rank.id, purchaseCurrency);
+  if (rankBuyPrimaryBtn) {
+    rankBuyPrimaryBtn.disabled = false;
+    rankBuyPrimaryBtn.classList.remove("hidden");
+  }
+
+  if (rankBuySecondaryBtn) {
+    rankBuySecondaryBtn.disabled = false;
+    rankBuySecondaryBtn.classList.add("hidden");
+  }
+
+  if (rank.id === userState.rank_id) {
+    if (rankBuyPrimaryBtn) {
+      rankBuyPrimaryBtn.textContent = "ACTIVE";
+      rankBuyPrimaryBtn.disabled = true;
+      rankBuyPrimaryBtn.onclick = null;
+    }
+
+    if (rankBuySecondaryBtn) {
+      rankBuySecondaryBtn.classList.add("hidden");
+      rankBuySecondaryBtn.onclick = null;
+    }
+  } else if (rank.id === 3) {
+    if (rankBuyPrimaryBtn) {
+      rankBuyPrimaryBtn.textContent = t().activateTon;
+      rankBuyPrimaryBtn.onclick = async () => {
+        await handleRankPurchase(rank.id, "TON");
       };
+    }
+
+    if (rankBuySecondaryBtn) {
+      rankBuySecondaryBtn.classList.add("hidden");
+      rankBuySecondaryBtn.onclick = null;
+    }
+  } else if (rank.id === 4 || rank.id === 5) {
+    if (rankBuyPrimaryBtn) {
+      rankBuyPrimaryBtn.textContent = t().activateTon;
+      rankBuyPrimaryBtn.onclick = async () => {
+        await handleRankPurchase(rank.id, "TON");
+      };
+    }
+
+    if (rankBuySecondaryBtn) {
+      rankBuySecondaryBtn.textContent = t().acquireRank;
+      rankBuySecondaryBtn.classList.remove("hidden");
+      rankBuySecondaryBtn.onclick = async () => {
+        await handleRankPurchase(rank.id, "WBC");
+      };
+    }
+  } else {
+    if (rankBuyPrimaryBtn) {
+      rankBuyPrimaryBtn.textContent = t().acquireRank;
+      rankBuyPrimaryBtn.onclick = async () => {
+        await handleRankPurchase(rank.id, "WBC");
+      };
+    }
+
+    if (rankBuySecondaryBtn) {
+      rankBuySecondaryBtn.classList.add("hidden");
+      rankBuySecondaryBtn.onclick = null;
     }
   }
 
