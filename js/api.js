@@ -130,5 +130,20 @@ const API = {
         error: e?.payload?.error || e?.message || 'withdraw_failed'
       };
     }
+  },
+
+  async buyRank(rankId, currency) {
+    try {
+      return await this.post('/api/rank/buy', {
+        rank_id: rankId,
+        currency
+      });
+    } catch (e) {
+      console.error('API Error (buyRank):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'rank_buy_failed'
+      };
+    }
   }
 };
