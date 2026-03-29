@@ -6,10 +6,12 @@ let userState = {
   balance: 0,
   energy: 100,
   rank_id: 1,
+  rank_expires_at: 0,
   zeroDayKeys: 0,
   walletConnected: false,
   withdrawStatus: "none",
-  lastWithdraw: null
+  lastWithdraw: null,
+  ton_balance: 0
 };
 
 let tapQueue = 0;
@@ -84,6 +86,45 @@ function getRankById(rankId) {
   return ranks[String(rankId)] || ranks[rankId] || ranks["1"] || ranks[1] || null;
 }
 
+function formatDurationLeft(expiresAt) {
+  const leftMs = Number(expiresAt || 0) - Date.now();
+
+  if (leftMs <= 0) return null;
+
+  const totalHours = Math.floor(leftMs / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  return `${Math.max(totalHours, 0)}h`;
+}
+
+function getPreferredRankCurrency(rank) {
+  if (!rank) return "WBC";
+  if (rank.id >= 3 && rank.priceTON > 0) return "TON";
+  if (rank.priceWBC > 0) return "WBC";
+  return "TON";
+}
+
+function getRankPriceLabel(rank) {
+  if (!rank) return "";
+
+  const parts = [];
+
+  if (rank.priceWBC > 0) {
+    parts.push(`${Number(rank.priceWBC).toLocaleString()} ${getCurrency()}`);
+  }
+
+  if (rank.priceTON > 0) {
+    parts.push(`${rank.priceTON} TON`);
+  }
+
+  return parts.join(" / ");
+}
+
 const I18N = {
   RU: {
     adLimit: "Лимит рекламы достигнут",
@@ -114,12 +155,19 @@ const I18N = {
     poolLive: "Пул заряжается в сети",
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "АКТИВИРОВАТЬ",
+    activateTon: "КУПИТЬ ЗА TON",
     details: "ПОДРОБНЕЕ",
     zeroDayPersist: "Сохраняется до розыгрыша. Максимум 2 ключа на один draw.",
     rankLabel: (id) => `R${id}`,
-    tapOutput: "Tap Output",
+    tapOutput: "Сила тапа",
     activationPrice: "Цена активации",
-    durationLabel: "Срок действия"
+    durationLabel: "Срок действия",
+    activeLeft: (time) => `Активен: ${time}`,
+    rankBuyOk: "Ранг активирован",
+    rankBuyFail: "Покупка ранга не удалась",
+    notEnoughTon: "Недостаточно TON",
+    notEnoughWbc: "Недостаточно $WBC",
+    alreadyPending: "У вас уже есть pending-статус"
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -150,12 +198,19 @@ const I18N = {
     poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "ACTIVATE",
+    activateTon: "BUY FOR TON",
     details: "DETAILS",
     zeroDayPersist: "Persists until draw. Maximum 2 keys per draw.",
     rankLabel: (id) => `R${id}`,
     tapOutput: "Tap Output",
     activationPrice: "Activation Price",
-    durationLabel: "Duration"
+    durationLabel: "Duration",
+    activeLeft: (time) => `Active: ${time}`,
+    rankBuyOk: "Rank activated",
+    rankBuyFail: "Rank purchase failed",
+    notEnoughTon: "Not enough TON",
+    notEnoughWbc: "Not enough $WBC",
+    alreadyPending: "You already have pending status"
   }
 };
 
@@ -218,6 +273,7 @@ function normalizeUserState(data) {
     balance: Number(data?.balance || 0),
     energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy || 0))),
     rank_id: Number(data?.rank_id || 1),
+    rank_expires_at: Number(data?.rank_expires_at || 0),
     zeroDayKeys: Number(data?.zeroDayKeys || data?.zero_day_keys || userState.zeroDayKeys || 0),
     walletConnected: Boolean(data?.walletConnected || data?.wallet_connected || userState.walletConnected || false),
     withdrawStatus: String(data?.withdrawStatus || data?.withdraw_status || userState.withdrawStatus || "none"),
@@ -258,7 +314,13 @@ function updateAccountPanel() {
   const walletStatus = document.getElementById("account-wallet-status");
   const withdrawStatus = document.getElementById("account-withdraw-status");
 
-  if (rankValue) rankValue.textContent = rank?.name || "Proxy Hacker";
+  if (rankValue) {
+    const left = formatDurationLeft(userState.rank_expires_at);
+    rankValue.textContent = left && userState.rank_id > 1
+      ? `${rank?.name || "Proxy Hacker"} • ${left}`
+      : (rank?.name || "Proxy Hacker");
+  }
+
   if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
   if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
 
@@ -330,6 +392,7 @@ function updateUI() {
   updateAccountPanel();
   updatePrizePoolPanel();
   updateRankLabel();
+  renderMarketPanel();
 }
 
 function applyTexts() {
@@ -491,6 +554,42 @@ async function handleWithdrawRequest() {
   }
 }
 
+async function handleRankPurchase(rankId, forcedCurrency = null) {
+  const rank = getRankById(rankId);
+  if (!rank || rank.id <= 1) return;
+
+  const currency = forcedCurrency || getPreferredRankCurrency(rank);
+
+  const result = await API.buyRank(rank.id, currency);
+
+  if (!result?.success) {
+    const errorCode = result?.error || "rank_buy_failed";
+
+    if (errorCode.includes("TON")) {
+      safeAlert(t().notEnoughTon);
+    } else if (errorCode.includes("WBC")) {
+      safeAlert(t().notEnoughWbc);
+    } else {
+      safeAlert(t().rankBuyFail);
+    }
+    return;
+  }
+
+  userState = normalizeUserState({
+    ...userState,
+    rank_id: result.rank_id,
+    rank_expires_at: result.rank_expires_at,
+    balance: result.balance,
+    wbc_balance: result.wbc_balance,
+    ton_balance: result.ton_balance
+  });
+
+  syncEnergyBase();
+  updateUI();
+  closeAllPanels();
+  safeAlert(t().rankBuyOk);
+}
+
 function startLocalEnergyTicker() {
   if (localEnergyTicker) {
     clearInterval(localEnergyTicker);
@@ -502,6 +601,9 @@ function startLocalEnergyTicker() {
     if (renderedEnergy !== Number(userState.energy || 0)) {
       userState.energy = renderedEnergy;
       updateUI();
+    } else {
+      renderMarketPanel();
+      updateAccountPanel();
     }
   }, 1000);
 }
@@ -549,7 +651,8 @@ async function processTapQueue() {
           ...userState,
           balance: data.balance,
           energy: data.energy,
-          rank_id: data.rank_id ?? userState.rank_id
+          rank_id: data.rank_id ?? userState.rank_id,
+          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at
         });
 
         syncEnergyBase();
@@ -668,12 +771,14 @@ function renderMarketPanel() {
 
     if (activeBadge) {
       if (rank.id === currentRankId) {
+        const left = formatDurationLeft(userState.rank_expires_at);
+        activeBadge.textContent = left || "ACTIVE";
         activeBadge.classList.remove("hidden");
       } else {
         activeBadge.classList.add("hidden");
       }
     }
-    
+
     const badgeEl = card.querySelector(".market-rank-badge");
     const iconEl = card.querySelector(".market-rank-icon");
     const pEls = card.querySelectorAll("p");
@@ -682,7 +787,7 @@ function renderMarketPanel() {
 
     if (badgeEl) {
       badgeEl.textContent = t().rankLabel(rank.id);
-      badgeEl.classList.toggle("market-rank-badge-ton", rank.unlockMode === "ton" || rank.id === 5);
+      badgeEl.classList.toggle("market-rank-badge-ton", rank.priceTON > 0);
     }
 
     if (iconEl) {
@@ -699,16 +804,33 @@ function renderMarketPanel() {
     }
 
     if (pEls[2]) {
-      pEls[2].textContent = rank.priceLabel || "";
+      if (rank.id >= 3 && rank.priceTON > 0) {
+        pEls[2].textContent = `${rank.priceTON} TON`;
+      } else {
+        pEls[2].textContent = getRankPriceLabel(rank);
+      }
     }
 
     if (pEls[3]) {
-      pEls[3].textContent = t().rankDuration(getRankDurationDays());
+      const left = rank.id === currentRankId ? formatDurationLeft(userState.rank_expires_at) : null;
+      pEls[3].textContent = left
+        ? t().activeLeft(left)
+        : t().rankDuration(getRankDurationDays());
     }
 
     if (btn) {
-      btn.textContent = t().details;
-      btn.onclick = () => showRankDetails(rank.id);
+      if (rank.id === currentRankId) {
+        btn.textContent = "ACTIVE";
+        btn.disabled = true;
+      } else if (rank.id >= 3 && rank.priceTON > 0) {
+        btn.textContent = t().activateTon;
+        btn.disabled = false;
+        btn.onclick = () => handleRankPurchase(rank.id, "TON");
+      } else {
+        btn.textContent = t().details;
+        btn.disabled = false;
+        btn.onclick = () => showRankDetails(rank.id);
+      }
     }
   });
 }
@@ -795,7 +917,9 @@ window.showAds = async () => {
         ...userState,
         balance: rewardResp.balance,
         energy: rewardResp.energy,
-        rank_id: rewardResp.rank_id ?? userState.rank_id
+        rank_id: rewardResp.rank_id ?? userState.rank_id,
+        rank_expires_at: rewardResp.rank_expires_at ?? userState.rank_expires_at,
+        ton_balance: rewardResp.ton_balance ?? userState.ton_balance
       });
 
       syncEnergyBase();
@@ -821,16 +945,6 @@ window.showAds = async () => {
   }
 };
 
-function getRankPriceLabel(rank) {
-  if (!rank) return "";
-
-  if (rank.tonPrice) {
-    return `${rank.tonPrice} TON`;
-  }
-
-  return `${Number(rank.price || 0).toLocaleString()} ${getCurrency()}`;
-}
-
 function showRankDetails(rankId) {
   const rank = getRankById(rankId);
   if (!rank) return;
@@ -843,14 +957,34 @@ function showRankDetails(rankId) {
 
   if (nameEl) nameEl.textContent = rank.name;
   if (priceEl) priceEl.textContent = `${t().activationPrice}: ${getRankPriceLabel(rank)}`;
-  if (durationEl) durationEl.textContent = `${t().durationLabel}: ${getRankDurationDays()} days`;
-  if (descEl) descEl.textContent = rank.desc || "";
+
+  const left = rank.id === userState.rank_id ? formatDurationLeft(userState.rank_expires_at) : null;
+  if (durationEl) {
+    durationEl.textContent = left
+      ? t().activeLeft(left)
+      : `${t().durationLabel}: ${getRankDurationDays()} days`;
+  }
+
+  if (descEl) {
+    descEl.textContent =
+      currentLang === "RU"
+        ? (rank.descRU || rank.shortRU || "")
+        : (rank.descEN || rank.shortEN || "");
+  }
 
   if (actionBtn) {
-    actionBtn.textContent = t().acquireRank;
-    actionBtn.onclick = async () => {
-      safeAlert("Rank purchase flow is connected to backend next and will be enabled in the next step.");
-    };
+    if (rank.id === userState.rank_id) {
+      actionBtn.textContent = "ACTIVE";
+      actionBtn.disabled = true;
+      actionBtn.onclick = null;
+    } else {
+      const purchaseCurrency = getPreferredRankCurrency(rank);
+      actionBtn.textContent = purchaseCurrency === "TON" ? t().activateTon : t().acquireRank;
+      actionBtn.disabled = false;
+      actionBtn.onclick = async () => {
+        await handleRankPurchase(rank.id, purchaseCurrency);
+      };
+    }
   }
 
   openPanel("rank-details-overlay");
@@ -901,4 +1035,4 @@ function updateRankLabel() {
   if (rank.id === 5) rankClass = "r5";
 
   el.className = "rank-label " + rankClass;
-    }
+}
