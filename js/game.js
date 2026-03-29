@@ -111,7 +111,7 @@ const I18N = {
     withdrawStatus: "Статус вывода",
     notConnected: "Не подключён",
     noWithdraws: "Запросов на вывод нет",
-    poolLive: "Формируется из рекламного пула",
+    poolLive: "Пул заряжается в сети",
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "АКТИВИРОВАТЬ",
     details: "ПОДРОБНЕЕ",
@@ -147,7 +147,7 @@ const I18N = {
     withdrawStatus: "Withdraw Status",
     notConnected: "Not connected",
     noWithdraws: "No withdraw requests",
-    poolLive: "Built from the ad-funded prize pool",
+    poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "ACTIVATE",
     details: "DETAILS",
@@ -699,10 +699,7 @@ function renderMarketPanel() {
     }
 
     if (pEls[2]) {
-      pEls[2].textContent =
-        rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0
-          ? `${Number(rank.priceTON)} TON`
-          : `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
+      pEls[2].textContent = rank.priceLabel || "";
     }
 
     if (pEls[3]) {
@@ -710,100 +707,22 @@ function renderMarketPanel() {
     }
 
     if (btn) {
-      const isActiveSellRank = Number(userState.rank_id || 1) === Number(rank.id);
-
-      if (isActiveSellRank) {
-        btn.textContent = "ACTIVE";
-        btn.classList.remove("ghost");
-        btn.classList.remove("premium");
-        btn.classList.add("is-active-rank");
-        btn.onclick = null;
-      } else {
-        btn.textContent = t().details;
-        btn.classList.remove("is-active-rank");
-        btn.classList.toggle("premium", rank.unlockMode === "ton" || rank.id === 5);
-        btn.classList.toggle("ghost", !(rank.unlockMode === "ton" || rank.id === 5));
-        btn.onclick = () => openRankDetails(rank.id);
-      }
+      btn.textContent = t().details;
+      btn.onclick = () => showRankDetails(rank.id);
     }
-    });
-
-  const infoCard = marketOverlay.querySelector(".info-card");
-  if (infoCard) {
-    const pEls = infoCard.querySelectorAll("p");
-    if (pEls[0]) pEls[0].innerHTML = "<strong>Zero-Day Key</strong>";
-    if (pEls[1]) {
-      pEls[1].textContent = `${getZeroDayKeyPrice().toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
-    }
-    if (pEls[2]) {
-      pEls[2].textContent = t().zeroDayPersist;
-    }
-  }
+  });
 }
-
-function openRankDetails(rankId) {
-  const rank = getRankById(rankId);
-  if (!rank) return;
-
-  const overlay = document.getElementById("rank-details-overlay");
-  const title = document.getElementById("rank-details-title");
-  const name = document.getElementById("rank-details-name");
-  const price = document.getElementById("rank-details-price");
-  const duration = document.getElementById("rank-details-duration");
-  const desc = document.getElementById("rank-details-desc");
-  const actionBtn = overlay?.querySelector(".wb-button");
-
-  if (title) title.textContent = `${t().rankDetailsTitle} • R${rank.id}`;
-  if (name) name.textContent = `${rank.name} • ${Number(rank.mult).toLocaleString()} ${getCurrency()} / tap`;
-
-  if (price) {
-    price.textContent =
-      rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0
-        ? `${t().activationPrice}: ${Number(rank.priceTON)} TON`
-        : `${t().activationPrice}: ${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
-  }
-
-  if (duration) {
-    duration.textContent = `${t().durationLabel}: ${getRankDurationDays()} days`;
-    if (currentLang === "RU") {
-      duration.textContent = `${t().durationLabel}: ${getRankDurationDays()} дней`;
-    }
-  }
-
-  if (desc) {
-    desc.textContent = currentLang === "RU" ? rank.descRU : rank.descEN;
-  }
-
-  if (actionBtn) {
-    actionBtn.textContent = t().acquireRank;
-    actionBtn.onclick = () => {
-      const priceText =
-        rank.unlockMode === "ton" && Number(rank.priceTON || 0) > 0
-          ? `${Number(rank.priceTON)} TON`
-          : `${Number(rank.priceWBC || 0).toLocaleString()} ${getCurrency()}`;
-
-      safeAlert(
-        `${t().rankLabel(rank.id)} • ${rank.name}\n\n${t().tapOutput}: ${Number(rank.mult).toLocaleString()} ${getCurrency()} / tap\n${t().activationPrice}: ${priceText}\n${t().rankDuration(getRankDurationDays())}\n\nServer-side activation подключим следующим пакетом.`
-      );
-    };
-  }
-
-  openPanel("rank-details-overlay");
-}
-
-window.openDarknetMarket = () => {
-  renderMarketPanel();
-  openPanel("market-panel-overlay");
-};
 
 window.showRanks = () => {
-  window.openDarknetMarket();
+  renderMarketPanel();
+  openPanel("market-panel-overlay");
 };
 
 window.showAccount = () => {
   updateAccountPanel();
   openPanel("account-panel-overlay");
 };
+
 window.closePanel = () => {
   closeAllPanels();
 
@@ -828,75 +747,114 @@ function getAdsgramController() {
   }
 }
 
-function parseAdErrorMessage(error) {
-  const raw = String(error?.message || error || "").toLowerCase();
-
-  if (!raw) return t().adOpenFail;
-  if (raw.includes("not fully watched")) return t().adWatchFail;
-  if (raw.includes("cancel")) return t().adWatchFail;
-  if (raw.includes("close")) return t().adWatchFail;
-  if (raw.includes("sdk")) return t().adNotLoaded;
-  if (raw.includes("block")) return t().adOpenFail;
-  if (raw.includes("init")) return t().adOpenFail;
-
-  return t().adOpenFail;
+function parseAdErrorMessage(err) {
+  if (!err) return "";
+  if (typeof err === "string") return err;
+  if (typeof err.message === "string") return err.message;
+  if (typeof err.error === "string") return err.error;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
 }
 
 window.showAds = async () => {
   try {
-    const limit = await API.checkAdLimit();
-
-    if (!limit?.canWatch) {
+    const limitInfo = await API.checkAdLimit();
+    if (!limitInfo?.canWatch) {
       safeAlert(t().adLimit);
       return;
     }
 
-    const adController = getAdsgramController();
-
-    if (!adController || typeof adController.show !== "function") {
+    const controller = getAdsgramController();
+    if (!controller) {
       safeAlert(t().adNotLoaded);
       return;
     }
 
-    let adOpened = false;
+    const result = await controller.show();
 
-    try {
-      await adController.show();
-      adOpened = true;
-    } catch (adErr) {
-      console.error("Adsgram show error:", adErr);
-      safeAlert(parseAdErrorMessage(adErr));
+    const status = result?.done || result?.state || result?.status || "";
+    const normalizedStatus = String(status).toLowerCase();
+
+    const rewardAllowed =
+      normalizedStatus === "reward" ||
+      normalizedStatus === "done" ||
+      normalizedStatus === "completed" ||
+      normalizedStatus === "finish";
+
+    if (!rewardAllowed) {
+      safeAlert(t().adWatchFail);
       return;
     }
 
-    if (!adOpened) {
-      safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
-      return;
-    }
-
-    const reward = await API.claimAdReward();
-
-    if (reward?.success) {
+    const rewardResp = await API.claimAdReward();
+    if (rewardResp?.success) {
       userState = normalizeUserState({
         ...userState,
-        balance: reward.balance,
-        energy: reward.energy,
-        rank_id: reward.rank_id ?? userState.rank_id
+        balance: rewardResp.balance,
+        energy: rewardResp.energy,
+        rank_id: rewardResp.rank_id ?? userState.rank_id
       });
 
-      tapQueue = 0;
       syncEnergyBase();
       updateUI();
       safeAlert(t().adRewardOk);
+    } else {
+      safeAlert(t().adRewardFail);
+    }
+  } catch (e) {
+    const adErrText = parseAdErrorMessage(e);
+    console.error("showAds error:", e);
+
+    if (
+      adErrText.includes("cancel") ||
+      adErrText.includes("close") ||
+      adErrText.includes("dismiss")
+    ) {
+      safeAlert(t().adWatchFail);
       return;
     }
 
-    safeAlert(t().adRewardFail);
-  } catch (e) {
-    console.error("showAds fatal error:", e);
-    safeAlert(t().adOpenFail);
+    safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
   }
 };
+
+function getRankPriceLabel(rank) {
+  if (!rank) return "";
+
+  if (rank.tonPrice) {
+    return `${rank.tonPrice} TON`;
+  }
+
+  return `${Number(rank.price || 0).toLocaleString()} ${getCurrency()}`;
+}
+
+function showRankDetails(rankId) {
+  const rank = getRankById(rankId);
+  if (!rank) return;
+
+  const nameEl = document.getElementById("rank-details-name");
+  const priceEl = document.getElementById("rank-details-price");
+  const durationEl = document.getElementById("rank-details-duration");
+  const descEl = document.getElementById("rank-details-desc");
+  const actionBtn = document.querySelector("#rank-details-overlay .wb-button");
+
+  if (nameEl) nameEl.textContent = rank.name;
+  if (priceEl) priceEl.textContent = `${t().activationPrice}: ${getRankPriceLabel(rank)}`;
+  if (durationEl) durationEl.textContent = `${t().durationLabel}: ${getRankDurationDays()} days`;
+  if (descEl) descEl.textContent = rank.desc || "";
+
+  if (actionBtn) {
+    actionBtn.textContent = t().acquireRank;
+    actionBtn.onclick = async () => {
+      safeAlert("Rank purchase flow is connected to backend next and will be enabled in the next step.");
+    };
+  }
+
+  openPanel("rank-details-overlay");
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const gateway = document.getElementById("gateway");
@@ -917,6 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTexts();
   loadUser();
 });
+
 function updateRankLabel() {
   const el = document.getElementById("current-rank-label");
   if (!el) return;
@@ -942,4 +901,4 @@ function updateRankLabel() {
   if (rank.id === 5) rankClass = "r5";
 
   el.className = "rank-label " + rankClass;
-}
+    }
