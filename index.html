@@ -65,11 +65,12 @@
 
   <div id="game-ui" style="display: none;">
     <div id="current-rank-label" class="rank-label"></div>
+
     <div id="balance" class="ui-top-block">
       <span id="balance-val">0</span>
       <span id="balance-currency">$WBC</span>
     </div>
-   
+
     <div id="cat-box" onclick="handleTap()">
       <img id="cat-img" src="assets/cat1.jpg" alt="Breaker" />
     </div>
@@ -89,8 +90,6 @@
       <img src="assets/server.jpg" alt="Gateway" />
     </div>
   </div>
-
-  <!-- FUTURE PANELS / CARCASS -->
 
   <div id="market-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
     <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="market-panel-title">
@@ -137,7 +136,7 @@
         </div>
         <p><strong>Root Operator</strong></p>
         <p>150 $WBC / tap</p>
-        <p>750,000 $WBC</p>
+        <p>750,000 $WBC / 1 TON</p>
         <p>Активен 7 дней.</p>
         <button class="wb-button ghost" type="button">DETAILS</button>
       </div>
@@ -150,7 +149,7 @@
         </div>
         <p><strong>Cyber Legend</strong></p>
         <p>400 $WBC / tap</p>
-        <p>1,300,000 $WBC</p>
+        <p>1,300,000 $WBC / 2.5 TON</p>
         <p>Активен 7 дней.</p>
         <button class="wb-button premium" type="button">DETAILS</button>
       </div>
@@ -239,7 +238,14 @@
         </p>
       </div>
 
-      <button class="wb-button primary" type="button">Acquire Rank</button>
+      <div class="rank-actions">
+        <button id="rank-buy-primary-btn" class="wb-button primary" type="button">
+          ACTIVATE
+        </button>
+        <button id="rank-buy-secondary-btn" class="wb-button ghost hidden" type="button">
+          BUY ALT
+        </button>
+      </div>
     </div>
   </div>
 
