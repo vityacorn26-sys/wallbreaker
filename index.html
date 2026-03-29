@@ -191,6 +191,37 @@
         <p><strong>Withdraw Status</strong></p>
         <p id="account-withdraw-status">No withdraw requests</p>
       </div>
+
+      <div class="account-card account-withdraw-box">
+        <p><strong>TON Wallet</strong></p>
+        <input
+          id="withdraw-wallet-input"
+          class="account-input"
+          type="text"
+          placeholder="UQ... your TON wallet"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="account-card account-withdraw-box">
+        <p><strong>Withdraw Amount (TON)</strong></p>
+        <input
+          id="withdraw-amount-input"
+          class="account-input"
+          type="number"
+          min="2.5"
+          step="0.1"
+          placeholder="2.5"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="account-card account-withdraw-box">
+        <button id="withdraw-btn" class="wb-button premium" type="button">
+          REQUEST WITHDRAW
+        </button>
+        <p id="withdraw-message" class="account-withdraw-message"></p>
+      </div>
     </div>
   </div>
 
