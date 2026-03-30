@@ -860,14 +860,58 @@ function getAdsgramController() {
 
 function parseAdErrorMessage(err) {
   if (!err) return "";
-  if (typeof err === "string") return err;
-  if (typeof err.message === "string") return err.message;
-  if (typeof err.error === "string") return err.error;
+  if (typeof err === "string") return err.toLowerCase();
+  if (typeof err.message === "string") return err.message.toLowerCase();
+  if (typeof err.error === "string") return err.error.toLowerCase();
+
   try {
-    return JSON.stringify(err);
+    return JSON.stringify(err).toLowerCase();
   } catch {
-    return String(err);
+    return String(err).toLowerCase();
   }
+}
+function isAdsgramRewardResult(result) {
+  if (!result) return false;
+
+  if (result === true) return true;
+
+  const done = result?.done;
+  const state = result?.state;
+  const status = result?.status;
+  const event = result?.event;
+  const type = result?.type;
+
+  if (done === true) return true;
+
+  const values = [done, state, status, event, type]
+    .filter((v) => v !== undefined && v !== null)
+    .map((v) => String(v).toLowerCase().trim());
+
+  return values.some((v) =>
+    v === "done" ||
+    v === "reward" ||
+    v === "completed" ||
+    v === "complete" ||
+    v === "finish" ||
+    v === "finished" ||
+    v === "success" ||
+    v === "ok" ||
+    v === "shown"
+  );
+}
+
+function isAdsgramCancelResult(errText) {
+  if (!errText) return false;
+
+  return (
+    errText.includes("cancel") ||
+    errText.includes("close") ||
+    errText.includes("closed") ||
+    errText.includes("dismiss") ||
+    errText.includes("skip") ||
+    errText.includes("abort") ||
+    errText.includes("aborted")
+  );
 }
 
 window.showAds = async () => {
@@ -885,31 +929,45 @@ window.showAds = async () => {
     }
 
     const result = await controller.show();
+    console.log("AdsGram result:", result);
 
-    const status = result?.done || result?.state || result?.status || "";
-    const normalizedStatus = String(status).toLowerCase();
-
-    const rewardAllowed =
-      normalizedStatus === "reward" ||
-      normalizedStatus === "done" ||
-      normalizedStatus === "completed" ||
-      normalizedStatus === "finish";
-
-    if (!rewardAllowed) {
+    if (!isAdsgramRewardResult(result)) {
       safeAlert(t().adWatchFail);
       return;
     }
 
     const rewardResp = await API.claimAdReward();
+
     if (rewardResp?.success) {
       userState = normalizeUserState({
         ...userState,
         balance: rewardResp.balance,
+        wbc_balance: rewardResp.wbc_balance ?? rewardResp.balance ?? userState.wbc_balance,
         energy: rewardResp.energy,
         rank_id: rewardResp.rank_id ?? userState.rank_id,
         rank_expires_at: rewardResp.rank_expires_at ?? userState.rank_expires_at,
         ton_balance: rewardResp.ton_balance ?? userState.ton_balance
       });
+
+      syncEnergyBase();
+      updateUI();
+      safeAlert(t().adRewardOk);
+      return;
+    }
+
+    safeAlert(t().adRewardFail);
+  } catch (e) {
+    console.error("showAds error:", e);
+
+    const adErrText = parseAdErrorMessage(e);
+    if (isAdsgramCancelResult(adErrText)) {
+      safeAlert(t().adWatchFail);
+      return;
+    }
+
+    safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
+  }
+};
 
       syncEnergyBase();
       updateUI();
