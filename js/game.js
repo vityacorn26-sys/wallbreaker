@@ -870,9 +870,9 @@ function parseAdErrorMessage(err) {
     return String(err).toLowerCase();
   }
 }
+
 function isAdsgramRewardResult(result) {
   if (!result) return false;
-
   if (result === true) return true;
 
   const done = result?.done;
@@ -961,29 +961,6 @@ window.showAds = async () => {
 
     const adErrText = parseAdErrorMessage(e);
     if (isAdsgramCancelResult(adErrText)) {
-      safeAlert(t().adWatchFail);
-      return;
-    }
-
-    safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
-  }
-};
-
-      syncEnergyBase();
-      updateUI();
-      safeAlert(t().adRewardOk);
-    } else {
-      safeAlert(t().adRewardFail);
-    }
-  } catch (e) {
-    const adErrText = parseAdErrorMessage(e);
-    console.error("showAds error:", e);
-
-    if (
-      adErrText.includes("cancel") ||
-      adErrText.includes("close") ||
-      adErrText.includes("dismiss")
-    ) {
       safeAlert(t().adWatchFail);
       return;
     }
