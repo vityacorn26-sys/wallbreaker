@@ -147,3 +147,33 @@ const API = {
     }
   }
 };
+
+async function createTonPurchase(rankId) {
+  const response = await fetch('/api/rank/buy-ton/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      rank_id: rankId
+    })
+  });
+
+  return response.json();
+}
+
+async function confirmTonPurchase(rankId, payload, txHash) {
+  const response = await fetch('/api/rank/buy-ton/confirm', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      rank_id: rankId,
+      payload,
+      tx_hash: txHash
+    })
+  });
+
+  return response.json();
+}
