@@ -164,7 +164,13 @@ const I18N = {
     rankBuyOk: "Ранг активирован",
     rankBuyFail: "Покупка ранга не удалась",
     notEnoughTon: "Недостаточно TON",
-    notEnoughWbc: "Недостаточно $WBC"
+    notEnoughWbc: "Недостаточно $WBC",
+    tonCreateFail: "Не удалось создать TON-платёж",
+    tonConfirmFail: "Не удалось подтвердить TON-платёж",
+    tonNoTxHash: "TX hash не указан",
+    tonPaymentInstructions: (amount, wallet, payload) =>
+      `Оплати ${amount} TON\n\nКошелёк:\n${wallet}\n\nPayload:\n${payload}\n\nПосле оплаты вставь tx_hash.`,
+    tonRankActivated: "Ранг успешно активирован"
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -206,7 +212,13 @@ const I18N = {
     rankBuyOk: "Rank activated",
     rankBuyFail: "Rank purchase failed",
     notEnoughTon: "Not enough TON",
-    notEnoughWbc: "Not enough $WBC"
+    notEnoughWbc: "Not enough $WBC",
+    tonCreateFail: "Failed to create TON payment",
+    tonConfirmFail: "Failed to confirm TON payment",
+    tonNoTxHash: "No tx hash provided",
+    tonPaymentInstructions: (amount, wallet, payload) =>
+      `Pay ${amount} TON\n\nWallet:\n${wallet}\n\nPayload:\n${payload}\n\nAfter payment paste tx_hash.`,
+    tonRankActivated: "Rank activated successfully"
   }
 };
 
@@ -219,6 +231,15 @@ function safeAlert(message) {
     tg.showAlert(String(message));
   } else {
     alert(String(message));
+  }
+}
+
+function safePrompt(message, defaultValue = "") {
+  try {
+    return window.prompt(String(message), String(defaultValue));
+  } catch (e) {
+    console.error("Prompt error:", e);
+    return null;
   }
 }
 
@@ -551,7 +572,14 @@ async function handleRankPurchase(rankId, currency) {
   const rank = getRankById(rankId);
   if (!rank || rank.id <= 1) return;
 
-  const result = await API.buyRank(rank.id, currency);
+  const normalizedCurrency = String(currency || "").toUpperCase();
+
+  if (normalizedCurrency === "TON") {
+    await buyRankForTon(rank.id);
+    return;
+  }
+
+  const result = await API.buyRank(rank.id, normalizedCurrency);
 
   if (!result?.success) {
     const errorCode = result?.error || "rank_buy_failed";
@@ -579,6 +607,58 @@ async function handleRankPurchase(rankId, currency) {
   updateUI();
   closeAllPanels();
   safeAlert(t().rankBuyOk);
+}
+
+async function buyRankForTon(rankId) {
+  try {
+    const create = await API.createTonPurchase(rankId);
+
+    if (!create?.success) {
+      safeAlert(t().tonCreateFail);
+      return;
+    }
+
+    const wallet = String(create.wallet || "").trim();
+    const payload = String(create.payload || "").trim();
+    const amountTon = Number(create.amount_ton || 0);
+
+    if (!wallet || !payload || !(amountTon > 0)) {
+      safeAlert(t().tonCreateFail);
+      return;
+    }
+
+    safeAlert(t().tonPaymentInstructions(amountTon, wallet, payload));
+
+    const txHash = (safePrompt("TX HASH / tx_hash", "") || "").trim();
+    if (!txHash) {
+      safeAlert(t().tonNoTxHash);
+      return;
+    }
+
+    const confirm = await API.confirmTonPurchase(rankId, payload, txHash);
+
+    if (!confirm?.success) {
+      safeAlert(confirm?.error || t().tonConfirmFail);
+      return;
+    }
+
+    userState = normalizeUserState({
+      ...userState,
+      rank_id: confirm.rank_id,
+      rank_expires_at: confirm.rank_expires_at,
+      balance: confirm.balance,
+      wbc_balance: confirm.wbc_balance,
+      ton_balance: confirm.ton_balance
+    });
+
+    syncEnergyBase();
+    updateUI();
+    closeAllPanels();
+    safeAlert(t().tonRankActivated);
+  } catch (e) {
+    console.error("buyRankForTon error:", e);
+    safeAlert(t().tonConfirmFail);
+  }
 }
 
 function startLocalEnergyTicker() {
@@ -814,7 +894,7 @@ function renderMarketPanel() {
       } else if (rank.id === 3) {
         btn.textContent = t().activateTon;
         btn.disabled = false;
-        btn.onclick = () => handleRankPurchase(rank.id, "TON");
+        btn.onclick = () => buyRankForTon(rank.id);
       } else {
         btn.textContent = t().details;
         btn.disabled = false;
@@ -1020,7 +1100,7 @@ function showRankDetails(rankId) {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().activateTon;
       rankBuyPrimaryBtn.onclick = async () => {
-        await handleRankPurchase(rank.id, "TON");
+        await buyRankForTon(rank.id);
       };
     }
 
@@ -1032,7 +1112,7 @@ function showRankDetails(rankId) {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().activateTon;
       rankBuyPrimaryBtn.onclick = async () => {
-        await handleRankPurchase(rank.id, "TON");
+        await buyRankForTon(rank.id);
       };
     }
 
