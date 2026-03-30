@@ -24,6 +24,14 @@ let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
 let adFlowLocked = false;
+let tonBuyLocked = false;
+
+let tonConnectUI = null;
+let tonWalletState = null;
+let tonStatusUnsubscribe = null;
+
+const TON_CONNECT_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
+const TON_CONNECT_BUTTON_ROOT_ID = "ton-connect-root-hidden";
 
 const MAX_ENERGY = 100;
 
@@ -171,10 +179,18 @@ const I18N = {
     notEnoughWbc: "Недостаточно $WBC",
     tonCreateFail: "Не удалось создать TON-платёж",
     tonConfirmFail: "Не удалось подтвердить TON-платёж",
-    tonNoTxHash: "TX hash не указан",
-    tonPaymentInstructions: (amount, wallet, payload) =>
-      `Оплати ${amount} TON\n\nКошелёк:\n${wallet}\n\nPayload:\n${payload}\n\nПосле оплаты вставь tx_hash.`,
-    tonRankActivated: "Ранг успешно активирован"
+    tonNoProof: "TON proof не получен",
+    tonRankActivated: "Ранг успешно активирован",
+    tonWalletSdkMissing: "TON Connect SDK не загружен",
+    tonWalletInitFail: "TON Connect не инициализировался",
+    tonWalletConnectPrompt: "Подключи TON-кошелёк для оплаты ранга",
+    tonWalletConnectFailed: "Кошелёк не подключён",
+    tonWalletSending: "Открываем TON-кошелёк...",
+    tonWalletRejected: "Платёж отклонён в кошельке",
+    tonWalletUnavailable: "TON Connect пока не готов. Проверь manifest и перезапусти бота.",
+    tonPaymentReady: (amount) => `Платёж подготовлен: ${amount} TON`,
+    tonPaymentPendingVerify: "Платёж отправлен. Подтверждаем ранг...",
+    tonBuyBusy: "TON-покупка уже выполняется. Подожди пару секунд."
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -221,10 +237,18 @@ const I18N = {
     notEnoughWbc: "Not enough $WBC",
     tonCreateFail: "Failed to create TON payment",
     tonConfirmFail: "Failed to confirm TON payment",
-    tonNoTxHash: "No tx hash provided",
-    tonPaymentInstructions: (amount, wallet, payload) =>
-      `Pay ${amount} TON\n\nWallet:\n${wallet}\n\nPayload:\n${payload}\n\nAfter payment paste tx_hash.`,
-    tonRankActivated: "Rank activated successfully"
+    tonNoProof: "No TON proof received",
+    tonRankActivated: "Rank activated successfully",
+    tonWalletSdkMissing: "TON Connect SDK not loaded",
+    tonWalletInitFail: "TON Connect failed to initialize",
+    tonWalletConnectPrompt: "Connect a TON wallet to pay for the rank",
+    tonWalletConnectFailed: "Wallet is not connected",
+    tonWalletSending: "Opening TON wallet...",
+    tonWalletRejected: "Payment was rejected in the wallet",
+    tonWalletUnavailable: "TON Connect is not ready yet. Check the manifest and restart the bot.",
+    tonPaymentReady: (amount) => `Payment prepared: ${amount} TON`,
+    tonPaymentPendingVerify: "Payment sent. Confirming rank...",
+    tonBuyBusy: "TON purchase is already in progress. Please wait a few seconds."
   }
 };
 
@@ -237,15 +261,6 @@ function safeAlert(message) {
     tg.showAlert(String(message));
   } else {
     alert(String(message));
-  }
-}
-
-function safePrompt(message, defaultValue = "") {
-  try {
-    return window.prompt(String(message), String(defaultValue));
-  } catch (e) {
-    console.error("Prompt error:", e);
-    return null;
   }
 }
 
@@ -348,6 +363,13 @@ function updatePrizePoolPanel() {
   if (accountPrizePool) accountPrizePool.textContent = poolText;
 }
 
+function getTonWalletShort() {
+  const addr = tonWalletState?.account?.address || "";
+  if (!addr) return "";
+  if (addr.length <= 14) return addr;
+  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+}
+
 function updateAccountPanel() {
   const rank = getRankById(userState.rank_id);
 
@@ -369,9 +391,12 @@ function updateAccountPanel() {
 
   const enteredWallet = withdrawWalletInput?.value?.trim() || "";
   const sessionWallet = userState.lastWithdraw?.wallet || "";
+  const connectedTonWallet = getTonWalletShort();
 
   if (walletStatus) {
-    if (sessionWallet) {
+    if (connectedTonWallet) {
+      walletStatus.textContent = connectedTonWallet;
+    } else if (sessionWallet) {
       walletStatus.textContent = sessionWallet;
     } else if (enteredWallet) {
       walletStatus.textContent = enteredWallet;
@@ -488,6 +513,137 @@ window.setLang = (lang) => {
   applyTexts();
 };
 
+function ensureTonConnectMount() {
+  let mount = document.getElementById(TON_CONNECT_BUTTON_ROOT_ID);
+  if (mount) return mount;
+
+  mount = document.createElement("div");
+  mount.id = TON_CONNECT_BUTTON_ROOT_ID;
+  mount.style.position = "fixed";
+  mount.style.left = "-9999px";
+  mount.style.top = "-9999px";
+  mount.style.width = "1px";
+  mount.style.height = "1px";
+  mount.style.opacity = "0";
+  mount.style.pointerEvents = "none";
+  document.body.appendChild(mount);
+  return mount;
+}
+
+function initTonConnect() {
+  if (tonConnectUI) return tonConnectUI;
+
+  if (!window.TON_CONNECT_UI || !window.TON_CONNECT_UI.TonConnectUI) {
+    console.error("TON Connect global is missing");
+    return null;
+  }
+
+  ensureTonConnectMount();
+
+  try {
+    tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: TON_CONNECT_MANIFEST_URL,
+      buttonRootId: TON_CONNECT_BUTTON_ROOT_ID
+    });
+
+    tonConnectUI.uiOptions = {
+      language: currentLang === "RU" ? "ru" : "en"
+    };
+
+    if (typeof tonStatusUnsubscribe === "function") {
+      tonStatusUnsubscribe();
+    }
+
+    tonStatusUnsubscribe = tonConnectUI.onStatusChange((wallet) => {
+      tonWalletState = wallet || null;
+      updateAccountPanel();
+    });
+
+    tonWalletState = tonConnectUI.wallet || tonConnectUI.account || null;
+    return tonConnectUI;
+  } catch (e) {
+    console.error("TON Connect init error:", e);
+    return null;
+  }
+}
+
+function getTonWalletAddress() {
+  const accountAddress =
+    tonWalletState?.account?.address ||
+    tonConnectUI?.account?.address ||
+    "";
+
+  return String(accountAddress || "").trim();
+}
+
+function toNanoString(amountTon) {
+  const normalized = String(amountTon).trim();
+  if (!normalized) return "0";
+
+  const [wholeRaw, fracRaw = ""] = normalized.split(".");
+  const whole = wholeRaw.replace(/\D/g, "") || "0";
+  const frac = fracRaw.replace(/\D/g, "").slice(0, 9).padEnd(9, "0");
+
+  const combined = `${whole}${frac}`.replace(/^0+(?=\d)/, "");
+  return combined || "0";
+}
+
+async function waitForTonWalletConnection(timeoutMs = 60000) {
+  const existing = getTonWalletAddress();
+  if (existing) return existing;
+
+  return new Promise((resolve) => {
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      if (typeof unsubscribe === "function") unsubscribe();
+      resolve("");
+    }, timeoutMs);
+
+    const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+      const address = wallet?.account?.address || "";
+      if (!address || finished) return;
+
+      finished = true;
+      clearTimeout(timer);
+      unsubscribe();
+      tonWalletState = wallet;
+      resolve(String(address));
+    });
+  });
+}
+
+async function ensureTonWalletConnected() {
+  const ui = initTonConnect();
+  if (!ui) {
+    safeAlert(t().tonWalletUnavailable);
+    return false;
+  }
+
+  if (getTonWalletAddress()) {
+    return true;
+  }
+
+  safeAlert(t().tonWalletConnectPrompt);
+
+  try {
+    await ui.openModal();
+  } catch (e) {
+    console.error("TON Connect openModal error:", e);
+  }
+
+  const connectedAddress = await waitForTonWalletConnection();
+  if (!connectedAddress) {
+    safeAlert(t().tonWalletConnectFailed);
+    return false;
+  }
+
+  updateAccountPanel();
+  return true;
+}
+
 async function loadUser() {
   try {
     showLoadingScreen();
@@ -496,6 +652,8 @@ async function loadUser() {
       showFatalError(t().initDataFail);
       return;
     }
+
+    initTonConnect();
 
     const data = await API.getUser();
 
@@ -643,11 +801,18 @@ async function handleRankPurchase(rankId, currency) {
 }
 
 async function buyRankForTon(rankId) {
+  if (tonBuyLocked) {
+    safeAlert(t().tonBuyBusy);
+    return;
+  }
+
+  tonBuyLocked = true;
+
   try {
     const create = await API.createTonPurchase(rankId);
 
     if (!create?.success) {
-      safeAlert(t().tonCreateFail);
+      safeAlert(create?.error || t().tonCreateFail);
       return;
     }
 
@@ -660,15 +825,60 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    safeAlert(t().tonPaymentInstructions(amountTon, wallet, payload));
+    const connected = await ensureTonWalletConnected();
+    if (!connected) return;
 
-    const txHash = (safePrompt("TX HASH / tx_hash", "") || "").trim();
-    if (!txHash) {
-      safeAlert(t().tonNoTxHash);
+    const ui = initTonConnect();
+    if (!ui) {
+      safeAlert(t().tonWalletInitFail);
       return;
     }
 
-    const confirm = await API.confirmTonPurchase(rankId, payload, txHash);
+    safeAlert(t().tonPaymentReady(amountTon));
+
+    const tx = {
+      validUntil: Math.floor(Date.now() / 1000) + 300,
+      messages: [
+        {
+          address: wallet,
+          amount: toNanoString(amountTon)
+        }
+      ]
+    };
+
+    let txResult = null;
+
+    try {
+      safeAlert(t().tonWalletSending);
+      txResult = await ui.sendTransaction(tx);
+    } catch (e) {
+      console.error("TON sendTransaction error:", e);
+      const text = String(e?.message || e || "").toLowerCase();
+
+      if (text.includes("declined") || text.includes("reject") || text.includes("cancel")) {
+        safeAlert(t().tonWalletRejected);
+      } else {
+        safeAlert(t().tonConfirmFail);
+      }
+      return;
+    }
+
+    const proof =
+      String(
+        txResult?.boc ||
+        txResult?.result ||
+        txResult?.transaction?.boc ||
+        ""
+      ).trim();
+
+    if (!proof) {
+      safeAlert(t().tonNoProof);
+      return;
+    }
+
+    safeAlert(t().tonPaymentPendingVerify);
+
+    const confirm = await API.confirmTonPurchase(rankId, payload, proof);
 
     if (!confirm?.success) {
       safeAlert(confirm?.error || t().tonConfirmFail);
@@ -691,6 +901,8 @@ async function buyRankForTon(rankId) {
   } catch (e) {
     console.error("buyRankForTon error:", e);
     safeAlert(t().tonConfirmFail);
+  } finally {
+    tonBuyLocked = false;
   }
 }
 
