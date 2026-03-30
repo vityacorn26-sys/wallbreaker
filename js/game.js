@@ -1349,11 +1349,13 @@ function showRankDetails(rankId) {
   if (rankBuyPrimaryBtn) {
     rankBuyPrimaryBtn.disabled = false;
     rankBuyPrimaryBtn.classList.remove("hidden");
+    rankBuyPrimaryBtn.onclick = null;
   }
 
   if (rankBuySecondaryBtn) {
     rankBuySecondaryBtn.disabled = false;
     rankBuySecondaryBtn.classList.add("hidden");
+    rankBuySecondaryBtn.onclick = null;
   }
 
   if (rank.id === userState.rank_id) {
@@ -1371,6 +1373,9 @@ function showRankDetails(rankId) {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().activateTon;
       rankBuyPrimaryBtn.onclick = async () => {
+        closeAllPanels();
+        closeSidebar();
+        await new Promise((resolve) => setTimeout(resolve, 120));
         await buyRankForTon(rank.id);
       };
     }
@@ -1379,19 +1384,23 @@ function showRankDetails(rankId) {
       rankBuySecondaryBtn.classList.add("hidden");
       rankBuySecondaryBtn.onclick = null;
     }
-  if (rankBuyPrimaryBtn) {
-  rankBuyPrimaryBtn.textContent = t().activateTon;
-  rankBuyPrimaryBtn.onclick = async () => {
-    closeAllPanels();
-    closeSidebar();
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    await buyRankForTon(rank.id);
-  };
-  }
+  } else if (rank.id === 4 || rank.id === 5) {
+    if (rankBuyPrimaryBtn) {
+      rankBuyPrimaryBtn.textContent = t().activateTon;
+      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.disabled = false;
+      rankBuyPrimaryBtn.onclick = async () => {
+        closeAllPanels();
+        closeSidebar();
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        await buyRankForTon(rank.id);
+      };
+    }
 
     if (rankBuySecondaryBtn) {
       rankBuySecondaryBtn.textContent = t().acquireRank;
       rankBuySecondaryBtn.classList.remove("hidden");
+      rankBuySecondaryBtn.disabled = false;
       rankBuySecondaryBtn.onclick = async () => {
         await handleRankPurchase(rank.id, "WBC");
       };
@@ -1399,6 +1408,8 @@ function showRankDetails(rankId) {
   } else {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().acquireRank;
+      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.disabled = false;
       rankBuyPrimaryBtn.onclick = async () => {
         await handleRankPurchase(rank.id, "WBC");
       };
