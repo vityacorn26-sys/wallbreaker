@@ -626,22 +626,34 @@ async function ensureTonWalletConnected() {
     return true;
   }
 
-  safeAlert(t().tonWalletConnectPrompt);
-
   try {
-    await ui.openModal();
-  } catch (e) {
-    console.error("TON Connect openModal error:", e);
-  }
+    const wallet = await ui.connectWallet();
+    tonWalletState = wallet || ui.wallet || tonWalletState || null;
+    updateAccountPanel();
 
-  const connectedAddress = await waitForTonWalletConnection();
-  if (!connectedAddress) {
-    safeAlert(t().tonWalletConnectFailed);
+    if (!getTonWalletAddress()) {
+      safeAlert(t().tonWalletConnectFailed);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error("TON Connect connectWallet error:", e);
+
+    const msg = String(e?.message || e || "").toLowerCase();
+    if (
+      msg.includes("reject") ||
+      msg.includes("decline") ||
+      msg.includes("cancel") ||
+      msg.includes("close")
+    ) {
+      safeAlert(t().tonWalletRejected);
+    } else {
+      safeAlert(t().tonWalletConnectFailed);
+    }
+
     return false;
   }
-
-  updateAccountPanel();
-  return true;
 }
 
 async function loadUser() {
@@ -799,7 +811,6 @@ async function handleRankPurchase(rankId, currency) {
   closeAllPanels();
   safeAlert(t().rankBuyOk);
 }
-
 async function buyRankForTon(rankId) {
   if (tonBuyLocked) {
     safeAlert(t().tonBuyBusy);
@@ -809,6 +820,9 @@ async function buyRankForTon(rankId) {
   tonBuyLocked = true;
 
   try {
+    const connected = await ensureTonWalletConnected();
+    if (!connected) return;
+
     const create = await API.createTonPurchase(rankId);
 
     if (!create?.success) {
@@ -825,16 +839,11 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const connected = await ensureTonWalletConnected();
-    if (!connected) return;
-
     const ui = initTonConnect();
     if (!ui) {
       safeAlert(t().tonWalletInitFail);
       return;
     }
-
-    safeAlert(t().tonPaymentReady(amountTon));
 
     const tx = {
       validUntil: Math.floor(Date.now() / 1000) + 300,
@@ -849,13 +858,17 @@ async function buyRankForTon(rankId) {
     let txResult = null;
 
     try {
-      safeAlert(t().tonWalletSending);
       txResult = await ui.sendTransaction(tx);
     } catch (e) {
       console.error("TON sendTransaction error:", e);
       const text = String(e?.message || e || "").toLowerCase();
 
-      if (text.includes("declined") || text.includes("reject") || text.includes("cancel")) {
+      if (
+        text.includes("declined") ||
+        text.includes("reject") ||
+        text.includes("cancel") ||
+        text.includes("close")
+      ) {
         safeAlert(t().tonWalletRejected);
       } else {
         safeAlert(t().tonConfirmFail);
@@ -863,20 +876,17 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const proof =
-      String(
-        txResult?.boc ||
-        txResult?.result ||
-        txResult?.transaction?.boc ||
-        ""
-      ).trim();
+    const proof = String(
+      txResult?.boc ||
+      txResult?.result ||
+      txResult?.transaction?.boc ||
+      ""
+    ).trim();
 
     if (!proof) {
       safeAlert(t().tonNoProof);
       return;
     }
-
-    safeAlert(t().tonPaymentPendingVerify);
 
     const confirm = await API.confirmTonPurchase(rankId, payload, proof);
 
