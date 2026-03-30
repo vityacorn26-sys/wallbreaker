@@ -145,35 +145,37 @@ const API = {
         error: e?.payload?.error || e?.message || 'rank_buy_failed'
       };
     }
+  },
+
+  async createTonPurchase(rankId) {
+    try {
+      return await this.post('/api/rank/buy-ton/create', {
+        rank_id: rankId
+      });
+    } catch (e) {
+      console.error('API Error (createTonPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'ton_create_failed'
+      };
+    }
+  },
+
+  async confirmTonPurchase(rankId, payload, txHash) {
+    try {
+      return await this.post('/api/rank/buy-ton/confirm', {
+        rank_id: rankId,
+        payload,
+        tx_hash: txHash
+      });
+    } catch (e) {
+      console.error('API Error (confirmTonPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'ton_confirm_failed'
+      };
+    }
   }
 };
 
-async function createTonPurchase(rankId) {
-  const response = await fetch('/api/rank/buy-ton/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      rank_id: rankId
-    })
-  });
-
-  return response.json();
-}
-
-async function confirmTonPurchase(rankId, payload, txHash) {
-  const response = await fetch('/api/rank/buy-ton/confirm', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      rank_id: rankId,
-      payload,
-      tx_hash: txHash
-    })
-  });
-
-  return response.json();
-}
+window.API = API;
