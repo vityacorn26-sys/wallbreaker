@@ -23,6 +23,8 @@ let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
+let adFlowLocked = false;
+
 const MAX_ENERGY = 100;
 
 const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
@@ -131,6 +133,8 @@ const I18N = {
     adRewardOk: "Награда получена",
     adRewardFail: "Ошибка начисления награды",
     adWatchFail: "Реклама не была досмотрена",
+    adBusy: "Реклама уже загружается. Подожди несколько секунд.",
+    adLoading: "ЗАГРУЗКА РЕКЛАМЫ...",
     userLoadFail: "Ошибка загрузки профиля",
     initDataFail: "Telegram initData не найден",
     refsText: (link) =>
@@ -179,6 +183,8 @@ const I18N = {
     adRewardOk: "Reward received",
     adRewardFail: "Reward credit error",
     adWatchFail: "Ad was not fully watched",
+    adBusy: "Ad is already loading. Please wait a few seconds.",
+    adLoading: "LOADING AD...",
     userLoadFail: "User loading error",
     initDataFail: "Telegram initData not found",
     refsText: (link) =>
@@ -240,6 +246,29 @@ function safePrompt(message, defaultValue = "") {
   } catch (e) {
     console.error("Prompt error:", e);
     return null;
+  }
+}
+
+function getAdsButton() {
+  return document.getElementById("btn-ads");
+}
+
+function setAdsButtonBusy(isBusy) {
+  const adsBtn = getAdsButton();
+  if (!adsBtn) return;
+
+  if (!adsBtn.dataset.defaultText) {
+    adsBtn.dataset.defaultText = adsBtn.textContent || "";
+  }
+
+  if (isBusy) {
+    adsBtn.disabled = true;
+    adsBtn.classList.add("btn-disabled");
+    adsBtn.textContent = t().adLoading;
+  } else {
+    adsBtn.disabled = false;
+    adsBtn.classList.remove("btn-disabled");
+    adsBtn.textContent = getMenuConfig().codeInjection || "CODE INJECTION (+1500)";
   }
 }
 
@@ -424,7 +453,11 @@ function applyTexts() {
   if (top) top.textContent = menu.breachBoard || "BREACH BOARD";
   if (market) market.textContent = menu.darknetMarket || "DARKNET MARKET";
   if (close) close.textContent = menu.close || "CLOSE";
-  if (ads) ads.textContent = menu.codeInjection || "CODE INJECTION (+1500)";
+  if (ads) {
+    ads.textContent = adFlowLocked
+      ? t().adLoading
+      : (menu.codeInjection || "CODE INJECTION (+1500)");
+  }
   if (account) account.textContent = menu.account || "ACCOUNT";
   if (balanceCurrencyEl) balanceCurrencyEl.textContent = getCurrency();
 
@@ -995,6 +1028,14 @@ function isAdsgramCancelResult(errText) {
 }
 
 window.showAds = async () => {
+  if (adFlowLocked) {
+    safeAlert(t().adBusy);
+    return;
+  }
+
+  adFlowLocked = true;
+  setAdsButtonBusy(true);
+
   try {
     const limitInfo = await API.checkAdLimit();
     if (!limitInfo?.canWatch) {
@@ -1046,6 +1087,9 @@ window.showAds = async () => {
     }
 
     safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
+  } finally {
+    adFlowLocked = false;
+    setAdsButtonBusy(false);
   }
 };
 
