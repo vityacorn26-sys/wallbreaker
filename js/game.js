@@ -1147,10 +1147,15 @@ function renderMarketPanel() {
         btn.disabled = true;
         btn.onclick = null;
       } else if (rank.id === 3) {
-        btn.textContent = t().activateTon;
-        btn.disabled = false;
-        btn.onclick = () => buyRankForTon(rank.id);
-      } else {
+  btn.textContent = t().activateTon;
+  btn.disabled = false;
+  btn.onclick = async () => {
+    closeAllPanels();
+    closeSidebar();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await buyRankForTon(rank.id);
+  };
+} else {
         btn.textContent = t().details;
         btn.disabled = false;
         btn.onclick = () => showRankDetails(rank.id);
@@ -1374,13 +1379,15 @@ function showRankDetails(rankId) {
       rankBuySecondaryBtn.classList.add("hidden");
       rankBuySecondaryBtn.onclick = null;
     }
-  } else if (rank.id === 4 || rank.id === 5) {
-    if (rankBuyPrimaryBtn) {
-      rankBuyPrimaryBtn.textContent = t().activateTon;
-      rankBuyPrimaryBtn.onclick = async () => {
-        await buyRankForTon(rank.id);
-      };
-    }
+  if (rankBuyPrimaryBtn) {
+  rankBuyPrimaryBtn.textContent = t().activateTon;
+  rankBuyPrimaryBtn.onclick = async () => {
+    closeAllPanels();
+    closeSidebar();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await buyRankForTon(rank.id);
+  };
+  }
 
     if (rankBuySecondaryBtn) {
       rankBuySecondaryBtn.textContent = t().acquireRank;
