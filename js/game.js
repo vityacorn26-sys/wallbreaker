@@ -562,9 +562,12 @@ function initTonConnect() {
   ensureTonConnectMount();
 
   try {
-    tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
-      buttonRootId: TON_CONNECT_BUTTON_ROOT_ID
+      buttonRootId: TON_CONNECT_BUTTON_ROOT_ID,
+      actionsConfiguration: {
+        twaReturnUrl: 'https://t.me/BypassWallBot/play'
+      }
     });
 
     tonConnectUI.uiOptions = {
