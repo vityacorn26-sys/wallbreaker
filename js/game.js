@@ -654,17 +654,14 @@ async function ensureTonWalletConnected() {
     return true;
   }
 
-  safeAlert(t().tonWalletConnectPrompt);
-
   try {
     await ui.openModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
 
-  const connectedAddress = await waitForTonWalletConnection();
+  const connectedAddress = await waitForTonWalletConnection(25000);
   if (!connectedAddress) {
-    safeAlert(t().tonWalletConnectFailed);
     return false;
   }
 
@@ -842,8 +839,11 @@ async function buyRankForTon(rankId) {
   tonBuyLocked = true;
 
   try {
-    const connected = await ensureTonWalletConnected();
-    if (!connected) return;
+        const connected = await ensureTonWalletConnected();
+    if (!connected) {
+      tonBuyLocked = false;
+      return;
+    }
 
     const create = await API.createTonPurchase(rankId);
 
