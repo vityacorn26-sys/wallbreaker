@@ -161,7 +161,7 @@ const API = {
     }
   },
 
-  async confirmTonPurchase(rankId, payload, txHash) {
+    async confirmTonPurchase(rankId, payload, txHash) {
     try {
       return await this.post('/api/rank/buy-ton/confirm', {
         rank_id: rankId,
@@ -173,6 +173,34 @@ const API = {
       return {
         success: false,
         error: e?.payload?.error || e?.message || 'ton_confirm_failed'
+      };
+    }
+  },
+
+  async createStarsPurchase(rankId) {
+    try {
+      return await this.post('/api/rank/buy-stars/create', {
+        rank_id: rankId
+      });
+    } catch (e) {
+      console.error('API Error (createStarsPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_create_failed'
+      };
+    }
+  },
+
+  async getStarsPurchaseStatus(payload) {
+    try {
+      return await this.post('/api/rank/buy-stars/status', {
+        payload
+      });
+    } catch (e) {
+      console.error('API Error (getStarsPurchaseStatus):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_status_failed'
       };
     }
   }
