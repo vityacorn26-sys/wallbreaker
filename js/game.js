@@ -654,34 +654,22 @@ async function ensureTonWalletConnected() {
     return true;
   }
 
+  safeAlert(t().tonWalletConnectPrompt);
+
   try {
-    const wallet = await ui.connectWallet();
-    tonWalletState = wallet || ui.wallet || tonWalletState || null;
-    updateAccountPanel();
-
-    if (!getTonWalletAddress()) {
-      safeAlert(t().tonWalletConnectFailed);
-      return false;
-    }
-
-    return true;
+    await ui.openModal();
   } catch (e) {
-    console.error("TON Connect connectWallet error:", e);
+    console.error("TON Connect openModal error:", e);
+  }
 
-    const msg = String(e?.message || e || "").toLowerCase();
-    if (
-      msg.includes("reject") ||
-      msg.includes("decline") ||
-      msg.includes("cancel") ||
-      msg.includes("close")
-    ) {
-      safeAlert(t().tonWalletRejected);
-    } else {
-      safeAlert(t().tonWalletConnectFailed);
-    }
-
+  const connectedAddress = await waitForTonWalletConnection();
+  if (!connectedAddress) {
+    safeAlert(t().tonWalletConnectFailed);
     return false;
   }
+
+  updateAccountPanel();
+  return true;
 }
 
 async function loadUser() {
