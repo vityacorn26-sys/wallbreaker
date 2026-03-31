@@ -25,6 +25,7 @@ let lastServerEnergy = 100;
 
 let adFlowLocked = false;
 let tonBuyLocked = false;
+let starsBuyLocked = false;
 
 let tonConnectUI = null;
 let tonWalletState = null;
@@ -130,6 +131,10 @@ function getRankPriceLabel(rank) {
     parts.push(`${rank.priceTON} TON`);
   }
 
+  if (Number(rank.priceStars || 0) > 0) {
+    parts.push(`${Number(rank.priceStars).toLocaleString()} XTR`);
+  }
+
   return parts.join(" / ");
 }
 
@@ -166,6 +171,7 @@ const I18N = {
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "КУПИТЬ ЗА $WBC",
     activateTon: "КУПИТЬ ЗА TON",
+    activateStars: "КУПИТЬ ЗА STARS",
     details: "ПОДРОБНЕЕ",
     zeroDayPersist: "Сохраняется до розыгрыша. Максимум 2 ключа на один draw.",
     rankLabel: (id) => `R${id}`,
@@ -190,7 +196,14 @@ const I18N = {
     tonWalletUnavailable: "TON Connect пока не готов. Проверь manifest и перезапусти бота.",
     tonPaymentReady: (amount) => `Платёж подготовлен: ${amount} TON`,
     tonPaymentPendingVerify: "Платёж отправлен. Подтверждаем ранг...",
-    tonBuyBusy: "TON-покупка уже выполняется. Подожди пару секунд."
+    tonBuyBusy: "TON-покупка уже выполняется. Подожди пару секунд.",
+    starsCreateFail: "Не удалось создать Stars-платёж",
+    starsOpenFail: "Не удалось открыть Stars-инвойс",
+    starsCancelled: "Оплата Stars отменена",
+    starsPending: "Проверяем оплату Stars...",
+    starsTimeout: "Платёж ещё не подтверждён. Проверь позже.",
+    starsRankActivated: "Ранг успешно активирован через Stars",
+    starsBuyBusy: "Покупка через Stars уже выполняется. Подожди пару секунд."
   },
   EN: {
     adLimit: "Ad limit reached",
@@ -224,6 +237,7 @@ const I18N = {
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "BUY FOR $WBC",
     activateTon: "BUY FOR TON",
+    activateStars: "BUY FOR STARS",
     details: "DETAILS",
     zeroDayPersist: "Persists until draw. Maximum 2 keys per draw.",
     rankLabel: (id) => `R${id}`,
@@ -248,7 +262,14 @@ const I18N = {
     tonWalletUnavailable: "TON Connect is not ready yet. Check the manifest and restart the bot.",
     tonPaymentReady: (amount) => `Payment prepared: ${amount} TON`,
     tonPaymentPendingVerify: "Payment sent. Confirming rank...",
-    tonBuyBusy: "TON purchase is already in progress. Please wait a few seconds."
+    tonBuyBusy: "TON purchase is already in progress. Please wait a few seconds.",
+    starsCreateFail: "Failed to create Stars payment",
+    starsOpenFail: "Failed to open Stars invoice",
+    starsCancelled: "Stars payment was cancelled",
+    starsPending: "Checking Stars payment...",
+    starsTimeout: "Payment is not confirmed yet. Check again later.",
+    starsRankActivated: "Rank activated successfully via Stars",
+    starsBuyBusy: "Stars purchase is already in progress. Please wait a few seconds."
   }
 };
 
@@ -588,6 +609,10 @@ function toNanoString(amountTon) {
   return combined || "0";
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function waitForTonWalletConnection(timeoutMs = 60000) {
   const existing = getTonWalletAddress();
   if (existing) return existing;
@@ -782,6 +807,11 @@ async function handleRankPurchase(rankId, currency) {
     return;
   }
 
+  if (normalizedCurrency === "XTR" || normalizedCurrency === "STARS") {
+    await buyRankForStars(rank.id);
+    return;
+  }
+
   const result = await API.buyRank(rank.id, normalizedCurrency);
 
   if (!result?.success) {
@@ -811,6 +841,7 @@ async function handleRankPurchase(rankId, currency) {
   closeAllPanels();
   safeAlert(t().rankBuyOk);
 }
+
 async function buyRankForTon(rankId) {
   if (tonBuyLocked) {
     safeAlert(t().tonBuyBusy);
@@ -913,6 +944,101 @@ async function buyRankForTon(rankId) {
     safeAlert(t().tonConfirmFail);
   } finally {
     tonBuyLocked = false;
+  }
+}
+
+async function waitForStarsConfirmation(payload, maxAttempts = 12, delayMs = 2000) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const statusResp = await API.getStarsPurchaseStatus(payload);
+
+    if (statusResp?.success && statusResp?.payment?.status === "paid") {
+      return statusResp;
+    }
+
+    await sleep(delayMs);
+  }
+
+  return null;
+}
+
+async function openTelegramInvoice(invoiceLink) {
+  if (!tg || typeof tg.openInvoice !== "function") {
+    throw new Error("telegram_open_invoice_unavailable");
+  }
+
+  return new Promise((resolve, reject) => {
+    try {
+      tg.openInvoice(invoiceLink, (status) => {
+        resolve(String(status || ""));
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function buyRankForStars(rankId) {
+  if (starsBuyLocked) {
+    safeAlert(t().starsBuyBusy);
+    return;
+  }
+
+  starsBuyLocked = true;
+
+  try {
+    const create = await API.createStarsPurchase(rankId);
+
+    if (!create?.success) {
+      safeAlert(create?.error || t().starsCreateFail);
+      return;
+    }
+
+    const invoiceLink = String(create.invoice_link || "").trim();
+    const payload = String(create.payload || "").trim();
+
+    if (!invoiceLink || !payload) {
+      safeAlert(t().starsCreateFail);
+      return;
+    }
+
+    let invoiceStatus = "";
+
+    try {
+      invoiceStatus = await openTelegramInvoice(invoiceLink);
+    } catch (e) {
+      console.error("openInvoice error:", e);
+      safeAlert(t().starsOpenFail);
+      return;
+    }
+
+    if (invoiceStatus && invoiceStatus !== "paid") {
+      safeAlert(t().starsCancelled);
+      return;
+    }
+
+    safeAlert(t().starsPending);
+
+    const statusResp = await waitForStarsConfirmation(payload);
+
+    if (!statusResp?.success || statusResp?.payment?.status !== "paid") {
+      safeAlert(t().starsTimeout);
+      return;
+    }
+
+    userState = normalizeUserState({
+      ...userState,
+      ...(statusResp.user || {})
+    });
+
+    syncEnergyBase();
+    updateUI();
+    closeAllPanels();
+    safeAlert(t().starsRankActivated);
+  } catch (e) {
+    console.error("buyRankForStars error:", e);
+    safeAlert(t().starsOpenFail);
+  } finally {
+    starsBuyLocked = false;
   }
 }
 
@@ -1114,7 +1240,7 @@ function renderMarketPanel() {
 
     if (badgeEl) {
       badgeEl.textContent = t().rankLabel(rank.id);
-      badgeEl.classList.toggle("market-rank-badge-ton", rank.priceTON > 0);
+      badgeEl.classList.toggle("market-rank-badge-ton", rank.priceTON > 0 || Number(rank.priceStars || 0) > 0);
     }
 
     if (iconEl) {
@@ -1146,16 +1272,7 @@ function renderMarketPanel() {
         btn.textContent = "ACTIVE";
         btn.disabled = true;
         btn.onclick = null;
-      } else if (rank.id === 3) {
-  btn.textContent = t().activateTon;
-  btn.disabled = false;
-  btn.onclick = async () => {
-    closeAllPanels();
-    closeSidebar();
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    await buyRankForTon(rank.id);
-  };
-} else {
+      } else {
         btn.textContent = t().details;
         btn.disabled = false;
         btn.onclick = () => showRankDetails(rank.id);
@@ -1371,18 +1488,27 @@ function showRankDetails(rankId) {
     }
   } else if (rank.id === 3) {
     if (rankBuyPrimaryBtn) {
-      rankBuyPrimaryBtn.textContent = t().activateTon;
+      rankBuyPrimaryBtn.textContent = t().activateStars;
+      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.disabled = false;
       rankBuyPrimaryBtn.onclick = async () => {
+        closeAllPanels();
+        closeSidebar();
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        await buyRankForStars(rank.id);
+      };
+    }
+
+    if (rankBuySecondaryBtn) {
+      rankBuySecondaryBtn.textContent = t().activateTon;
+      rankBuySecondaryBtn.classList.remove("hidden");
+      rankBuySecondaryBtn.disabled = false;
+      rankBuySecondaryBtn.onclick = async () => {
         closeAllPanels();
         closeSidebar();
         await new Promise((resolve) => setTimeout(resolve, 120));
         await buyRankForTon(rank.id);
       };
-    }
-
-    if (rankBuySecondaryBtn) {
-      rankBuySecondaryBtn.classList.add("hidden");
-      rankBuySecondaryBtn.onclick = null;
     }
   } else if (rank.id === 4 || rank.id === 5) {
     if (rankBuyPrimaryBtn) {
