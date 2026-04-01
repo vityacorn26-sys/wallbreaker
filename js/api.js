@@ -1,5 +1,5 @@
 const API = {
-  BASE_URL: 'https://wbapi.corterbs.dpdns.org'
+  BASE_URL: 'https://wbapi.corterbs.dpdns.org',
 
   getInitData() {
     try {
