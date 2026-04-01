@@ -31,7 +31,7 @@ let tonConnectUI = null;
 let tonWalletState = null;
 let tonStatusUnsubscribe = null;
 
-const TON_CONNECT_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
+const TON_CONNECT_MANIFEST_URL = "https://vityacorn26-sys.github.io/wallbreaker/tonconnect-manifest.json";
 const TON_CONNECT_BUTTON_ROOT_ID = "ton-connect-root-hidden";
 
 const MAX_ENERGY = 100;
