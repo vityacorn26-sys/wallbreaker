@@ -1,5 +1,5 @@
 window.CONFIG = {
-  API_BASE: "https://wbapi.corterbs.dpdns.org"
+  API_BASE: "https://wbapi.corterbs.dpdns.org",
   ADSGRAM_BLOCK_ID: "25766",
 
   GAME: {
