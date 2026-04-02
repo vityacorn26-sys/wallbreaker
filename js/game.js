@@ -397,7 +397,7 @@ function getTonWalletShort() {
 
   if (!raw) return "";
 
-  return `${appName}: ${String(raw)}`;
+  return `${appName}: ${String(raw).slice(0, 6)}...${String(raw).slice(-6)}`;
 }
 
 function updateAccountPanel() {
