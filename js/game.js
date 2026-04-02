@@ -1456,20 +1456,21 @@ function showRankDetails(rankId) {
 
   if (rankBuyPrimaryBtn) {
     rankBuyPrimaryBtn.disabled = false;
-    rankBuyPrimaryBtn.classList.remove("hidden");
+    rankBuyPrimaryBtn.classList.remove("hidden", "primary", "premium", "ghost", "active-rank-btn");
     rankBuyPrimaryBtn.onclick = null;
   }
 
   if (rankBuySecondaryBtn) {
     rankBuySecondaryBtn.disabled = false;
-    rankBuySecondaryBtn.classList.add("hidden");
+    rankBuySecondaryBtn.classList.remove("hidden", "primary", "premium", "ghost", "active-rank-btn");
     rankBuySecondaryBtn.onclick = null;
   }
 
   if (rank.id === userState.rank_id) {
     if (rankBuyPrimaryBtn) {
-      rankBuyPrimaryBtn.textContent = "ACTIVE";
+      rankBuyPrimaryBtn.textContent = currentLang === "RU" ? "АКТИВЕН" : "ACTIVE";
       rankBuyPrimaryBtn.disabled = true;
+      rankBuyPrimaryBtn.classList.add("active-rank-btn");
       rankBuyPrimaryBtn.onclick = null;
     }
 
@@ -1480,7 +1481,8 @@ function showRankDetails(rankId) {
   } else if (rank.id === 3) {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().activateStars;
-      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.classList.add("ghost");
+      rankBuyPrimaryBtn.classList.remove("premium", "primary", "active-rank-btn");
       rankBuyPrimaryBtn.disabled = false;
       rankBuyPrimaryBtn.onclick = async () => {
         closeAllPanels();
@@ -1492,7 +1494,8 @@ function showRankDetails(rankId) {
 
     if (rankBuySecondaryBtn) {
       rankBuySecondaryBtn.textContent = t().activateTon;
-      rankBuySecondaryBtn.classList.remove("hidden");
+      rankBuySecondaryBtn.classList.remove("hidden", "ghost", "primary", "active-rank-btn");
+      rankBuySecondaryBtn.classList.add("premium");
       rankBuySecondaryBtn.disabled = false;
       rankBuySecondaryBtn.onclick = async () => {
         closeAllPanels();
@@ -1504,7 +1507,8 @@ function showRankDetails(rankId) {
   } else if (rank.id === 4 || rank.id === 5) {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().activateTon;
-      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.classList.remove("ghost", "active-rank-btn");
+      rankBuyPrimaryBtn.classList.add("premium");
       rankBuyPrimaryBtn.disabled = false;
       rankBuyPrimaryBtn.onclick = async () => {
         closeAllPanels();
@@ -1516,7 +1520,8 @@ function showRankDetails(rankId) {
 
     if (rankBuySecondaryBtn) {
       rankBuySecondaryBtn.textContent = t().acquireRank;
-      rankBuySecondaryBtn.classList.remove("hidden");
+      rankBuySecondaryBtn.classList.remove("hidden", "premium", "active-rank-btn");
+      rankBuySecondaryBtn.classList.add("ghost");
       rankBuySecondaryBtn.disabled = false;
       rankBuySecondaryBtn.onclick = async () => {
         await handleRankPurchase(rank.id, "WBC");
@@ -1525,7 +1530,8 @@ function showRankDetails(rankId) {
   } else {
     if (rankBuyPrimaryBtn) {
       rankBuyPrimaryBtn.textContent = t().acquireRank;
-      rankBuyPrimaryBtn.classList.remove("hidden");
+      rankBuyPrimaryBtn.classList.remove("premium", "active-rank-btn");
+      rankBuyPrimaryBtn.classList.add("ghost");
       rankBuyPrimaryBtn.disabled = false;
       rankBuyPrimaryBtn.onclick = async () => {
         await handleRankPurchase(rank.id, "WBC");
@@ -1568,22 +1574,32 @@ function updateRankLabel() {
   const rank = getRankById(userState.rank_id);
   if (!rank) {
     el.textContent = "";
-    el.className = "rank-label";
+    el.className = "rank-label hidden";
     return;
   }
 
-  el.textContent = rank.name;
+  const left = userState.rank_id > 1 ? formatDurationLeft(userState.rank_expires_at) : null;
 
-  const accentMap = {
-    silver: "r1",
-    cyan: "r2",
-    magenta: "r3"
-  };
+  const accentClass =
+    rank.accent === "magenta"
+      ? "rank-label-magenta"
+      : rank.accent === "cyan"
+        ? "rank-label-cyan"
+        : "rank-label-silver";
 
-  let rankClass = accentMap[rank.accent] || "r1";
+  const statusText = left
+    ? (currentLang === "RU" ? `АКТИВЕН • ${left}` : `ACTIVE • ${left}`)
+    : (currentLang === "RU" ? "ONLINE" : "ONLINE");
 
-  if (rank.id === 4) rankClass = "r4";
-  if (rank.id === 5) rankClass = "r5";
+  const prefix =
+    currentLang === "RU"
+      ? ">>> RANK PROTOCOL"
+      : ">>> RANK PROTOCOL";
 
-  el.className = "rank-label " + rankClass;
+  el.className = `rank-label ${accentClass}`;
+  el.innerHTML = `
+    <span class="rank-label-prefix">${prefix}</span>
+    <span class="rank-label-main">${rank.name}</span>
+    <span class="rank-label-meta">${t().rankLabel(rank.id)} • ${statusText}</span>
+  `;
 }
