@@ -839,9 +839,8 @@ async function buyRankForTon(rankId) {
   tonBuyLocked = true;
 
   try {
-        const connected = await ensureTonWalletConnected();
+    const connected = await ensureTonWalletConnected();
     if (!connected) {
-      tonBuyLocked = false;
       return;
     }
 
@@ -883,18 +882,7 @@ async function buyRankForTon(rankId) {
       txResult = await ui.sendTransaction(tx);
     } catch (e) {
       console.error("TON sendTransaction error:", e);
-      const text = String(e?.message || e || "").toLowerCase();
-
-      if (
-        text.includes("declined") ||
-        text.includes("reject") ||
-        text.includes("cancel") ||
-        text.includes("close")
-      ) {
-        safeAlert(t().tonWalletRejected);
-      } else {
-        safeAlert(t().tonConfirmFail);
-      }
+      safeAlert("TON sendTransaction error: " + String(e?.message || e || "unknown_error"));
       return;
     }
 
@@ -932,7 +920,7 @@ async function buyRankForTon(rankId) {
     safeAlert(t().tonRankActivated);
   } catch (e) {
     console.error("buyRankForTon error:", e);
-    safeAlert(t().tonConfirmFail);
+    safeAlert("buyRankForTon error: " + String(e?.message || e || "unknown_error"));
   } finally {
     tonBuyLocked = false;
   }
