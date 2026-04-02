@@ -851,30 +851,19 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const wallet = String(create.wallet || "").trim();
     const payload = String(create.payload || "").trim();
-    const amountTon = Number(create.amount_ton || 0);
+    const tx = create.tx || null;
 
-    if (!wallet || !payload || !(amountTon > 0)) {
-      safeAlert(t().tonCreateFail);
-      return;
+    if (!payload || !tx || !Array.isArray(tx.messages) || !tx.messages.length) {
+    safeAlert(t().tonCreateFail);
+    return;
     }
 
     const ui = initTonConnect();
     if (!ui) {
-      safeAlert(t().tonWalletInitFail);
-      return;
+    safeAlert(t().tonWalletInitFail);
+    return;
     }
-
-    const tx = {
-      validUntil: Math.floor(Date.now() / 1000) + 300,
-      messages: [
-        {
-          address: wallet,
-          amount: toNanoString(amountTon)
-        }
-      ]
-    };
 
     let txResult = null;
 
