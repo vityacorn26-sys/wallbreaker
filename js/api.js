@@ -97,7 +97,7 @@ return { success: false };
 async getLeaderboard() {
 try {
 const response = await fetch(`${this.BASE_URL}/api/leaderboard`, {
-headers: { 'Accept': 'application/json' }
+headers: { Accept: 'application/json' }
 });
 
 ```
@@ -210,8 +210,6 @@ error: e?.payload?.error || e?.message || 'stars_status_failed'
 };
 }
 },
-
-// ===== DRAW SYSTEM =====
 
 async buyDrawTicket() {
 try {
