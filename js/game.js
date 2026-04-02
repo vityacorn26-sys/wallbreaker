@@ -1175,42 +1175,21 @@ window.showRefs = () => {
 };
 
 window.showLeaderboard = async () => {
-  try {
-    const response = await fetch("https://wbapi.corterbs.dpdns.org/api/stats", {
-      headers: { Accept: "application/json" }
-    });
+  const text = currentLang === "RU"
+    ? [
+        "BREACH BOARD",
+        "",
+        "Top ranking board is being deployed.",
+        "The breach ladder will unlock with the first active wave."
+      ]
+    : [
+        "BREACH BOARD",
+        "",
+        "Top ranking board is being deployed.",
+        "The breach ladder will unlock with the first active wave."
+      ];
 
-    if (!response.ok) {
-      throw new Error("stats_failed");
-    }
-
-    const data = await response.json();
-    const totalUsers = Number(data?.totalUsers || 0).toLocaleString();
-    const onlineUsers = Number(data?.onlineUsers || 0).toLocaleString();
-
-    const lines = currentLang === "RU"
-      ? [
-          "BREACH BOARD",
-          "",
-          `TOTAL OPERATORS: ${totalUsers}`,
-          `ONLINE NOW: ${onlineUsers}`,
-          "",
-          "Top ranking board will be connected next."
-        ]
-      : [
-          "BREACH BOARD",
-          "",
-          `TOTAL OPERATORS: ${totalUsers}`,
-          `ONLINE NOW: ${onlineUsers}`,
-          "",
-          "Top ranking board will be connected next."
-        ];
-
-    safeAlert(lines.join("\n"));
-  } catch (e) {
-    console.error("showLeaderboard error:", e);
-    safeAlert("BREACH BOARD TEMPORARILY UNAVAILABLE");
-  }
+  safeAlert(text.join("\n"));
 };
 
 function renderMarketPanel() {
