@@ -110,13 +110,13 @@ window.CONFIG = {
   },
 
   MENU_RU: {
-    codeInjection: "CODE INJECTION (+1500)",
-    referralNode: "РЕФЕРАЛЬНЫЙ УЗЕЛ",
-    breachBoard: "ДОСКА ВЗЛОМА",
-    darknetMarket: "ДАРКНЕТ-МАРКЕТ",
-    account: "АККАУНТ",
-    close: "ЗАКРЫТЬ"
-  },
+  codeInjection: "CODE INJECTION (+1500)",
+  referralNode: "REFERRAL NODE",
+  breachBoard: "BREACH BOARD",
+  darknetMarket: "ДАРКНЕТ-МАРКЕТ",
+  account: "АККАУНТ",
+  close: "ЗАКРЫТЬ"
+},
 
   SYSTEM_TEXT: {
     zeroDayKeyName: "Zero-Day Key",
