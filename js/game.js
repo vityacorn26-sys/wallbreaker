@@ -151,7 +151,7 @@ const I18N = {
     userLoadFail: "Ошибка загрузки профиля",
     initDataFail: "Telegram initData не найден",
     refsText: (link) =>
-      `Referral Node:\n${link}\n\nБонус: ${getReferralPercent()}% от рекламной награды приглашённых.`,
+      `Referral Node:\n${link}\n\nLevel 1: 10% from invited users' ad rewards\nLevel 2: 5% from sub-referrals' ad rewards\nLevel 3: 3% from 3rd-level referrals' ad rewards`,
     leaderboardSoon: "Breach Board уже на линии, но панель ещё собирается.",
     fatalError: "Ошибка запуска",
     adCooldownHint: "Если реклама не стартовала, попробуй ещё раз через пару секунд.",
@@ -217,7 +217,7 @@ const I18N = {
     userLoadFail: "User loading error",
     initDataFail: "Telegram initData not found",
     refsText: (link) =>
-      `Referral Node:\n${link}\n\nBonus: ${getReferralPercent()}% from invited users' ad rewards.`,
+      `Referral Node:\n${link}\n\nLevel 1: 10% from invited users' ad rewards\nLevel 2: 5% from sub-referrals' ad rewards\nLevel 3: 3% from 3rd-level referrals' ad rewards`,
     leaderboardSoon: "Breach Board is online, but the full panel is still being assembled.",
     fatalError: "Launch error",
     adCooldownHint: "If the ad did not start, try again in a few seconds.",
@@ -1176,26 +1176,40 @@ window.showRefs = () => {
 
 window.showLeaderboard = async () => {
   try {
-    const rows = await API.getLeaderboard();
-
-    if (!Array.isArray(rows) || rows.length === 0) {
-      safeAlert(t().leaderboardSoon);
-      return;
-    }
-
-    const topRows = rows.slice(0, 10).map((row, index) => {
-      const name = row?.username?.trim()
-        ? `@${row.username}`
-        : `ID ${row?.telegramId || "unknown"}`;
-
-      const balance = Number(row?.balance || 0).toLocaleString();
-      return `${index + 1}. ${name} — ${balance} ${getCurrency()}`;
+    const response = await fetch("https://wbapi.corterbs.dpdns.org/api/stats", {
+      headers: { Accept: "application/json" }
     });
 
-    safeAlert(topRows.join("\n"));
+    if (!response.ok) {
+      throw new Error("stats_failed");
+    }
+
+    const data = await response.json();
+    const totalUsers = Number(data?.totalUsers || 0).toLocaleString();
+    const onlineUsers = Number(data?.onlineUsers || 0).toLocaleString();
+
+    const lines = currentLang === "RU"
+      ? [
+          "BREACH BOARD",
+          "",
+          `TOTAL OPERATORS: ${totalUsers}`,
+          `ONLINE NOW: ${onlineUsers}`,
+          "",
+          "Top ranking board will be connected next."
+        ]
+      : [
+          "BREACH BOARD",
+          "",
+          `TOTAL OPERATORS: ${totalUsers}`,
+          `ONLINE NOW: ${onlineUsers}`,
+          "",
+          "Top ranking board will be connected next."
+        ];
+
+    safeAlert(lines.join("\n"));
   } catch (e) {
     console.error("showLeaderboard error:", e);
-    safeAlert(t().leaderboardSoon);
+    safeAlert("BREACH BOARD TEMPORARILY UNAVAILABLE");
   }
 };
 
@@ -1587,19 +1601,13 @@ function updateRankLabel() {
         ? "rank-label-cyan"
         : "rank-label-silver";
 
-  const statusText = left
-    ? (currentLang === "RU" ? `АКТИВЕН • ${left}` : `ACTIVE • ${left}`)
-    : (currentLang === "RU" ? "ONLINE" : "ONLINE");
-
-  const prefix =
-    currentLang === "RU"
-      ? ">>> RANK PROTOCOL"
-      : ">>> RANK PROTOCOL";
+  const meta = left
+    ? `${t().rankLabel(rank.id)} • ${currentLang === "RU" ? "АКТИВЕН" : "ACTIVE"} • ${left}`
+    : `${t().rankLabel(rank.id)} • ONLINE`;
 
   el.className = `rank-label ${accentClass}`;
   el.innerHTML = `
-    <span class="rank-label-prefix">${prefix}</span>
     <span class="rank-label-main">${rank.name}</span>
-    <span class="rank-label-meta">${t().rankLabel(rank.id)} • ${statusText}</span>
+    <span class="rank-label-meta">${meta}</span>
   `;
 }
