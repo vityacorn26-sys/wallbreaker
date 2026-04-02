@@ -385,10 +385,19 @@ function updatePrizePoolPanel() {
 }
 
 function getTonWalletShort() {
-  const addr = tonWalletState?.account?.address || "";
-  if (!addr) return "";
-  if (addr.length <= 14) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+  const raw =
+    tonWalletState?.account?.address ||
+    tonConnectUI?.account?.address ||
+    "";
+
+  const appName =
+    tonWalletState?.device?.appName ||
+    tonWalletState?.wallet?.name ||
+    "TON Wallet";
+
+  if (!raw) return "";
+
+  return `${appName}: ${String(raw).slice(0, 6)}...${String(raw).slice(-6)}`;
 }
 
 function updateAccountPanel() {
