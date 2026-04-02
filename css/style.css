@@ -1128,7 +1128,7 @@ img {
 
 .rank-label {
   position: fixed;
-  top: 52px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1005;
@@ -1137,7 +1137,7 @@ img {
   align-items: center;
   gap: 1px;
   min-width: 0;
-  max-width: 72vw;
+  max-width: 68vw;
   padding: 0;
   border: none;
   background: transparent;
@@ -1147,15 +1147,15 @@ img {
 }
 
 .rank-label-main {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.02;
   font-weight: 900;
-  letter-spacing: 0.7px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
 .rank-label-meta {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.05;
   font-weight: 800;
   letter-spacing: 0.45px;
@@ -1190,15 +1190,15 @@ img {
 
 @media (max-width: 420px) {
   .rank-label {
-    top: 50px;
-    max-width: 78vw;
+    top: 6px;
+    max-width: 72vw;
   }
 
   .rank-label-main {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .rank-label-meta {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
