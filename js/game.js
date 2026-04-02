@@ -839,9 +839,8 @@ async function buyRankForTon(rankId) {
   tonBuyLocked = true;
 
   try {
-        const connected = await ensureTonWalletConnected();
+    const connected = await ensureTonWalletConnected();
     if (!connected) {
-      tonBuyLocked = false;
       return;
     }
 
@@ -852,11 +851,10 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const wallet = String(create.wallet || "").trim();
     const payload = String(create.payload || "").trim();
-    const amountTon = Number(create.amount_ton || 0);
+    const tx = create.tx || null;
 
-    if (!wallet || !payload || !(amountTon > 0)) {
+    if (!payload || !tx || !Array.isArray(tx.messages) || !tx.messages.length) {
       safeAlert(t().tonCreateFail);
       return;
     }
@@ -867,34 +865,13 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const tx = {
-      validUntil: Math.floor(Date.now() / 1000) + 300,
-      messages: [
-        {
-          address: wallet,
-          amount: toNanoString(amountTon)
-        }
-      ]
-    };
-
     let txResult = null;
 
     try {
       txResult = await ui.sendTransaction(tx);
     } catch (e) {
       console.error("TON sendTransaction error:", e);
-      const text = String(e?.message || e || "").toLowerCase();
-
-      if (
-        text.includes("declined") ||
-        text.includes("reject") ||
-        text.includes("cancel") ||
-        text.includes("close")
-      ) {
-        safeAlert(t().tonWalletRejected);
-      } else {
-        safeAlert(t().tonConfirmFail);
-      }
+      safeAlert("TON sendTransaction error: " + String(e?.message || e || "unknown_error"));
       return;
     }
 
@@ -932,7 +909,7 @@ async function buyRankForTon(rankId) {
     safeAlert(t().tonRankActivated);
   } catch (e) {
     console.error("buyRankForTon error:", e);
-    safeAlert(t().tonConfirmFail);
+    safeAlert("buyRankForTon error: " + String(e?.message || e || "unknown_error"));
   } finally {
     tonBuyLocked = false;
   }
