@@ -873,7 +873,6 @@ async function buyRankForTon(rankId) {
         {
           address: wallet,
           amount: toNanoString(amountTon)
-          payload: payload
         }
       ]
     };
