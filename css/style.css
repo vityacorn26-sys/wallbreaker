@@ -1169,6 +1169,11 @@ img {
   font-weight: 900;
   letter-spacing: 0.35px;
   text-transform: uppercase;
+  color: #d9e3ee;
+  text-shadow:
+    0 0 10px rgba(210, 225, 245, 0.18),
+    0 0 22px rgba(160, 185, 215, 0.10),
+    0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 .rank-label-meta {
@@ -1176,8 +1181,12 @@ img {
   line-height: 1.1;
   font-weight: 800;
   letter-spacing: 0.35px;
-  opacity: 0.9;
+  opacity: 0.92;
   text-transform: uppercase;
+  color: #aebdcd;
+  text-shadow:
+    0 0 8px rgba(190, 210, 230, 0.10),
+    0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .rank-label-silver {
