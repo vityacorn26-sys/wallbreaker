@@ -1313,6 +1313,7 @@ async function refreshZeroDayKeyPanel() {
     updateAccountPanel();
     updatePrizePoolPanel(status);
   }
+}
 
 window.showZeroDayKeyPanel = async () => {
   await refreshZeroDayKeyPanel();
