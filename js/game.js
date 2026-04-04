@@ -1252,6 +1252,40 @@ window.showAccount = () => {
   openPanel("account-panel-overlay");
 };
 
+async function refreshZeroDayKeyPanel() {
+  const balanceEl = document.getElementById("zero-key-balance-value");
+  const enteredEl = document.getElementById("zero-key-entered-value");
+
+  if (balanceEl) {
+    balanceEl.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
+  }
+
+  if (enteredEl) {
+    enteredEl.textContent = "0 / 2";
+  }
+
+  const status = await API.getDrawStatus();
+
+  if (status?.success) {
+    userState.zeroDayKeys = Number(status.keys || 0);
+
+    if (balanceEl) {
+      balanceEl.textContent = Number(status.keys || 0).toLocaleString();
+    }
+
+    if (enteredEl) {
+      enteredEl.textContent = `${Number(status.entered || 0)} / ${Number(status.max || 2)}`;
+    }
+
+    updateAccountPanel();
+  }
+}
+
+window.showZeroDayKeyPanel = async () => {
+  await refreshZeroDayKeyPanel();
+  openPanel("zero-key-panel-overlay");
+};
+
 window.closePanel = () => {
   closeAllPanels();
 
