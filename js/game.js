@@ -1286,6 +1286,34 @@ window.showZeroDayKeyPanel = async () => {
   openPanel("zero-key-panel-overlay");
 };
 
+async function handleZeroDayKeyBuy() {
+  const result = await API.buyZeroDayKey();
+
+  if (!result?.success) {
+    safeAlert(result?.error || "Не удалось купить Zero-Day Key");
+    return;
+  }
+
+  userState.zeroDayKeys = Number(result.keys || 0);
+  updateAccountPanel();
+  await refreshZeroDayKeyPanel();
+  safeAlert("Zero-Day Key куплен");
+}
+
+async function handleZeroDayKeyEnter() {
+  const result = await API.enterDrawWithKey();
+
+  if (!result?.success) {
+    safeAlert(result?.error || "Не удалось внести ключ в draw");
+    return;
+  }
+
+  userState.zeroDayKeys = Number(result.keys || userState.zeroDayKeys || 0);
+  updateAccountPanel();
+  await refreshZeroDayKeyPanel();
+  safeAlert("Ключ внесён в draw");
+}
+
 window.closePanel = () => {
   closeAllPanels();
 
@@ -1566,10 +1594,20 @@ document.addEventListener("DOMContentLoaded", () => {
     withdrawBtn.addEventListener("click", handleWithdrawRequest);
   }
 
+  const zeroKeyBuyBtn = document.getElementById("zero-key-buy-btn");
+  const zeroKeyEnterBtn = document.getElementById("zero-key-enter-btn");
+
+  if (zeroKeyBuyBtn) {
+    zeroKeyBuyBtn.addEventListener("click", handleZeroDayKeyBuy);
+  }
+
+  if (zeroKeyEnterBtn) {
+    zeroKeyEnterBtn.addEventListener("click", handleZeroDayKeyEnter);
+  }
   bindOverlayClosers();
   applyTexts();
   loadUser();
-});
+  });
 
 function updateRankLabel() {
   const el = document.getElementById("current-rank-label");
