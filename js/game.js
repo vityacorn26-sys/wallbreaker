@@ -168,6 +168,17 @@ const I18N = {
     notConnected: "Не подключён",
     noWithdraws: "Запросов на вывод нет",
     poolLive: "Пул заряжается в сети",
+    poolCharging: "HACKER PRIZE POOL IS CHARGING IN THE NETWORK",
+    poolLocked: "HACKER PRIZE POOL IS LOCKED — READY FOR DROP",
+    drawCompleted: "HACKER PRIZE POOL DROP COMPLETED",
+    zeroKeyBuyOk: "Zero-Day Key куплен",
+    zeroKeyEnterOk: "Ключ внесён в draw",
+    zeroKeyNoKeys: "У тебя пока нет Zero-Day Key",
+    zeroKeyNoWbc: "Недостаточно $WBC для покупки Zero-Day Key",
+    zeroKeyLimit: "Лимит: максимум 2 ключа на один draw",
+    zeroKeyDrawLocked: "Текущий draw уже заблокирован. Ключ не потерян.",
+    zeroKeyBuyFail: "Не удалось купить Zero-Day Key",
+    zeroKeyEnterFail: "Не удалось внести ключ в draw",
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "КУПИТЬ ЗА $WBC",
     activateTon: "КУПИТЬ ЗА TON",
@@ -233,6 +244,17 @@ const I18N = {
     withdrawStatus: "Withdraw Status",
     notConnected: "Not connected",
     noWithdraws: "No withdraw requests",
+    poolCharging: "HACKER PRIZE POOL IS CHARGING IN THE NETWORK",
+    poolLocked: "HACKER PRIZE POOL IS LOCKED — READY FOR DROP",
+    drawCompleted: "HACKER PRIZE POOL DROP COMPLETED",
+    zeroKeyBuyOk: "Zero-Day Key purchased",
+    zeroKeyEnterOk: "Key entered into draw",
+    zeroKeyNoKeys: "You do not have any Zero-Day Keys yet",
+    zeroKeyNoWbc: "Not enough $WBC to buy Zero-Day Key",
+    zeroKeyLimit: "Limit: maximum 2 keys per draw",
+    zeroKeyDrawLocked: "Current draw is locked. Your key is not lost.",
+    zeroKeyBuyFail: "Failed to buy Zero-Day Key",
+    zeroKeyEnterFail: "Failed to enter key into draw",
     poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "BUY FOR $WBC",
@@ -375,10 +397,21 @@ function getRenderedEnergy() {
   return Math.max(0, Math.min(MAX_ENERGY, lastServerEnergy + gained));
 }
 
-function updatePrizePoolPanel() {
+function updatePrizePoolPanel(statusData = null) {
   const prizePoolLive = document.getElementById("prize-pool-live-value");
   const accountPrizePool = document.getElementById("account-prize-pool-value");
-  const poolText = t().poolLive;
+
+  const poolState = String(statusData?.pool_state || "").trim().toLowerCase();
+
+  let poolText = t().poolCharging;
+
+  if (poolState === "locked_ready_for_drop") {
+    poolText = t().poolLocked;
+  } else if (poolState === "completed") {
+    poolText = t().drawCompleted;
+  } else if (poolState === "charging") {
+    poolText = t().poolCharging;
+  }
 
   if (prizePoolLive) prizePoolLive.textContent = poolText;
   if (accountPrizePool) accountPrizePool.textContent = poolText;
@@ -1278,8 +1311,8 @@ async function refreshZeroDayKeyPanel() {
     }
 
     updateAccountPanel();
+    updatePrizePoolPanel(status);
   }
-}
 
 window.showZeroDayKeyPanel = async () => {
   await refreshZeroDayKeyPanel();
@@ -1290,28 +1323,44 @@ async function handleZeroDayKeyBuy() {
   const result = await API.buyZeroDayKey();
 
   if (!result?.success) {
-    safeAlert(result?.error || "Не удалось купить Zero-Day Key");
+    const errorCode = String(result?.error || "").toLowerCase();
+
+    if (errorCode === "no_wbc") {
+      safeAlert(t().zeroKeyNoWbc);
+    } else {
+      safeAlert(t().zeroKeyBuyFail);
+    }
     return;
   }
 
   userState.zeroDayKeys = Number(result.keys || 0);
   updateAccountPanel();
   await refreshZeroDayKeyPanel();
-  safeAlert("Zero-Day Key куплен");
+  safeAlert(t().zeroKeyBuyOk);
 }
 
 async function handleZeroDayKeyEnter() {
   const result = await API.enterDrawWithKey();
 
   if (!result?.success) {
-    safeAlert(result?.error || "Не удалось внести ключ в draw");
+    const errorCode = String(result?.error || "").toLowerCase();
+
+    if (errorCode === "no_keys" || errorCode === "no_key") {
+      safeAlert(t().zeroKeyNoKeys);
+    } else if (errorCode === "limit") {
+      safeAlert(t().zeroKeyLimit);
+    } else if (errorCode === "draw_locked") {
+      safeAlert(t().zeroKeyDrawLocked);
+    } else {
+      safeAlert(t().zeroKeyEnterFail);
+    }
     return;
   }
 
   userState.zeroDayKeys = Number(result.keys || userState.zeroDayKeys || 0);
   updateAccountPanel();
   await refreshZeroDayKeyPanel();
-  safeAlert("Ключ внесён в draw");
+  safeAlert(t().zeroKeyEnterOk);
 }
 
 window.closePanel = () => {
