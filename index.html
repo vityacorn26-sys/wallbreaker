@@ -97,10 +97,11 @@
       <h2 id="market-panel-title">Darknet Market</h2>
       <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
 
-      <div class="info-card market-info-card">
+      <div class="info-card market-info-card zero-key-card">
         <p><strong>Zero-Day Key</strong></p>
         <p>2,000,000 $WBC = 1 Zero-Day Key</p>
         <p>Сохраняется до розыгрыша. Максимум 2 ключа на один draw.</p>
+        <button class="wb-button ghost" type="button" onclick="showZeroDayKeyPanel()">ПОДРОБНЕЕ</button>
       </div>
 
       <div class="rank-card market-rank-card" data-rank-id="2">
@@ -273,6 +274,40 @@
     </div>
   </div>
 
+  <div id="zero-key-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+  <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="zero-key-panel-title">
+    <h2 id="zero-key-panel-title">ZERO-DAY KEY</h2>
+    <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+
+    <div class="info-card market-info-card">
+      <p><strong>Zero-Day Key</strong></p>
+      <p>Доступ к участию в текущем draw.</p>
+      <p>1 Key = 1 вход в draw.</p>
+    </div>
+
+    <div class="info-card market-info-card">
+      <p><strong>Цена</strong></p>
+      <p>2,000,000 $WBC</p>
+      <p>Максимум 2 ключа на один draw.</p>
+    </div>
+
+    <div class="info-card market-info-card">
+      <p><strong>Текущий баланс ключей</strong></p>
+      <p id="zero-key-balance-value">0</p>
+      <p><strong>Уже внесено в draw</strong></p>
+      <p id="zero-key-entered-value">0 / 2</p>
+    </div>
+
+    <div class="market-actions" style="margin-top: 14px;">
+      <button id="zero-key-buy-btn" class="wb-button premium" type="button">
+        КУПИТЬ KEY
+      </button>
+      <button id="zero-key-enter-btn" class="wb-button ghost" type="button">
+        ВНЕСТИ В DRAW
+      </button>
+    </div>
+  </div>
+  </div>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/game.js"></script>
