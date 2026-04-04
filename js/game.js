@@ -1217,10 +1217,17 @@ window.showLeaderboard = async () => {
     poolText = t().drawCompleted;
   }
 
+  const keys = Number(status?.keys || userState.zeroDayKeys || 0);
+  const entered = Number(status?.entered || 0);
+  const max = Number(status?.max || 2);
+
   const text = [
     "BREACH BOARD",
     "",
-    poolText
+    poolText,
+    "",
+    `ZERO-DAY KEYS: ${keys}`,
+    `DRAW ENTRY: ${entered} / ${max}`
   ];
 
   safeAlert(text.join("\n"));
