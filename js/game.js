@@ -417,6 +417,26 @@ function updatePrizePoolPanel(statusData = null) {
   if (accountPrizePool) accountPrizePool.textContent = poolText;
 }
 
+async function refreshDrawStatusGlobal() {
+  try {
+    const status = await API.getDrawStatus();
+
+    if (status?.success) {
+      userState.zeroDayKeys = Number(status.keys || userState.zeroDayKeys || 0);
+      updateAccountPanel();
+      updatePrizePoolPanel(status);
+      return status;
+    }
+
+    updatePrizePoolPanel();
+    return null;
+  } catch (e) {
+    console.error("refreshDrawStatusGlobal error:", e);
+    updatePrizePoolPanel();
+    return null;
+  }
+}
+
 function getTonWalletShort() {
   const addr = tonWalletState?.account?.address || "";
   if (!addr) return "";
@@ -723,7 +743,10 @@ async function loadUser() {
     userState = normalizeUserState(data);
     tapQueue = 0;
     syncEnergyBase();
+
     await loadWithdrawStatus();
+    await refreshDrawStatusGlobal();
+
     applyTexts();
     startLocalEnergyTicker();
     showGameScreen();
@@ -1185,19 +1208,20 @@ window.showRefs = () => {
 };
 
 window.showLeaderboard = async () => {
-  const text = currentLang === "RU"
-    ? [
-        "BREACH BOARD",
-        "",
-        "Top ranking board is being deployed.",
-        "The breach ladder will unlock with the first active wave."
-      ]
-    : [
-        "BREACH BOARD",
-        "",
-        "Top ranking board is being deployed.",
-        "The breach ladder will unlock with the first active wave."
-      ];
+  const status = await refreshDrawStatusGlobal();
+
+  let poolText = t().poolCharging;
+  if (status?.pool_state === "locked_ready_for_drop") {
+    poolText = t().poolLocked;
+  } else if (status?.pool_state === "completed") {
+    poolText = t().drawCompleted;
+  }
+
+  const text = [
+    "BREACH BOARD",
+    "",
+    poolText
+  ];
 
   safeAlert(text.join("\n"));
 };
