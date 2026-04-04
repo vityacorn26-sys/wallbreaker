@@ -203,8 +203,7 @@ const API = {
         error: e?.payload?.error || e?.message || 'stars_status_failed'
       };
     }
-  }
-};
+  },
 
   async buyZeroDayKey() {
     try {
@@ -242,6 +241,7 @@ const API = {
         max: 2
       };
     }
-  },
+  }
+};
 
 window.API = API;
