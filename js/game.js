@@ -1319,6 +1319,9 @@ window.showAccount = () => {
 async function refreshZeroDayKeyPanel() {
   const balanceEl = document.getElementById("zero-key-balance-value");
   const enteredEl = document.getElementById("zero-key-entered-value");
+  const buyBtn = document.getElementById("zero-key-buy-btn");
+  const enterBtn = document.getElementById("zero-key-enter-btn");
+  const statusLine = document.getElementById("zero-key-status-line");
 
   if (balanceEl) {
     balanceEl.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
@@ -1328,17 +1331,53 @@ async function refreshZeroDayKeyPanel() {
     enteredEl.textContent = "0 / 2";
   }
 
+  if (statusLine) {
+    statusLine.textContent = "DRAW ENTRY OPEN";
+  }
+
   const status = await API.getDrawStatus();
 
   if (status?.success) {
-    userState.zeroDayKeys = Number(status.keys || 0);
+    const keys = Number(status.keys || 0);
+    const entered = Number(status.entered || 0);
+    const max = Number(status.max || 2);
+    const poolState = String(status.pool_state || "").toLowerCase();
+    const roundStatus = String(status.round_status || "").toLowerCase();
+
+    userState.zeroDayKeys = keys;
 
     if (balanceEl) {
-      balanceEl.textContent = Number(status.keys || 0).toLocaleString();
+      balanceEl.textContent = keys.toLocaleString();
     }
 
     if (enteredEl) {
-      enteredEl.textContent = `${Number(status.entered || 0)} / ${Number(status.max || 2)}`;
+      enteredEl.textContent = `${entered} / ${max}`;
+    }
+
+    if (buyBtn) {
+      buyBtn.disabled = false;
+    }
+
+    let enterDisabled = false;
+    let lineText = "DRAW ENTRY OPEN";
+
+    if (roundStatus !== "active" || poolState === "locked_ready_for_drop") {
+      enterDisabled = true;
+      lineText = "DRAW LOCKED — READY FOR DROP";
+    } else if (entered >= max) {
+      enterDisabled = true;
+      lineText = "DRAW ENTRY LIMIT REACHED";
+    } else if (keys <= 0) {
+      enterDisabled = true;
+      lineText = "NO ZERO-DAY KEYS AVAILABLE";
+    }
+
+    if (enterBtn) {
+      enterBtn.disabled = enterDisabled;
+    }
+
+    if (statusLine) {
+      statusLine.textContent = lineText;
     }
 
     updateAccountPanel();
