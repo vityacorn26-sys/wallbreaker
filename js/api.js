@@ -206,4 +206,42 @@ const API = {
   }
 };
 
+  async buyZeroDayKey() {
+    try {
+      return await this.post('/api/draw/ticket/buy');
+    } catch (e) {
+      console.error('API Error (buyZeroDayKey):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'draw_key_buy_failed'
+      };
+    }
+  },
+
+  async enterDrawWithKey() {
+    try {
+      return await this.post('/api/draw/ticket/enter');
+    } catch (e) {
+      console.error('API Error (enterDrawWithKey):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'draw_key_enter_failed'
+      };
+    }
+  },
+
+  async getDrawStatus() {
+    try {
+      return await this.post('/api/draw/status');
+    } catch (e) {
+      console.error('API Error (getDrawStatus):', e);
+      return {
+        success: false,
+        keys: 0,
+        entered: 0,
+        max: 2
+      };
+    }
+  },
+
 window.API = API;
