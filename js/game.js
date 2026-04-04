@@ -179,6 +179,10 @@ const I18N = {
     zeroKeyDrawLocked: "Текущий draw уже заблокирован. Ключ не потерян.",
     zeroKeyBuyFail: "Не удалось купить Zero-Day Key",
     zeroKeyEnterFail: "Не удалось внести ключ в draw",
+    zeroKeyStatusOpen: "ВНЕСЕНИЕ В DRAW ОТКРЫТО",
+    zeroKeyStatusLimit: "ЛИМИТ DRAW ДОСТИГНУТ",
+    zeroKeyStatusLocked: "DRAW ЗАБЛОКИРОВАН — ГОТОВ К DROP",
+    zeroKeyStatusNoKeys: "У ТЕБЯ НЕТ ZERO-DAY KEY",
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "КУПИТЬ ЗА $WBC",
     activateTon: "КУПИТЬ ЗА TON",
@@ -255,6 +259,10 @@ const I18N = {
     zeroKeyDrawLocked: "Current draw is locked. Your key is not lost.",
     zeroKeyBuyFail: "Failed to buy Zero-Day Key",
     zeroKeyEnterFail: "Failed to enter key into draw",
+    zeroKeyStatusOpen: "DRAW ENTRY OPEN",
+    zeroKeyStatusLimit: "DRAW ENTRY LIMIT REACHED",
+    zeroKeyStatusLocked: "DRAW LOCKED — READY FOR DROP",
+    zeroKeyStatusNoKeys: "NO ZERO-DAY KEYS AVAILABLE",
     poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "BUY FOR $WBC",
@@ -1332,7 +1340,7 @@ async function refreshZeroDayKeyPanel() {
   }
 
   if (statusLine) {
-    statusLine.textContent = "DRAW ENTRY OPEN";
+    statusLine.textContent = t().zeroKeyStatusOpen;
   }
 
   const status = await API.getDrawStatus();
@@ -1359,17 +1367,17 @@ async function refreshZeroDayKeyPanel() {
     }
 
     let enterDisabled = false;
-    let lineText = "DRAW ENTRY OPEN";
+    let lineText = t().zeroKeyStatusOpen;
 
     if (roundStatus !== "active" || poolState === "locked_ready_for_drop") {
       enterDisabled = true;
-      lineText = "DRAW LOCKED — READY FOR DROP";
+      lineText = t().zeroKeyStatusLocked;
     } else if (entered >= max) {
       enterDisabled = true;
-      lineText = "DRAW ENTRY LIMIT REACHED";
+      lineText = t().zeroKeyStatusLimit;
     } else if (keys <= 0) {
       enterDisabled = true;
-      lineText = "NO ZERO-DAY KEYS AVAILABLE";
+      lineText = t().zeroKeyStatusNoKeys;
     }
 
     if (enterBtn) {
