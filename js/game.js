@@ -507,21 +507,16 @@ function updateAccountPanel() {
   const sessionWallet = userState.lastWithdraw?.wallet || "";
   const connectedTonWallet = getTonWalletShort();
   const connectedTonWalletFull = getTonWalletAddress();
+  const manualWallet = getManualWithdrawWallet();
+  const preferredWallet = enteredWallet || manualWallet || connectedTonWalletFull || sessionWallet || "";
 
   if (walletStatus) {
-    if (enteredWallet) {
-      walletStatus.textContent = formatWallet(enteredWallet);
-    } else if (connectedTonWalletFull) {
-      walletStatus.textContent = formatWallet(connectedTonWalletFull);
-    } else if (sessionWallet) {
-      walletStatus.textContent = formatWallet(sessionWallet);
+    if (preferredWallet) {
+      walletStatus.textContent = formatWallet(preferredWallet);
     } else {
       walletStatus.textContent = t().notConnected;
     }
   }
-
-  const manualWallet = getManualWithdrawWallet();
-  const preferredWallet = manualWallet || connectedTonWalletFull || sessionWallet || "";
 
   if (
     withdrawWalletInput &&
