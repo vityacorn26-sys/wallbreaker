@@ -1236,8 +1236,14 @@ function bindOverlayClosers() {
 }
 
 window.showRefs = () => {
-  const userId = tg?.initDataUnsafe?.user?.id?.toString() || "";
-  const link = `https://t.me/BypassWallBot/play?start=${userId}`;
+  const refCode = String(userState.ref_code || "").trim();
+
+  if (!refCode) {
+    safeAlert("Referral link is not ready yet. Please reopen the app.");
+    return;
+  }
+
+  const link = `https://t.me/BypassWallBot/play?start=${encodeURIComponent(refCode)}`;
   safeAlert(t().refsText(link));
 };
 
