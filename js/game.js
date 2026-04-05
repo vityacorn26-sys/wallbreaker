@@ -481,12 +481,12 @@ function updateAccountPanel() {
   const connectedTonWalletFull = getTonWalletAddress();
 
   if (walletStatus) {
-    if (connectedTonWallet) {
+    if (enteredWallet) {
+      walletStatus.textContent = enteredWallet;
+    } else if (connectedTonWallet) {
       walletStatus.textContent = connectedTonWallet;
     } else if (sessionWallet) {
       walletStatus.textContent = sessionWallet;
-    } else if (enteredWallet) {
-      walletStatus.textContent = enteredWallet;
     } else {
       walletStatus.textContent = t().notConnected;
     }
