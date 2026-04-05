@@ -1257,7 +1257,7 @@ function bindOverlayClosers() {
   });
 }
 
-window.showRefs = () => {
+window.showRefs = async () => {
   const refCode = String(userState.ref_code || "").trim();
 
   if (!refCode) {
@@ -1266,7 +1266,17 @@ window.showRefs = () => {
   }
 
   const link = `https://t.me/BypassWallBot/play?start=${encodeURIComponent(refCode)}`;
-  safeAlert(t().refsText(link));
+  const text = `${t().refsText(link)}\n\n${link}`;
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(link);
+      safeAlert(`${t().refsText(link)}\n\nCopied to clipboard`);
+      return;
+    }
+  } catch (_) {}
+
+  safeAlert(text);
 };
 
 window.showLeaderboard = async () => {
