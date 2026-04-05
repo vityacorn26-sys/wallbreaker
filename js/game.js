@@ -478,6 +478,7 @@ function updateAccountPanel() {
   const enteredWallet = withdrawWalletInput?.value?.trim() || "";
   const sessionWallet = userState.lastWithdraw?.wallet || "";
   const connectedTonWallet = getTonWalletShort();
+  const connectedTonWalletFull = getTonWalletAddress();
 
   if (walletStatus) {
     if (connectedTonWallet) {
@@ -489,6 +490,17 @@ function updateAccountPanel() {
     } else {
       walletStatus.textContent = t().notConnected;
     }
+  }
+
+  const preferredWallet = connectedTonWalletFull || sessionWallet || "";
+
+  if (
+  withdrawWalletInput &&
+  preferredWallet &&
+  !withdrawWalletInput.matches(":focus") &&
+  !withdrawWalletInput.value.trim()
+  ) {
+  withdrawWalletInput.value = preferredWallet;
   }
 
   if (withdrawStatus) {
