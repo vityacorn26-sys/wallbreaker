@@ -125,6 +125,27 @@ function formatWallet(addr) {
   return addr.slice(0, 6) + "..." + addr.slice(-6);
 }
 
+const MANUAL_WITHDRAW_WALLET_KEY = "wb_manual_withdraw_wallet";
+
+function getManualWithdrawWallet() {
+  try {
+    return localStorage.getItem(MANUAL_WITHDRAW_WALLET_KEY) || "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function setManualWithdrawWallet(value) {
+  try {
+    const clean = String(value || "").trim();
+    if (clean) {
+      localStorage.setItem(MANUAL_WITHDRAW_WALLET_KEY, clean);
+    } else {
+      localStorage.removeItem(MANUAL_WITHDRAW_WALLET_KEY);
+    }
+  } catch (_) {}
+}
+
 function getRankPriceLabel(rank) {
   if (!rank) return "";
 
@@ -499,7 +520,8 @@ function updateAccountPanel() {
     }
   }
 
-  const preferredWallet = connectedTonWalletFull || sessionWallet || "";
+  const manualWallet = getManualWithdrawWallet();
+  const preferredWallet = manualWallet || connectedTonWalletFull || sessionWallet || "";
 
   if (
     withdrawWalletInput &&
@@ -1754,12 +1776,23 @@ document.addEventListener("DOMContentLoaded", () => {
     withdrawBtn.addEventListener("click", handleWithdrawRequest);
   }
 
+  if (withdrawWalletInput) {
+    withdrawWalletInput.addEventListener("change", () => {
+      setManualWithdrawWallet(withdrawWalletInput.value);
+    });
+
+    withdrawWalletInput.addEventListener("blur", () => {
+      setManualWithdrawWallet(withdrawWalletInput.value);
+    });
+  }
+
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", () => {
       if (!withdrawWalletInput) return;
 
       withdrawWalletInput.value = "";
+      setManualWithdrawWallet("");
       delete withdrawWalletInput.dataset.walletAutofilled;
       withdrawWalletInput.focus();
     });
