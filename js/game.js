@@ -458,6 +458,7 @@ function updateAccountPanel() {
   const rankValue = document.getElementById("account-rank-value");
   const tapValue = document.getElementById("account-tap-value");
   const keysValue = document.getElementById("account-keys-value");
+  const tonBalanceValue = document.getElementById("account-ton-balance-value");
   const walletStatus = document.getElementById("account-wallet-status");
   const withdrawStatus = document.getElementById("account-withdraw-status");
 
@@ -470,7 +471,10 @@ function updateAccountPanel() {
 
   if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
   if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
-
+  if (tonBalanceValue) {
+  tonBalanceValue.textContent = `${Number(userState.ton_balance || 0).toFixed(2)} TON`;
+  }
+  
   const enteredWallet = withdrawWalletInput?.value?.trim() || "";
   const sessionWallet = userState.lastWithdraw?.wallet || "";
   const connectedTonWallet = getTonWalletShort();
@@ -503,8 +507,9 @@ function updateAccountPanel() {
   if (cards[1]) cards[1].querySelector("strong").textContent = t().tapPower;
   if (cards[2]) cards[2].querySelector("strong").textContent = t().zeroDayKeys;
   if (cards[3]) cards[3].querySelector("strong").textContent = t().prizePool;
-  if (cards[4]) cards[4].querySelector("strong").textContent = t().walletStatus;
-  if (cards[5]) cards[5].querySelector("strong").textContent = t().withdrawStatus;
+  if (cards[4]) cards[4].querySelector("strong").textContent = t().tonBalance || "TON Balance";
+  if (cards[5]) cards[5].querySelector("strong").textContent = t().walletStatus;
+  if (cards[6]) cards[6].querySelector("strong").textContent = t().withdrawStatus;
 }
 
 function updateUI() {
