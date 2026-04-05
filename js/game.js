@@ -118,6 +118,13 @@ function formatDurationLeft(expiresAt) {
   return `${Math.max(totalHours, 0)}h`;
 }
 
+function formatWallet(addr) {
+  if (!addr) return "";
+  if (addr.length <= 20) return addr;
+
+  return addr.slice(0, 6) + "..." + addr.slice(-6);
+}
+
 function getRankPriceLabel(rank) {
   if (!rank) return "";
 
@@ -482,11 +489,11 @@ function updateAccountPanel() {
 
   if (walletStatus) {
     if (enteredWallet) {
-      walletStatus.textContent = enteredWallet;
-    } else if (connectedTonWallet) {
-      walletStatus.textContent = connectedTonWallet;
+      walletStatus.textContent = formatWallet(enteredWallet);
+    } else if (connectedTonWalletFull) {
+      walletStatus.textContent = formatWallet(connectedTonWalletFull);
     } else if (sessionWallet) {
-      walletStatus.textContent = sessionWallet;
+      walletStatus.textContent = formatWallet(sessionWallet);
     } else {
       walletStatus.textContent = t().notConnected;
     }
