@@ -481,8 +481,8 @@ function updateAccountPanel() {
   const connectedTonWalletFull = getTonWalletAddress();
 
   if (walletStatus) {
-    if (connectedTonWalletFull) {
-      walletStatus.textContent = connectedTonWalletFull;
+    if (connectedTonWallet) {
+      walletStatus.textContent = connectedTonWallet;
     } else if (sessionWallet) {
       walletStatus.textContent = sessionWallet;
     } else if (enteredWallet) {
