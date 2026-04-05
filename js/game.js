@@ -495,12 +495,14 @@ function updateAccountPanel() {
   const preferredWallet = connectedTonWalletFull || sessionWallet || "";
 
   if (
-  withdrawWalletInput &&
-  preferredWallet &&
-  !withdrawWalletInput.matches(":focus") &&
-  !withdrawWalletInput.value.trim()
+    withdrawWalletInput &&
+    preferredWallet &&
+    !withdrawWalletInput.dataset.walletAutofilled &&
+    !withdrawWalletInput.matches(":focus") &&
+    !withdrawWalletInput.value.trim()
   ) {
-  withdrawWalletInput.value = preferredWallet;
+    withdrawWalletInput.value = preferredWallet;
+    withdrawWalletInput.dataset.walletAutofilled = "1";
   }
 
   if (withdrawStatus) {
