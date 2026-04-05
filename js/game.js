@@ -1782,6 +1782,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (withdrawWalletInput) {
+    withdrawWalletInput.addEventListener("input", () => {
+      setManualWithdrawWallet(withdrawWalletInput.value);
+    });
+
     withdrawWalletInput.addEventListener("change", () => {
       setManualWithdrawWallet(withdrawWalletInput.value);
     });
