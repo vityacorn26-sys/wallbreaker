@@ -461,7 +461,6 @@ function updateAccountPanel() {
   const tonBalanceValue = document.getElementById("account-ton-balance-value");
   const walletStatus = document.getElementById("account-wallet-status");
   const withdrawStatus = document.getElementById("account-withdraw-status");
-  const changeWalletBtn = document.getElementById("change-wallet-btn");
 
   if (rankValue) {
     const left = formatDurationLeft(userState.rank_expires_at);
@@ -1742,6 +1741,7 @@ document.addEventListener("DOMContentLoaded", () => {
     withdrawBtn.addEventListener("click", handleWithdrawRequest);
   }
 
+  const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", () => {
       if (!withdrawWalletInput) return;
