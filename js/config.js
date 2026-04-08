@@ -1,6 +1,5 @@
 window.CONFIG = {
   API_BASE: "https://wbapi.corterbs.dpdns.org",
-  ADSGRAM_BLOCK_ID: "27127",
 
   GAME: {
     CURRENCY: "$WBC",
