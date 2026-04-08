@@ -82,12 +82,12 @@ const API = {
     }
   },
 
-  async claimAdReward(ymid) {
+  async claimAdReward() {
     try {
-      return await this.post('/api/ad-reward', { ymid });
+      return await this.post('/api/ad-reward');
     } catch (e) {
       console.error('API Error (claimAdReward):', e);
-      return { success: false, error: e?.payload?.error || 'ad_reward_failed' };
+      return { success: false };
     }
   },
 
