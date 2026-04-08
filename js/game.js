@@ -1579,35 +1579,23 @@ window.showAds = async () => {
 
     await showRewarded({ ymid });
 
-    let rewardResp = null;
+    const rewardResp = await API.claimAdReward();
 
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      if (attempt > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-      }
+    if (rewardResp?.success) {
+      userState = normalizeUserState({
+        ...userState,
+        balance: rewardResp.balance,
+        wbc_balance: rewardResp.wbc_balance ?? rewardResp.balance ?? userState.wbc_balance,
+        energy: rewardResp.energy,
+        rank_id: rewardResp.rank_id ?? userState.rank_id,
+        rank_expires_at: rewardResp.rank_expires_at ?? userState.rank_expires_at,
+        ton_balance: rewardResp.ton_balance ?? userState.ton_balance
+      });
 
-      rewardResp = await API.claimAdReward(ymid);
-
-      if (rewardResp?.success) {
-        userState = normalizeUserState({
-          ...userState,
-          balance: rewardResp.balance,
-          wbc_balance: rewardResp.wbc_balance ?? rewardResp.balance ?? userState.wbc_balance,
-          energy: rewardResp.energy,
-          rank_id: rewardResp.rank_id ?? userState.rank_id,
-          rank_expires_at: rewardResp.rank_expires_at ?? userState.rank_expires_at,
-          ton_balance: rewardResp.ton_balance ?? userState.ton_balance
-        });
-
-        syncEnergyBase();
-        updateUI();
-        safeAlert(t().adRewardOk);
-        return;
-      }
-
-      if (rewardResp?.error && rewardResp.error !== "pending_postback") {
-        break;
-      }
+      syncEnergyBase();
+      updateUI();
+      safeAlert(t().adRewardOk);
+      return;
     }
 
     safeAlert(t().adRewardFail);
