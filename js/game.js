@@ -169,7 +169,7 @@ function getRankPriceLabel(rank) {
 const I18N = {
   RU: {
     adLimit: "Лимит рекламы достигнут",
-    adNotLoaded: "AdsGram SDK не загрузился. Перезапусти бота.",
+    adNotLoaded: "Monetag SDK не загрузился. Перезапусти бота.",
     adOpenFail: "Реклама сейчас не открылась. Попробуй ещё раз.",
     adRewardOk: "Награда получена",
     adRewardFail: "Ошибка начисления награды",
@@ -250,7 +250,7 @@ const I18N = {
   },
   EN: {
     adLimit: "Ad limit reached",
-    adNotLoaded: "AdsGram SDK not loaded. Restart the bot.",
+    adNotLoaded: "Monetag SDK not loaded. Restart the bot.",
     adOpenFail: "Ad failed to open. Please try again.",
     adRewardOk: "Reward received",
     adRewardFail: "Reward credit error",
@@ -1510,19 +1510,12 @@ window.closePanel = () => {
   }
 };
 
-function getAdsgramController() {
-  if (!window.Adsgram || typeof window.Adsgram.init !== "function") {
+function getMonetagRewardedHandler() {
+  const fn = window.show_10848170;
+  if (typeof fn !== "function") {
     return null;
   }
-
-  try {
-    return window.Adsgram.init({
-      blockId: getConfig().ADSGRAM_BLOCK_ID || "25766"
-    });
-  } catch (e) {
-    console.error("AdsGram init error:", e);
-    return null;
-  }
+  return fn;
 }
 
 function parseAdErrorMessage(err) {
@@ -1538,36 +1531,7 @@ function parseAdErrorMessage(err) {
   }
 }
 
-function isAdsgramRewardResult(result) {
-  if (!result) return false;
-  if (result === true) return true;
-
-  const done = result?.done;
-  const state = result?.state;
-  const status = result?.status;
-  const event = result?.event;
-  const type = result?.type;
-
-  if (done === true) return true;
-
-  const values = [done, state, status, event, type]
-    .filter((v) => v !== undefined && v !== null)
-    .map((v) => String(v).toLowerCase().trim());
-
-  return values.some((v) =>
-    v === "done" ||
-    v === "reward" ||
-    v === "completed" ||
-    v === "complete" ||
-    v === "finish" ||
-    v === "finished" ||
-    v === "success" ||
-    v === "ok" ||
-    v === "shown"
-  );
-}
-
-function isAdsgramCancelResult(errText) {
+function isMonetagCancelResult(errText) {
   if (!errText) return false;
 
   return (
@@ -1597,19 +1561,23 @@ window.showAds = async () => {
       return;
     }
 
-    const controller = getAdsgramController();
-    if (!controller) {
+    const showRewarded = getMonetagRewardedHandler();
+    if (!showRewarded) {
       safeAlert(t().adNotLoaded);
       return;
     }
 
-    const result = await controller.show();
-    console.log("AdsGram result:", result);
+    const tgUser = API.getTelegramUser?.() || null;
+    const telegramId = tgUser?.id ? String(tgUser.id) : "anon";
+    const ymid = `wbad_${telegramId}_${Date.now()}`;
 
-    if (!isAdsgramRewardResult(result)) {
-      safeAlert(t().adWatchFail);
-      return;
+    try {
+      await showRewarded({ type: "preload", ymid });
+    } catch (preloadErr) {
+      console.warn("Monetag preload skipped:", preloadErr);
     }
+
+    await showRewarded({ ymid });
 
     const rewardResp = await API.claimAdReward();
 
@@ -1635,7 +1603,7 @@ window.showAds = async () => {
     console.error("showAds error:", e);
 
     const adErrText = parseAdErrorMessage(e);
-    if (isAdsgramCancelResult(adErrText)) {
+    if (isMonetagCancelResult(adErrText)) {
       safeAlert(t().adWatchFail);
       return;
     }
