@@ -55,6 +55,10 @@
       DARKNET MARKET
     </button>
 
+    <button class="menu-item" id="btn-protocol" onclick="showProtocol()" type="button">
+      MISSION PROTOCOL
+    </button>
+    
     <button class="menu-item" id="btn-account" onclick="showAccount()" type="button">
       ACCOUNT
     </button>
@@ -318,6 +322,14 @@
       DRAW ENTRY OPEN
     </p>
   </div>
+  </div>
+    <div id="protocol-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="protocol-panel-title">
+      <h2 id="protocol-panel-title">MISSION PROTOCOL</h2>
+      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+
+      <div id="protocol-content" class="protocol-grid"></div>
+    </div>
   </div>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
