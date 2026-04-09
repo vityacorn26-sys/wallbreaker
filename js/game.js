@@ -1383,6 +1383,83 @@ window.showAccount = () => {
   openPanel("account-panel-overlay");
 };
 
+function getProtocolConfig() {
+  const cfg = getConfig().PROTOCOL || {};
+  return currentLang === "RU" ? (cfg.RU || {}) : (cfg.EN || {});
+}
+
+function getProtocolDrawText(status) {
+  const p = getProtocolConfig();
+  const poolState = String(status?.pool_state || "").trim().toLowerCase();
+
+  if (poolState === "locked_ready_for_drop") {
+    return p.drawLocked || "HACKER'S PRIZE POOL BLOCKED — READY TO DROP";
+  }
+
+  if (poolState === "completed") {
+    return p.drawCompleted || "HACKER'S PRIZE POOL DROP COMPLETED";
+  }
+
+  return p.drawCharging || "HACKER'S PRIZE POOL IS CHARGING IN THE NETWORK";
+}
+
+function renderProtocolPanel(status = null) {
+  const p = getProtocolConfig();
+
+  const titleEl = document.getElementById("protocol-panel-title");
+  const contentEl = document.getElementById("protocol-content");
+  const backBtn = document.querySelector("#protocol-panel-overlay .wb-back-btn");
+
+  if (titleEl) titleEl.textContent = p.title || "MISSION PROTOCOL";
+  if (backBtn) backBtn.textContent = p.back || "← BACK";
+  if (!contentEl) return;
+
+  const drawText = getProtocolDrawText(status);
+
+  contentEl.innerHTML = `
+    <div class="protocol-card">
+      <strong>${p.coreTitle || "TAP CORE"}</strong>
+      <p>${p.coreText || "Tap the core to farm $WBC."}</p>
+    </div>
+
+    <div class="protocol-card">
+      <strong>${p.adsTitle || "CODE INJECTION"}</strong>
+      <p>${p.adsText || "Watch ads to get boosted rewards."}</p>
+    </div>
+
+    <div class="protocol-card">
+      <strong>${p.rankTitle || "RANK UPGRADE"}</strong>
+      <p>${p.rankText || "Ranks increase tap output only."}</p>
+    </div>
+
+    <div class="protocol-card">
+      <strong>${p.keyTitle || "ZERO-DAY KEY"}</strong>
+      <p>${p.keyText || "1 Key = 1 entry. Max 2 keys per round."}</p>
+    </div>
+
+    <div class="protocol-card">
+      <strong>${p.activityTitle || "ACTIVITY LOGIC"}</strong>
+      <p>${p.activityText || ""}</p>
+    </div>
+
+    <div class="protocol-card protocol-card-status">
+      <strong>${p.drawTitle || "DRAW STATUS"}</strong>
+      <p>${drawText}</p>
+    </div>
+
+    <div class="protocol-card protocol-card-highlight">
+      <strong>${p.targetTitle || "TARGET"}</strong>
+      <p>${p.targetText || ""}</p>
+    </div>
+  `;
+}
+
+window.showProtocol = async () => {
+  const status = await refreshDrawStatusGlobal();
+  renderProtocolPanel(status);
+  openPanel("protocol-panel-overlay");
+};
+
 async function refreshZeroDayKeyPanel() {
   const balanceEl = document.getElementById("zero-key-balance-value");
   const enteredEl = document.getElementById("zero-key-entered-value");
