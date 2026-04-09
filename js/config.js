@@ -104,6 +104,7 @@ window.CONFIG = {
     referralNode: "REFERRAL NODE",
     breachBoard: "BREACH BOARD",
     darknetMarket: "DARKNET MARKET",
+    missionProtocol: "MISSION PROTOCOL",
     account: "ACCOUNT",
     close: "CLOSE"
   },
@@ -113,6 +114,7 @@ window.CONFIG = {
   referralNode: "REFERRAL NODE",
   breachBoard: "BREACH BOARD",
   darknetMarket: "ДАРКНЕТ-МАРКЕТ",
+  missionProtocol: "ПРОТОКОЛ ВЗЛОМА",
   account: "АККАУНТ",
   close: "ЗАКРЫТЬ"
 },
@@ -144,6 +146,63 @@ window.CONFIG = {
       donationTON: 1.5,
       adsActivity: 1.25,
       tapsActivity: 1.1
+    }
+  }
+    PROTOCOL: {
+    EN: {
+      title: "MISSION PROTOCOL",
+      back: "← BACK",
+
+      coreTitle: "TAP CORE",
+      coreText: "Tap the core to farm $WBC.",
+
+      adsTitle: "CODE INJECTION",
+      adsText: "Watch ads to get boosted rewards.",
+
+      rankTitle: "RANK UPGRADE",
+      rankText: "Ranks increase tap output only.",
+
+      keyTitle: "ZERO-DAY KEY",
+      keyText: "1 Key = 1 entry. Max 2 keys per round.",
+
+      activityTitle: "ACTIVITY LOGIC",
+      activityText: "Activity counts from the start of the active round even before key entry. If the current prize pool is blocked and ready to drop, new activity is counted into the next round.",
+
+      drawTitle: "DRAW STATUS",
+      drawCharging: "HACKER'S PRIZE POOL IS CHARGING IN THE NETWORK",
+      drawLocked: "HACKER'S PRIZE POOL BLOCKED — READY TO DROP",
+      drawCompleted: "HACKER'S PRIZE POOL DROP COMPLETED",
+
+      targetTitle: "TARGET",
+      targetText: "Farm $WBC → upgrade rank → enter draw via Zero-Day Key → compete for TON."
+    },
+
+    RU: {
+      title: "ПРОТОКОЛ ВЗЛОМА",
+      back: "← НАЗАД",
+
+      coreTitle: "TAP CORE",
+      coreText: "Тапай ядро и добывай $WBC.",
+
+      adsTitle: "CODE INJECTION",
+      adsText: "Смотри рекламу и получай усиленные награды.",
+
+      rankTitle: "RANK UPGRADE",
+      rankText: "Ранги увеличивают только силу тапа.",
+
+      keyTitle: "ZERO-DAY KEY",
+      keyText: "1 Key = 1 вход. Максимум 2 ключа на один раунд.",
+
+      activityTitle: "ACTIVITY LOGIC",
+      activityText: "Активность считается с начала active round даже до внесения key. Если текущий prize pool blocked ready to drop, новая активность уже идёт в следующий round.",
+
+      drawTitle: "DRAW STATUS",
+      drawCharging: "HACKER'S PRIZE POOL IS CHARGING IN THE NETWORK",
+      drawLocked: "HACKER'S PRIZE POOL BLOCKED — READY TO DROP",
+      drawCompleted: "HACKER'S PRIZE POOL DROP COMPLETED",
+
+      targetTitle: "TARGET",
+      targetText: "Фарми $WBC → усиливай ранг → входи в draw через Zero-Day Key → борись за TON."
     }
   }
 };
