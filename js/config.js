@@ -147,8 +147,9 @@ window.CONFIG = {
       adsActivity: 1.25,
       tapsActivity: 1.1
     }
-  }
-    PROTOCOL: {
+  },
+    
+  PROTOCOL: {
     EN: {
       title: "MISSION PROTOCOL",
       back: "← BACK",
