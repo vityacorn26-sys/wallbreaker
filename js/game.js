@@ -1449,12 +1449,12 @@ function renderProtocolPanel(status = null) {
       <p>${p.activityText || ""}</p>
     </div>
 
-    <div class="protocol-card protocol-card-status">
+    <div class="protocol-highlight">
       <strong>${p.drawTitle || "DRAW STATUS"}</strong>
       <p>${drawText}</p>
     </div>
 
-    <div class="protocol-card protocol-card-highlight">
+    <div class="protocol-target">
       <strong>${p.targetTitle || "TARGET"}</strong>
       <p>${p.targetText || ""}</p>
     </div>
