@@ -161,7 +161,7 @@ window.CONFIG = {
       adsText: "Watch ads to get boosted rewards.",
 
       rankTitle: "RANK UPGRADE",
-      rankText: "Ranks increase tap output only.",
+      rankText: "Rank gives an improvement in hacking skills, a boost in activity, and an increase in the share of draw in accordance with the Rank level.",
 
       keyTitle: "ZERO-DAY KEY",
       keyText: "1 Key = 1 entry. Max 2 keys per round.",
@@ -189,7 +189,7 @@ window.CONFIG = {
       adsText: "Смотри рекламу и получай усиленные награды.",
 
       rankTitle: "RANK UPGRADE",
-      rankText: "Ранги увеличивают только силу тапа.",
+      rankText: "Ранг даёт улучшение квалификации взлома, буст в активновность, и увеличение доли с draw в соответствии с уровнем Ранга.",
 
       keyTitle: "ZERO-DAY KEY",
       keyText: "1 Key = 1 вход. Максимум 2 ключа на один раунд.",
