@@ -1286,3 +1286,35 @@ img {
     font-size: 9px;
   }
 }
+
+/* === PROTOCOL HIGHLIGHT BLOCK === */
+
+.protocol-highlight {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0,255,180,0.08), rgba(0,200,255,0.08));
+  border: 1px solid rgba(0,255,180,0.25);
+  box-shadow: 0 0 12px rgba(0,255,180,0.15);
+}
+
+.protocol-highlight strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #00ffd0;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.protocol-target {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 0, 120, 0.08);
+  border: 1px solid rgba(255, 0, 120, 0.25);
+  box-shadow: 0 0 10px rgba(255, 0, 120, 0.12);
+}
+
+.protocol-target strong {
+  color: #ff4da6;
+}
