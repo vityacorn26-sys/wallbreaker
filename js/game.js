@@ -597,11 +597,13 @@ function applyTexts() {
   const close = document.getElementById("btn-close");
   const ads = document.getElementById("btn-ads");
   const account = document.getElementById("btn-account");
+  const protocol = document.getElementById("btn-protocol");
   const balanceCurrencyEl = document.getElementById("balance-currency");
 
   if (refs) refs.textContent = menu.referralNode || "REFERRAL NODE";
   if (top) top.textContent = menu.breachBoard || "BREACH BOARD";
   if (market) market.textContent = menu.darknetMarket || "DARKNET MARKET";
+  if (protocol) protocol.textContent = menu.missionProtocol || "MISSION PROTOCOL";
   if (close) close.textContent = menu.close || "CLOSE";
   if (ads) {
     ads.textContent = adFlowLocked
@@ -631,6 +633,11 @@ function applyTexts() {
   updateAccountPanel();
   updatePrizePoolPanel();
   updateUI();
+
+  const protocolOverlay = document.getElementById("protocol-panel-overlay");
+  if (protocolOverlay && !protocolOverlay.classList.contains("hidden")) {
+    renderProtocolPanel();
+  }
 }
 
 window.setLang = (lang) => {
