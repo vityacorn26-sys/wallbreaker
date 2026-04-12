@@ -1390,6 +1390,14 @@ window.showAccount = () => {
   openPanel("account-panel-overlay");
 };
 
+window.showTasksPanel = async () => {
+  openPanel("tasks-panel-overlay");
+};
+
+window.showPromoPanel = async () => {
+  openPanel("promo-panel-overlay");
+};
+
 function getProtocolConfig() {
   const cfg = getConfig().PROTOCOL || {};
   return currentLang === "RU" ? (cfg.RU || {}) : (cfg.EN || {});
