@@ -598,6 +598,8 @@ function applyTexts() {
   const ads = document.getElementById("btn-ads");
   const account = document.getElementById("btn-account");
   const protocol = document.getElementById("btn-protocol");
+  const tasks = document.getElementById("btn-tasks");
+  const promo = document.getElementById("btn-promo");
   const balanceCurrencyEl = document.getElementById("balance-currency");
 
   if (refs) refs.textContent = menu.referralNode || "REFERRAL NODE";
@@ -611,6 +613,9 @@ function applyTexts() {
       : (menu.codeInjection || "CODE INJECTION (+1500)");
   }
   if (account) account.textContent = menu.account || "ACCOUNT";
+  if (tasks) tasks.textContent = getTasksPromoText().tasksBtn;
+  if (promo) promo.textContent = getTasksPromoText().promoBtn;
+  syncTasksPromoTexts();
   if (balanceCurrencyEl) balanceCurrencyEl.textContent = getCurrency();
 
   const ru = document.getElementById("lang-ru");
@@ -1390,11 +1395,296 @@ window.showAccount = () => {
   openPanel("account-panel-overlay");
 };
 
+function getTasksPromoText() {
+  if (currentLang === "RU") {
+    return {
+      tasksBtn: "TASKS",
+      promoBtn: "ПРОМОКОД",
+      tasksTitle: "TASKS",
+      promoTitle: "ПРОМОКОД",
+      tasksLoading: "Загрузка задач...",
+      tasksLoadFail: "Не удалось загрузить задачи",
+      noTasks: "Пока задач нет",
+      claim: "ЗАБРАТЬ",
+      claimed: "ЗАБРАНО",
+      activateCode: "АКТИВАЦИЯ КОДА",
+      enterCodeHint: "Введи промокод и забери награду.",
+      promoWaiting: "Ожидание кода...",
+      promoEmpty: "Введи промокод",
+      promoApply: "АКТИВИРОВАТЬ",
+      promoSuccessTon: (amount) => `Промокод активирован: +${Number(amount || 0).toFixed(4)} TON`,
+      promoSuccessWbc: (amount) => `Промокод активирован: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
+      promoFail: "Не удалось активировать промокод",
+      rewardWbc: (amount) => `Награда: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
+      rewardKey: (amount) => `Награда: +${Number(amount || 0)} Zero-Day Key`,
+      progress: (a, b) => `Прогресс: ${a} / ${b}`
+    };
+  }
+
+  return {
+    tasksBtn: "TASKS",
+    promoBtn: "PROMO CODE",
+    tasksTitle: "TASKS",
+    promoTitle: "PROMO CODE",
+    tasksLoading: "Loading tasks...",
+    tasksLoadFail: "Failed to load tasks",
+    noTasks: "No tasks yet",
+    claim: "CLAIM",
+    claimed: "CLAIMED",
+    activateCode: "ACTIVATE CODE",
+    enterCodeHint: "Enter promo code and claim reward.",
+    promoWaiting: "Waiting for code...",
+    promoEmpty: "Enter promo code",
+    promoApply: "ACTIVATE",
+    promoSuccessTon: (amount) => `Promo activated: +${Number(amount || 0).toFixed(4)} TON`,
+    promoSuccessWbc: (amount) => `Promo activated: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
+    promoFail: "Failed to activate promo code",
+    rewardWbc: (amount) => `Reward: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
+    rewardKey: (amount) => `Reward: +${Number(amount || 0)} Zero-Day Key`,
+    progress: (a, b) => `Progress: ${a} / ${b}`
+  };
+}
+
+function syncTasksPromoTexts() {
+  const tp = getTasksPromoText();
+
+  const btnTasks = document.getElementById("btn-tasks");
+  const btnPromo = document.getElementById("btn-promo");
+  const tasksTitle = document.getElementById("tasks-panel-title");
+  const promoTitle = document.getElementById("promo-panel-title");
+  const promoApplyBtn = document.getElementById("promo-code-apply-btn");
+  const promoStatus = document.getElementById("promo-code-status");
+  const promoHintCard = document.querySelector("#promo-panel-overlay .info-card.market-info-card");
+  const promoStrong = promoHintCard?.querySelector("p strong");
+  const promoHint = promoHintCard?.querySelectorAll("p")[1];
+
+  if (btnTasks) btnTasks.textContent = tp.tasksBtn;
+  if (btnPromo) btnPromo.textContent = tp.promoBtn;
+  if (tasksTitle) tasksTitle.textContent = tp.tasksTitle;
+  if (promoTitle) promoTitle.textContent = tp.promoTitle;
+  if (promoApplyBtn) promoApplyBtn.textContent = tp.promoApply;
+  if (promoStrong) promoStrong.textContent = tp.activateCode;
+  if (promoHint) promoHint.textContent = tp.enterCodeHint;
+
+  if (promoStatus && !promoStatus.dataset.lockedText) {
+    promoStatus.textContent = tp.promoWaiting;
+  }
+}
+
+function getTaskRewardText(task) {
+  const tp = getTasksPromoText();
+
+  if (Number(task?.reward_wbc || 0) > 0) {
+    return tp.rewardWbc(task.reward_wbc);
+  }
+
+  if (Number(task?.reward_key || 0) > 0) {
+    return tp.rewardKey(task.reward_key);
+  }
+
+  return "";
+}
+
+function renderTasksPanel(payload) {
+  const wrap = document.getElementById("tasks-panel-content");
+  if (!wrap) return;
+
+  const tp = getTasksPromoText();
+  const tasks = payload?.tasks || {};
+  const entries = Object.values(tasks);
+
+  if (!entries.length) {
+    wrap.innerHTML = `
+      <div class="info-card market-info-card">
+        <p><strong>${tp.tasksTitle}</strong></p>
+        <p>${tp.noTasks}</p>
+      </div>
+    `;
+    return;
+  }
+
+  wrap.innerHTML = entries.map((task) => {
+    const progress = tp.progress(
+      Number(task.progress || 0),
+      Number(task.target || 0)
+    );
+
+    const reward = getTaskRewardText(task);
+    const buttonText = task.claimed ? tp.claimed : tp.claim;
+    const disabledAttr = (!task.claimable || task.claimed) ? "disabled" : "";
+
+    return `
+      <div class="info-card market-info-card">
+        <p><strong>${String(task.key || "").toUpperCase()}</strong></p>
+        <p>${progress}</p>
+        <p>${reward}</p>
+        <div style="margin-top:12px;">
+          <button
+            class="wb-button ${task.claimed ? "ghost" : "premium"}"
+            type="button"
+            onclick="claimTaskReward('${String(task.key || "")}')"
+            ${disabledAttr}
+          >
+            ${buttonText}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadTasksPanel() {
+  const wrap = document.getElementById("tasks-panel-content");
+  if (!wrap) return;
+
+  const tp = getTasksPromoText();
+
+  wrap.innerHTML = `
+    <div class="info-card market-info-card">
+      <p><strong>${tp.tasksTitle}</strong></p>
+      <p>${tp.tasksLoading}</p>
+    </div>
+  `;
+
+  try {
+    const payload = await API.getTasksStatus();
+
+    if (!payload?.success) {
+      wrap.innerHTML = `
+        <div class="info-card market-info-card">
+          <p><strong>${tp.tasksTitle}</strong></p>
+          <p>${tp.tasksLoadFail}</p>
+        </div>
+      `;
+      return;
+    }
+
+    renderTasksPanel(payload);
+  } catch (e) {
+    console.error("loadTasksPanel error:", e);
+    wrap.innerHTML = `
+      <div class="info-card market-info-card">
+        <p><strong>${tp.tasksTitle}</strong></p>
+        <p>${tp.tasksLoadFail}</p>
+      </div>
+    `;
+  }
+}
+
+window.claimTaskReward = async (taskKey) => {
+  try {
+    const result = await API.claimTask(taskKey);
+
+    if (!result?.success) {
+      safeAlert(result?.error || getTasksPromoText().tasksLoadFail);
+      return;
+    }
+
+    userState = normalizeUserState({
+      ...userState,
+      balance: result.balance ?? userState.balance,
+      wbc_balance: result.wbc_balance ?? userState.wbc_balance,
+      ton_balance: result.ton_balance ?? userState.ton_balance,
+      zeroDayKeys: result.zero_day_keys_balance ?? userState.zeroDayKeys
+    });
+
+    syncEnergyBase();
+    updateUI();
+    await loadTasksPanel();
+
+    if (Number(result.reward_wbc || 0) > 0) {
+      safeAlert(getTasksPromoText().rewardWbc(result.reward_wbc));
+      return;
+    }
+
+    if (Number(result.reward_keys || 0) > 0) {
+      safeAlert(getTasksPromoText().rewardKey(result.reward_keys));
+      return;
+    }
+
+    safeAlert(getTasksPromoText().claim);
+  } catch (e) {
+    console.error("claimTaskReward error:", e);
+    safeAlert(getTasksPromoText().tasksLoadFail);
+  }
+};
+
+async function handlePromoApply() {
+  const input = document.getElementById("promo-code-input");
+  const status = document.getElementById("promo-code-status");
+  const tp = getTasksPromoText();
+
+  const code = String(input?.value || "").trim();
+
+  if (!code) {
+    if (status) {
+      status.textContent = tp.promoEmpty;
+      status.dataset.lockedText = "1";
+    }
+    return;
+  }
+
+  if (status) {
+    status.textContent = "...";
+    status.dataset.lockedText = "1";
+  }
+
+  try {
+    const result = await API.redeemPromo(code);
+
+    if (!result?.success) {
+      if (status) status.textContent = result?.error || tp.promoFail;
+      safeAlert(result?.error || tp.promoFail);
+      return;
+    }
+
+    userState = normalizeUserState({
+      ...userState,
+      balance: result.balance ?? userState.balance,
+      wbc_balance: result.wbc_balance ?? userState.wbc_balance,
+      ton_balance: result.ton_balance ?? userState.ton_balance
+    });
+
+    syncEnergyBase();
+    updateUI();
+
+    let okText = tp.promoFail;
+
+    if (Number(result.reward_ton || 0) > 0) {
+      okText = tp.promoSuccessTon(result.reward_ton);
+    } else if (Number(result.reward_wbc || 0) > 0) {
+      okText = tp.promoSuccessWbc(result.reward_wbc);
+    }
+
+    if (status) status.textContent = okText;
+    if (input) input.value = "";
+
+    safeAlert(okText);
+  } catch (e) {
+    console.error("handlePromoApply error:", e);
+    if (status) status.textContent = tp.promoFail;
+    safeAlert(tp.promoFail);
+  }
+}
+
 window.showTasksPanel = async () => {
+  syncTasksPromoTexts();
   openPanel("tasks-panel-overlay");
+  await loadTasksPanel();
 };
 
 window.showPromoPanel = async () => {
+  syncTasksPromoTexts();
+
+  const input = document.getElementById("promo-code-input");
+  const status = document.getElementById("promo-code-status");
+
+  if (input) input.value = "";
+  if (status) {
+    status.textContent = getTasksPromoText().promoWaiting;
+    delete status.dataset.lockedText;
+  }
+
   openPanel("promo-panel-overlay");
 };
 
@@ -1867,6 +2157,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const promoCodeApplyBtn = document.getElementById("promo-code-apply-btn");
+  if (promoCodeApplyBtn) {
+    promoCodeApplyBtn.addEventListener("click", handlePromoApply);
+  }
+
+  const promoCodeInput = document.getElementById("promo-code-input");
+  if (promoCodeInput) {
+    promoCodeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handlePromoApply();
+      }
+    });
+  }
+
+  syncTasksPromoTexts();
+  
   const zeroKeyBuyBtn = document.getElementById("zero-key-buy-btn");
   const zeroKeyEnterBtn = document.getElementById("zero-key-enter-btn");
 
