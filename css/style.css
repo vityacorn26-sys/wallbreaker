@@ -1318,3 +1318,41 @@ img {
 .protocol-target strong {
   color: #ff4da6;
 }
+
+.wb-button.ghost {
+  background: linear-gradient(180deg, #49f3e5 0%, #21d9c8 100%);
+  color: #04131a;
+  border: 1px solid rgba(73, 243, 229, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 10px 26px rgba(33, 217, 200, 0.24),
+    0 0 24px rgba(73, 243, 229, 0.18);
+}
+
+.wb-button.ghost:hover,
+.wb-button.ghost:active {
+  background: linear-gradient(180deg, #67fff0 0%, #29e7d4 100%);
+  color: #04131a;
+  border-color: rgba(103, 255, 240, 0.98);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 12px 28px rgba(41, 231, 212, 0.28),
+    0 0 30px rgba(103, 255, 240, 0.22);
+  transform: translateY(-1px);
+}
+
+#tasks-panel-content .wb-button[disabled] {
+  opacity: 0.52;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none;
+}
+
+#tasks-panel-content .task-card.task-progress {
+  opacity: 0.96;
+}
+
+#tasks-panel-content .task-card.task-claimed {
+  opacity: 0.84;
+}
