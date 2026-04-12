@@ -1390,6 +1390,11 @@ window.showRanks = () => {
   openPanel("market-panel-overlay");
 };
 
+window.closeRankDetailsPanel = () => {
+  renderMarketPanel();
+  openPanel("market-panel-overlay");
+};
+
 window.showAccount = () => {
   updateAccountPanel();
   openPanel("account-panel-overlay");
