@@ -229,7 +229,7 @@ const API = {
     }
   },
 
-  async getDrawStatus() {
+    async getDrawStatus() {
     try {
       return await this.post('/api/draw/status');
     } catch (e) {
@@ -239,6 +239,46 @@ const API = {
         keys: 0,
         entered: 0,
         max: 2
+      };
+    }
+  },
+
+  async getTasksStatus() {
+    try {
+      return await this.post('/api/tasks/status');
+    } catch (e) {
+      console.error('API Error (getTasksStatus):', e);
+      return {
+        success: false,
+        tasks: {}
+      };
+    }
+  },
+
+  async claimTask(taskKey) {
+    try {
+      return await this.post('/api/tasks/claim', {
+        task_key: taskKey
+      });
+    } catch (e) {
+      console.error('API Error (claimTask):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'task_claim_failed'
+      };
+    }
+  },
+
+  async redeemPromo(code) {
+    try {
+      return await this.post('/api/promo/redeem', {
+        code
+      });
+    } catch (e) {
+      console.error('API Error (redeemPromo):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'promo_redeem_failed'
       };
     }
   }
