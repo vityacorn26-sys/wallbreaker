@@ -1471,6 +1471,33 @@ function syncTasksPromoTexts() {
   }
 }
 
+function getTaskDisplayName(taskKey) {
+  const key = String(taskKey || "");
+
+  if (currentLang === "RU") {
+    const map = {
+      ads_10_daily: "10 РЕКЛАМ / ДЕНЬ",
+      ads_15_daily: "15 РЕКЛАМ / ДЕНЬ",
+      ads_20_daily: "20 РЕКЛАМ / ДЕНЬ",
+      login_streak_daily: "ЕЖЕДНЕВНЫЙ ВХОД",
+      ref_valid_1: "1 АКТИВНЫЙ РЕФЕРАЛ",
+      ref_valid_5: "5 АКТИВНЫХ РЕФЕРАЛОВ"
+    };
+    return map[key] || key;
+  }
+
+  const map = {
+    ads_10_daily: "10 ADS / DAY",
+    ads_15_daily: "15 ADS / DAY",
+    ads_20_daily: "20 ADS / DAY",
+    login_streak_daily: "DAILY LOGIN",
+    ref_valid_1: "1 ACTIVE REFERRAL",
+    ref_valid_5: "5 ACTIVE REFERRALS"
+  };
+
+  return map[key] || key;
+}
+
 function getTaskRewardText(task) {
   const tp = getTasksPromoText();
 
@@ -1504,23 +1531,37 @@ function renderTasksPanel(payload) {
   }
 
   wrap.innerHTML = entries.map((task) => {
-    const progress = tp.progress(
-      Number(task.progress || 0),
-      Number(task.target || 0)
-    );
-
+    const progressValue = Number(task.progress || 0);
+    const targetValue = Number(task.target || 0);
+    const progress = tp.progress(progressValue, targetValue);
     const reward = getTaskRewardText(task);
-    const buttonText = task.claimed ? tp.claimed : tp.claim;
-    const disabledAttr = (!task.claimable || task.claimed) ? "disabled" : "";
+    const title = getTaskDisplayName(task.key);
+
+    let buttonText = tp.claim;
+    let buttonClass = "premium";
+    let disabledAttr = "";
+    let stateClass = "task-ready";
+
+    if (task.claimed) {
+      buttonText = tp.claimed;
+      buttonClass = "ghost";
+      disabledAttr = "disabled";
+      stateClass = "task-claimed";
+    } else if (!task.claimable) {
+      buttonText = currentLang === "RU" ? "В ПРОЦЕССЕ" : "IN PROGRESS";
+      buttonClass = "ghost";
+      disabledAttr = "disabled";
+      stateClass = "task-progress";
+    }
 
     return `
-      <div class="info-card market-info-card">
-        <p><strong>${String(task.key || "").toUpperCase()}</strong></p>
+      <div class="info-card market-info-card task-card ${stateClass}">
+        <p><strong>${title}</strong></p>
         <p>${progress}</p>
         <p>${reward}</p>
         <div style="margin-top:12px;">
           <button
-            class="wb-button ${task.claimed ? "ghost" : "premium"}"
+            class="wb-button ${buttonClass}"
             type="button"
             onclick="claimTaskReward('${String(task.key || "")}')"
             ${disabledAttr}
@@ -1591,18 +1632,7 @@ window.claimTaskReward = async (taskKey) => {
     syncEnergyBase();
     updateUI();
     await loadTasksPanel();
-
-    if (Number(result.reward_wbc || 0) > 0) {
-      safeAlert(getTasksPromoText().rewardWbc(result.reward_wbc));
-      return;
-    }
-
-    if (Number(result.reward_keys || 0) > 0) {
-      safeAlert(getTasksPromoText().rewardKey(result.reward_keys));
-      return;
-    }
-
-    safeAlert(getTasksPromoText().claim);
+    return;
   } catch (e) {
     console.error("claimTaskReward error:", e);
     safeAlert(getTasksPromoText().tasksLoadFail);
