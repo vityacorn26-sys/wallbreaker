@@ -51,6 +51,14 @@
       BREACH BOARD
     </button>
 
+    <button class="menu-item" id="btn-tasks" onclick="showTasksPanel()" type="button">
+      TASKS
+    </button>
+
+    <button class="menu-item" id="btn-promo" onclick="showPromoPanel()" type="button">
+      PROMO CODE
+    </button>
+    
     <button class="menu-item" id="btn-market" onclick="showRanks()" type="button">
       DARKNET MARKET
     </button>
@@ -287,47 +295,91 @@
   </div>
 
   <div id="zero-key-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
-  <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="zero-key-panel-title">
-    <h2 id="zero-key-panel-title">ZERO-DAY KEY</h2>
-    <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+    <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="zero-key-panel-title">
+      <h2 id="zero-key-panel-title">ZERO-DAY KEY</h2>
+      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
 
-    <div class="info-card market-info-card">
-      <p><strong>Zero-Day Key</strong></p>
-      <p>Доступ к участию в текущем draw.</p>
-      <p>1 Key = 1 вход в draw.</p>
-    </div>
+      <div class="info-card market-info-card">
+        <p><strong>Zero-Day Key</strong></p>
+        <p>Доступ к участию в текущем draw.</p>
+        <p>1 Key = 1 вход в draw.</p>
+      </div>
 
-    <div class="info-card market-info-card">
-      <p><strong>Цена</strong></p>
-      <p>2,000,000 $WBC</p>
-      <p>Максимум 2 ключа на один draw.</p>
-    </div>
+      <div class="info-card market-info-card">
+        <p><strong>Цена</strong></p>
+        <p>2,000,000 $WBC</p>
+        <p>Максимум 2 ключа на один draw.</p>
+      </div>
 
-    <div class="info-card market-info-card">
-      <p><strong>Текущий баланс ключей</strong></p>
-      <p id="zero-key-balance-value">0</p>
-      <p><strong>Уже внесено в draw</strong></p>
-      <p id="zero-key-entered-value">0 / 2</p>
-    </div>
+      <div class="info-card market-info-card">
+        <p><strong>Текущий баланс ключей</strong></p>
+        <p id="zero-key-balance-value">0</p>
+        <p><strong>Уже внесено в draw</strong></p>
+        <p id="zero-key-entered-value">0 / 2</p>
+      </div>
 
-    <div class="market-actions" style="margin-top: 14px;">
-      <button id="zero-key-buy-btn" class="wb-button premium" type="button">
-        КУПИТЬ KEY
-      </button>
-      <button id="zero-key-enter-btn" class="wb-button ghost" type="button">
-        ВНЕСТИ В DRAW
-      </button>
+      <div class="market-actions" style="margin-top: 14px;">
+        <button id="zero-key-buy-btn" class="wb-button premium" type="button">
+          КУПИТЬ KEY
+        </button>
+        <button id="zero-key-enter-btn" class="wb-button ghost" type="button">
+          ВНЕСТИ В DRAW
+        </button>
+      </div>
+    
+      <p id="zero-key-status-line" style="margin-top:10px; font-size:12px; opacity:.82;">
+        DRAW ENTRY OPEN
+      </p>
     </div>
-    <p id="zero-key-status-line" style="margin-top:10px; font-size:12px; opacity:.82;">
-      DRAW ENTRY OPEN
-    </p>
   </div>
+
+  <div id="tasks-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="tasks-panel-title">
+      <h2 id="tasks-panel-title">TASKS</h2>
+      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+
+      <div id="tasks-panel-content" class="protocol-grid">
+        <div class="info-card market-info-card">
+          <p><strong>DAILY TASKS</strong></p>
+          <p>Loading tasks...</p>
+        </div>
+      </div>
+    </div>
   </div>
-    <div id="protocol-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+
+  <div id="promo-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="promo-panel-title">
+      <h2 id="promo-panel-title">PROMO CODE</h2>
+      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+
+      <div class="info-card market-info-card">
+        <p><strong>ACTIVATE CODE</strong></p>
+        <p>Enter promo code and claim reward.</p>
+
+        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <input
+            id="promo-code-input"
+            type="text"
+            placeholder="ENTER CODE"
+            autocomplete="off"
+            style="flex:1; min-width:180px; background:rgba(7,12,28,.78); border:1px solid rgba(0,255,224,.18); color:#eafcff; border-radius:14px; padding:14px 16px; font-size:15px;"
+          />
+          <button id="promo-code-apply-btn" class="wb-button premium" type="button">
+            ACTIVATE
+          </button>
+        </div>
+
+        <p id="promo-code-status" style="margin-top:12px; font-size:12px; opacity:.86;">
+          Waiting for code...
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div id="protocol-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
     <div class="wb-panel market-panel-glass" role="dialog" aria-labelledby="protocol-panel-title">
       <h2 id="protocol-panel-title">MISSION PROTOCOL</h2>
       <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
-
       <div id="protocol-content" class="protocol-grid"></div>
     </div>
   </div>
