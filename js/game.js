@@ -358,10 +358,11 @@ function showNotify(type, message, ttl = 3000) {
   }
 
   const notifyType = String(type || "info");
+  const isSticky = notifyType === "info";
   const effectiveTtl =
     Number(ttl || 0) > 0
       ? Number(ttl)
-      : (notifyType === "info" || notifyType === "warning" ? 7000 : 3200);
+      : (isSticky ? 0 : 3200);
 
   const item = document.createElement("div");
   item.className = `wb-notify wb-notify-${notifyType}`;
@@ -402,7 +403,9 @@ function showNotify(type, message, ttl = 3000) {
     }, 180);
   };
 
-  autoTimer = setTimeout(close, effectiveTtl);
+  if (!isSticky && effectiveTtl > 0) {
+    autoTimer = setTimeout(close, effectiveTtl);
+  }
 
   setTimeout(() => {
     dismissHandler = (ev) => {
