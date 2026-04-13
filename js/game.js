@@ -335,12 +335,78 @@ function t() {
   return I18N[currentLang] || I18N.RU;
 }
 
-function safeAlert(message) {
-  if (tg?.showAlert) {
-    tg.showAlert(String(message));
-  } else {
-    alert(String(message));
+function notifyTitleByType(type) {
+  if (currentLang === "RU") {
+    if (type === "success") return "✅ ДОСТУП РАЗРЕШЁН";
+    if (type === "error") return "⛔ ДОСТУП ОТКЛОНЁН";
+    if (type === "warning") return "⚠ СИСТЕМНОЕ ПРЕДУПРЕЖДЕНИЕ";
+    return "ℹ СИСТЕМНОЕ СООБЩЕНИЕ";
   }
+
+  if (type === "success") return "✅ ACCESS GRANTED";
+  if (type === "error") return "⛔ ACCESS DENIED";
+  if (type === "warning") return "⚠ SYSTEM ALERT";
+  return "ℹ SYSTEM MESSAGE";
+}
+
+function showNotify(type, message, ttl = 3000) {
+  const root = document.getElementById("wb-notify-root");
+  if (!root) {
+    if (tg?.showAlert) tg.showAlert(String(message));
+    else alert(String(message));
+    return;
+  }
+
+  const item = document.createElement("div");
+  item.className = `wb-notify wb-notify-${type || "info"}`;
+
+  const title = document.createElement("div");
+  title.className = "wb-notify-title";
+  title.textContent = notifyTitleByType(type || "info");
+
+  const text = document.createElement("div");
+  text.className = "wb-notify-text";
+  text.textContent = String(message || "");
+
+  item.appendChild(title);
+  item.appendChild(text);
+  root.appendChild(item);
+
+  const close = () => {
+    if (!item.parentNode) return;
+    item.classList.add("hide");
+    setTimeout(() => item.remove(), 180);
+  };
+
+  setTimeout(close, ttl);
+
+  item.addEventListener("click", close);
+}
+
+function safeAlert(message) {
+  showNotify("info", String(message || ""));
+}
+
+function mapPromoErrorMessage(errorCode) {
+  const code = String(errorCode || "").trim();
+
+  if (currentLang === "RU") {
+    if (code === "promo_not_found") return "Код не найден в сети.";
+    if (code === "promo_expired") return "Срок действия промокода истёк.";
+    if (code === "promo_limit_reached") return "Лимит активаций исчерпан.";
+    if (code === "promo_already_claimed") return "Ты уже активировал этот промокод.";
+    if (code === "invalid_code") return "Неверный формат промокода.";
+    if (code === "promo_redeem_failed") return "Не удалось активировать промокод.";
+    return code || "Системная ошибка.";
+  }
+
+  if (code === "promo_not_found") return "Code not found in the network.";
+  if (code === "promo_expired") return "Promo code has expired.";
+  if (code === "promo_limit_reached") return "Promo activation limit reached.";
+  if (code === "promo_already_claimed") return "You have already used this promo code.";
+  if (code === "invalid_code") return "Invalid promo code format.";
+  if (code === "promo_redeem_failed") return "Failed to activate promo code.";
+  return code || "System error.";
 }
 
 function getAdsButton() {
@@ -1622,7 +1688,7 @@ window.claimTaskReward = async (taskKey) => {
     const result = await API.claimTask(taskKey);
 
     if (!result?.success) {
-      safeAlert(result?.error || getTasksPromoText().tasksLoadFail);
+      showNotify("error", result?.error || getTasksPromoText().tasksLoadFail);
       return;
     }
 
@@ -1637,10 +1703,19 @@ window.claimTaskReward = async (taskKey) => {
     syncEnergyBase();
     updateUI();
     await loadTasksPanel();
+
+    if (Number(result.reward_wbc || 0) > 0) {
+      showNotify("success", getTasksPromoText().rewardWbc(result.reward_wbc));
+    } else if (Number(result.reward_key || 0) > 0) {
+      showNotify("success", getTasksPromoText().rewardKey(result.reward_key));
+    } else {
+      showNotify("success", currentLang === "RU" ? "Награда за задачу получена." : "Task reward received.");
+    }
+
     return;
   } catch (e) {
     console.error("claimTaskReward error:", e);
-    safeAlert(getTasksPromoText().tasksLoadFail);
+    showNotify("error", getTasksPromoText().tasksLoadFail);
   }
 };
 
@@ -1656,11 +1731,12 @@ async function handlePromoApply() {
       status.textContent = tp.promoEmpty;
       status.dataset.lockedText = "1";
     }
+    showNotify("warning", tp.promoEmpty);
     return;
   }
 
   if (status) {
-    status.textContent = "...";
+    status.textContent = currentLang === "RU" ? "Подключение к узлу..." : "Linking to node...";
     status.dataset.lockedText = "1";
   }
 
@@ -1668,8 +1744,9 @@ async function handlePromoApply() {
     const result = await API.redeemPromo(code);
 
     if (!result?.success) {
-      if (status) status.textContent = result?.error || tp.promoFail;
-      safeAlert(result?.error || tp.promoFail);
+      const msg = mapPromoErrorMessage(result?.error || tp.promoFail);
+      if (status) status.textContent = msg;
+      showNotify("error", msg, 3400);
       return;
     }
 
@@ -1694,11 +1771,12 @@ async function handlePromoApply() {
     if (status) status.textContent = okText;
     if (input) input.value = "";
 
-    safeAlert(okText);
+    showNotify("success", okText, 3200);
   } catch (e) {
     console.error("handlePromoApply error:", e);
-    if (status) status.textContent = tp.promoFail;
-    safeAlert(tp.promoFail);
+    const failText = mapPromoErrorMessage(e?.message || tp.promoFail);
+    if (status) status.textContent = failText;
+    showNotify("error", failText, 3400);
   }
 }
 
