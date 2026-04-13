@@ -596,7 +596,6 @@ function updateAccountPanel() {
   const tonBalanceValue = document.getElementById("account-ton-balance-value");
   const walletStatus = document.getElementById("account-wallet-status");
   const withdrawStatus = document.getElementById("account-withdraw-status");
-  const withdrawWalletPreview = document.getElementById("withdraw-wallet-preview");
 
   if (rankValue) {
     const left = formatDurationLeft(userState.rank_expires_at);
@@ -626,14 +625,6 @@ function updateAccountPanel() {
     }
   }
 
-  if (withdrawWalletPreview) {
-    if (preferredWallet) {
-      withdrawWalletPreview.textContent = formatWallet(preferredWallet);
-    } else {
-      withdrawWalletPreview.textContent = "";
-    }
-  }
-
   if (
     withdrawWalletInput &&
     preferredWallet &&
@@ -643,11 +634,6 @@ function updateAccountPanel() {
   ) {
     withdrawWalletInput.value = preferredWallet;
     withdrawWalletInput.dataset.walletAutofilled = "1";
-    withdrawWalletInput.title = preferredWallet;
-  }
-
-  if (withdrawWalletInput && preferredWallet) {
-    withdrawWalletInput.title = preferredWallet;
   }
 
   if (withdrawStatus) {
@@ -2386,4 +2372,4 @@ function updateRankLabel() {
     <span class="rank-label-main">${rank.name}</span>
     <span class="rank-label-meta">${meta}</span>
   `;
-}
+ }
