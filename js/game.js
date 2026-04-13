@@ -357,12 +357,18 @@ function showNotify(type, message, ttl = 3000) {
     return;
   }
 
+  const notifyType = String(type || "info");
+  const effectiveTtl =
+    Number(ttl || 0) > 0
+      ? Number(ttl)
+      : (notifyType === "info" || notifyType === "warning" ? 7000 : 3200);
+
   const item = document.createElement("div");
-  item.className = `wb-notify wb-notify-${type || "info"}`;
+  item.className = `wb-notify wb-notify-${notifyType}`;
 
   const title = document.createElement("div");
   title.className = "wb-notify-title";
-  title.textContent = notifyTitleByType(type || "info");
+  title.textContent = notifyTitleByType(notifyType);
 
   const text = document.createElement("div");
   text.className = "wb-notify-text";
@@ -372,15 +378,47 @@ function showNotify(type, message, ttl = 3000) {
   item.appendChild(text);
   root.appendChild(item);
 
+  let closed = false;
+  let dismissHandler = null;
+  let autoTimer = null;
+
   const close = () => {
-    if (!item.parentNode) return;
+    if (closed) return;
+    closed = true;
+
+    if (autoTimer) {
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+
+    if (dismissHandler) {
+      document.removeEventListener("pointerdown", dismissHandler, true);
+      dismissHandler = null;
+    }
+
     item.classList.add("hide");
-    setTimeout(() => item.remove(), 180);
+    setTimeout(() => {
+      if (item.parentNode) item.remove();
+    }, 180);
   };
 
-  setTimeout(close, ttl);
+  autoTimer = setTimeout(close, effectiveTtl);
 
-  item.addEventListener("click", close);
+  setTimeout(() => {
+    dismissHandler = (ev) => {
+      if (closed) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      close();
+    };
+    document.addEventListener("pointerdown", dismissHandler, true);
+  }, 0);
+
+  item.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    close();
+  });
 }
 
 function safeAlert(message) {
