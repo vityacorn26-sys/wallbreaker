@@ -1615,3 +1615,23 @@ img {
     font-size: 14px;
   }
 }
+
+#withdraw-wallet-input {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.account-wallet-preview {
+  margin-top: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.25;
+  color: rgba(185, 245, 255, 0.92);
+  opacity: 0.92;
+  letter-spacing: 0.3px;
+  word-break: break-all;
+  text-shadow: 0 0 10px rgba(62, 231, 255, 0.12);
+}
