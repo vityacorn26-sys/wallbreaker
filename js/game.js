@@ -1106,7 +1106,19 @@ async function buyRankForTon(rankId) {
       txResult = await ui.sendTransaction(tx);
     } catch (e) {
       console.error("TON sendTransaction error:", e);
-      safeAlert("TON sendTransaction error: " + String(e?.message || e || "unknown_error"));
+
+      const raw = String(e?.message || e || "").toLowerCase();
+
+      if (
+        raw.includes("reject") ||
+        raw.includes("declined") ||
+        raw.includes("cancel")
+      ) {
+        safeAlert(t().tonWalletRejected);
+      } else {
+        safeAlert(t().tonCreateFail);
+      }
+
       return;
     }
 
@@ -1144,10 +1156,9 @@ async function buyRankForTon(rankId) {
     safeAlert(t().tonRankActivated);
   } catch (e) {
     console.error("buyRankForTon error:", e);
-    safeAlert("buyRankForTon error: " + String(e?.message || e || "unknown_error"));
+    safeAlert(t().tonCreateFail);
   } finally {
     tonBuyLocked = false;
-  }
 }
 
 async function waitForStarsConfirmation(payload, maxAttempts = 12, delayMs = 2000) {
