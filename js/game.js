@@ -1159,6 +1159,7 @@ async function buyRankForTon(rankId) {
     safeAlert(t().tonCreateFail);
   } finally {
     tonBuyLocked = false;
+  }
 }
 
 async function waitForStarsConfirmation(payload, maxAttempts = 12, delayMs = 2000) {
