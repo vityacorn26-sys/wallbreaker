@@ -211,6 +211,17 @@ const I18N = {
     zeroKeyStatusLimit: "ЛИМИТ DRAW ДОСТИГНУТ",
     zeroKeyStatusLocked: "DRAW ЗАБЛОКИРОВАН — ГОТОВ К DROP",
     zeroKeyStatusNoKeys: "У ТЕБЯ НЕТ ZERO-DAY KEY",
+    zeroKeyTitle: "ZERO-DAY KEY",
+    zeroKeyBack: "← НАЗАД",
+    zeroKeyInfoTitle: "Zero-Day Key",
+    zeroKeyInfoLine1: "Доступ к участию в текущем draw.",
+    zeroKeyInfoLine2: "1 Key = 1 вход в draw.",
+    zeroKeyPriceTitle: "Цена",
+    zeroKeyPriceValue: () => `${Number(getZeroDayKeyPrice()).toLocaleString()} ${getCurrency()}`,
+    zeroKeyBalanceTitle: "Текущий баланс ключей",
+    zeroKeyEnteredTitle: "Уже внесено в draw",
+    zeroKeyBuyBtn: "КУПИТЬ KEY",
+    zeroKeyEnterBtn: "ВНЕСТИ В DRAW",
     rankDuration: (days) => `Срок действия: ${days} дней`,
     acquireRank: "КУПИТЬ ЗА $WBC",
     activateTon: "КУПИТЬ ЗА TON",
@@ -291,6 +302,17 @@ const I18N = {
     zeroKeyStatusLimit: "DRAW ENTRY LIMIT REACHED",
     zeroKeyStatusLocked: "DRAW LOCKED — READY FOR DROP",
     zeroKeyStatusNoKeys: "NO ZERO-DAY KEYS AVAILABLE",
+    zeroKeyTitle: "ZERO-DAY KEY",
+    zeroKeyBack: "← BACK",
+    zeroKeyInfoTitle: "Zero-Day Key",
+    zeroKeyInfoLine1: "Access to the current draw.",
+    zeroKeyInfoLine2: "1 Key = 1 entry into the draw.",
+    zeroKeyPriceTitle: "Price",
+    zeroKeyPriceValue: () => `${Number(getZeroDayKeyPrice()).toLocaleString()} ${getCurrency()}`,
+    zeroKeyBalanceTitle: "Current key balance",
+    zeroKeyEnteredTitle: "Already entered into draw",
+    zeroKeyBuyBtn: "BUY KEY",
+    zeroKeyEnterBtn: "ENTER DRAW",
     poolLive: "Pool is charging in the network",
     rankDuration: (days) => `Duration: ${days} days`,
     acquireRank: "BUY FOR $WBC",
@@ -1964,11 +1986,44 @@ window.showProtocol = async () => {
 };
 
 async function refreshZeroDayKeyPanel() {
+  const panel = document.getElementById("zero-key-panel-overlay");
+
+  const titleEl = panel?.querySelector("h2");
+  const backBtn = panel?.querySelector(".wb-back-btn");
+
+  const infoCards = panel?.querySelectorAll(".info-card.market-info-card");
+
+  const infoTitle = infoCards?.[0]?.querySelector("p strong");
+  const infoLines = infoCards?.[0]?.querySelectorAll("p");
+
+  const priceTitle = infoCards?.[1]?.querySelector("p strong");
+  const priceLines = infoCards?.[1]?.querySelectorAll("p");
+
+  const balanceTitle = infoCards?.[2]?.querySelectorAll("p strong");
+  const balanceLines = infoCards?.[2]?.querySelectorAll("p");
+
   const balanceEl = document.getElementById("zero-key-balance-value");
   const enteredEl = document.getElementById("zero-key-entered-value");
   const buyBtn = document.getElementById("zero-key-buy-btn");
   const enterBtn = document.getElementById("zero-key-enter-btn");
   const statusLine = document.getElementById("zero-key-status-line");
+
+  if (titleEl) titleEl.textContent = t().zeroKeyTitle;
+  if (backBtn) backBtn.textContent = t().zeroKeyBack;
+
+  if (infoTitle) infoTitle.textContent = t().zeroKeyInfoTitle;
+  if (infoLines?.[1]) infoLines[1].textContent = t().zeroKeyInfoLine1;
+  if (infoLines?.[2]) infoLines[2].textContent = t().zeroKeyInfoLine2;
+
+  if (priceTitle) priceTitle.textContent = t().zeroKeyPriceTitle;
+  if (priceLines?.[1]) priceLines[1].textContent = t().zeroKeyPriceValue();
+  if (priceLines?.[2]) priceLines[2].textContent = t().zeroKeyLimit;
+
+  if (balanceTitle?.[0]) balanceTitle[0].textContent = t().zeroKeyBalanceTitle;
+  if (balanceTitle?.[1]) balanceTitle[1].textContent = t().zeroKeyEnteredTitle;
+
+  if (buyBtn) buyBtn.textContent = t().zeroKeyBuyBtn;
+  if (enterBtn) enterBtn.textContent = t().zeroKeyEnterBtn;
 
   if (balanceEl) {
     balanceEl.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
