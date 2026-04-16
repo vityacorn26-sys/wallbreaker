@@ -1444,6 +1444,29 @@ function renderMarketPanel() {
   const marketOverlay = document.getElementById("market-panel-overlay");
   if (!marketOverlay) return;
 
+  const zeroKeyCard = marketOverlay.querySelector(".zero-key-card");
+  if (zeroKeyCard) {
+    const zeroKeyPs = zeroKeyCard.querySelectorAll("p");
+    const zeroKeyStrong = zeroKeyCard.querySelector("strong");
+    const zeroKeyBtn = zeroKeyCard.querySelector("button");
+
+    if (zeroKeyStrong) {
+      zeroKeyStrong.textContent = "Zero-Day Key";
+    }
+
+    if (zeroKeyPs[1]) {
+      zeroKeyPs[1].textContent = `${Number(getZeroDayKeyPrice()).toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`;
+    }
+
+    if (zeroKeyPs[2]) {
+      zeroKeyPs[2].textContent = t().zeroDayPersist;
+    }
+
+    if (zeroKeyBtn) {
+      zeroKeyBtn.textContent = t().details;
+    }
+  }
+
   const rankCards = marketOverlay.querySelectorAll(".rank-card");
   const ranks = [getRankById(2), getRankById(3), getRankById(4), getRankById(5)].filter(Boolean);
 
