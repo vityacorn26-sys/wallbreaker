@@ -608,7 +608,7 @@ function updateAccountPanel() {
   if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
   if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
   if (tonBalanceValue) {
-  tonBalanceValue.textContent = `${Number(userState.ton_balance || 0).toFixed(2)} TON`;
+  tonBalanceValue.textContent = `${Number(userState.ton_balance || 0).toFixed(4)} TON`;
   }
   
   const enteredWallet = withdrawWalletInput?.value?.trim() || "";
