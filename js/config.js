@@ -56,7 +56,7 @@ window.CONFIG = {
       unlockMode: "hybrid_ton_stars",
       priceWBC: 0,
       priceTON: 0.5,
-      priceStars: 250,
+      priceStars: 50,
       accent: "magenta",
       shortRU: "Золотая середина для пробоя защиты.",
       shortEN: "The golden-middle breach rank.",
