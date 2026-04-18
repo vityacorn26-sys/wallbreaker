@@ -146,6 +146,54 @@ function setManualWithdrawWallet(value) {
   } catch (_) {}
 }
 
+const LAUNCH_CONSENT_KEY = "wb_launch_consent_v1";
+let appBootStarted = false;
+
+function hasLaunchConsent() {
+  try {
+    return localStorage.getItem(LAUNCH_CONSENT_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveLaunchConsent() {
+  try {
+    localStorage.setItem(LAUNCH_CONSENT_KEY, "1");
+  } catch (_) {}
+}
+
+function openLaunchConsent() {
+  const overlay = document.getElementById("launch-consent-overlay");
+  if (!overlay) {
+    startAppBoot();
+    return;
+  }
+
+  overlay.classList.remove("hidden");
+  overlay.setAttribute("aria-hidden", "false");
+}
+
+function closeLaunchConsent() {
+  const overlay = document.getElementById("launch-consent-overlay");
+  if (!overlay) return;
+
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function startAppBoot() {
+  if (appBootStarted) return;
+  appBootStarted = true;
+  loadUser();
+}
+
+function handleLaunchConsentAccept() {
+  saveLaunchConsent();
+  closeLaunchConsent();
+  startAppBoot();
+}
+
 function getRankPriceLabel(rank) {
   if (!rank) return "";
 
@@ -1407,6 +1455,8 @@ function openPanel(overlayId) {
 function bindOverlayClosers() {
   document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
+      if (overlay.id === "launch-consent-overlay") return;
+
       if (e.target === overlay) {
         closeAllPanels();
       }
@@ -2437,10 +2487,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if (zeroKeyEnterBtn) {
     zeroKeyEnterBtn.addEventListener("click", handleZeroDayKeyEnter);
   }
+  const launchConsentAcceptBtn = document.getElementById("launch-consent-accept-btn");
+  if (launchConsentAcceptBtn) {
+    launchConsentAcceptBtn.addEventListener("click", handleLaunchConsentAccept);
+  }
+
   bindOverlayClosers();
   applyTexts();
-  loadUser();
-  });
+
+  if (hasLaunchConsent()) {
+    startAppBoot();
+  } else {
+    openLaunchConsent();
+  }
+});
 
 function updateRankLabel() {
   const el = document.getElementById("current-rank-label");
