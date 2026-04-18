@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallBreaker Earn TON</title>
+  <meta
+    name="description"
+    content="WallBreaker Earn TON — Telegram Mini App with a transparent prize pool, ad rewards, ranks, and draw mechanics."
+  />
+  <style>
+    :root{
+      --bg:#05070b;
+      --panel:rgba(10,14,22,.88);
+      --line:rgba(255,255,255,.10);
+      --text:#edf3ff;
+      --muted:#a7b4c9;
+      --cyan:#21e6d6;
+      --magenta:#ff2aa8;
+      --btnText:#ffffff;
+      --shadow:0 18px 48px rgba(0,0,0,.38);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:
+        radial-gradient(circle at top left, rgba(255,42,168,.14), transparent 24%),
+        radial-gradient(circle at top right, rgba(33,230,214,.12), transparent 24%),
+        linear-gradient(180deg, #04060a 0%, #090d14 100%);
+      color:var(--text);
+      font-family:Inter, Arial, sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+    }
+
+    .wrap{
+      width:min(980px, calc(100% - 28px));
+      margin:0 auto;
+      padding:28px 0 44px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .cover{
+      min-height:360px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.22)),
+        url('../assets/loading.jpg') center/cover no-repeat;
+    }
+
+    .content{
+      padding:26px 22px 22px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--cyan);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.2px;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:38px;
+      line-height:1.05;
+    }
+
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:17px;
+      line-height:1.55;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin:18px 0 22px;
+    }
+
+    .stat{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:16px;
+      padding:14px 12px;
+    }
+
+    .stat strong{
+      display:block;
+      font-size:18px;
+      margin-bottom:6px;
+      color:var(--text);
+    }
+
+    .stat span{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin:4px 0 10px;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:50px;
+      padding:0 18px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:15px;
+      letter-spacing:.2px;
+      transition:transform .12s ease, opacity .12s ease;
+      cursor:pointer;
+    }
+
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{
+      background:linear-gradient(180deg, #ff4fba 0%, var(--magenta) 100%);
+      color:var(--btnText);
+      box-shadow:0 12px 28px rgba(255,42,168,.28);
+    }
+    .btn-secondary{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .section{
+      margin-top:20px;
+      padding:22px;
+    }
+
+    .section h2{
+      margin:0 0 12px;
+      font-size:22px;
+    }
+
+    .section p{
+      margin:0 0 10px;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:15px;
+    }
+
+    .list{
+      margin:0;
+      padding-left:18px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .link-pill{
+      text-decoration:none;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .footer{
+      margin-top:18px;
+      text-align:center;
+      color:#94a3ba;
+      font-size:13px;
+    }
+
+    @media (max-width: 860px){
+      .hero{
+        grid-template-columns:1fr;
+      }
+      .cover{
+        min-height:260px;
+      }
+      h1{
+        font-size:30px;
+      }
+      .stats{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="card cover"></div>
+
+      <div class="card content">
+        <div class="badge">Telegram Mini App • TON</div>
+
+        <h1>WallBreaker Earn TON</h1>
+
+        <p class="lead">
+          Cyberpunk Telegram Mini App with transparent draw mechanics, ad rewards,
+          rank upgrades, Zero-Day Keys and real TON prize pool participation.
+        </p>
+
+        <div class="stats">
+          <div class="stat">
+            <strong>Play</strong>
+            <span>Tap, upgrade ranks, complete actions and build your draw power.</span>
+          </div>
+          <div class="stat">
+            <strong>Earn</strong>
+            <span>Collect in-app rewards and strengthen your position in the pool.</span>
+          </div>
+          <div class="stat">
+            <strong>Compete</strong>
+            <span>Use Zero-Day Keys and activity to fight for TON rewards.</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-primary" href="https://t.me/BypassWallBot/play" target="_blank" rel="noopener">
+            Open in Telegram
+          </a>
+
+          <a class="btn btn-secondary" href="https://t.me/wallbreakergame" target="_blank" rel="noopener">
+            Community
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section">
+      <h2>About WallBreaker</h2>
+      <p>
+        WallBreaker is a Telegram-based mini app focused on gameplay, ranks,
+        ad-based progression, draw participation and prize pool competition.
+      </p>
+      <p>
+        The project is built as a Telegram Mini App frontend on GitHub Pages,
+        while the secure game backend is separated and handles user auth,
+        balance logic, taps, ranks, referrals, draws and purchases.
+      </p>
+    </div>
+
+    <div class="card section">
+      <h2>Main Links</h2>
+      <div class="links">
+        <a class="link-pill" href="https://t.me/BypassWallBot/play" target="_blank" rel="noopener">Launch Mini App</a>
+        <a class="link-pill" href="https://t.me/BypassWallBot" target="_blank" rel="noopener">Telegram Bot</a>
+        <a class="link-pill" href="https://t.me/wallbreakergame" target="_blank" rel="noopener">Telegram Channel</a>
+        <a class="link-pill" href="https://github.com/vityacorn26-sys/wallbreaker" target="_blank" rel="noopener">GitHub</a>
+        <a class="link-pill" href="./terms-of-use.html" target="_blank" rel="noopener">Terms of Use</a>
+        <a class="link-pill" href="./privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      WallBreaker • Official project page
+    </div>
+  </div>
+</body>
+</html>
