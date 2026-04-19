@@ -666,7 +666,7 @@ async function refreshDrawStatusGlobal() {
 }
 
 function getTonWalletShort() {
-  const addr = tonWalletState?.account?.address || "";
+  const addr = getTonWalletAddress();
   if (!addr) return "";
   if (addr.length <= 14) return addr;
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
@@ -698,22 +698,21 @@ function updateAccountPanel() {
   
   const enteredWallet = withdrawWalletInput?.value?.trim() || "";
   const sessionWallet = userState.lastWithdraw?.wallet || "";
-  const connectedTonWallet = getTonWalletShort();
   const connectedTonWalletFull = getTonWalletAddress();
   const manualWallet = getManualWithdrawWallet();
-  const preferredWallet = enteredWallet || manualWallet || connectedTonWalletFull || sessionWallet || "";
+  const preferredWithdrawWallet = enteredWallet || manualWallet || connectedTonWalletFull || sessionWallet || "";
 
   if (walletStatus) {
-    if (preferredWallet) {
-      walletStatus.textContent = formatWallet(preferredWallet);
+    if (connectedTonWalletFull) {
+      walletStatus.textContent = formatWallet(connectedTonWalletFull);
     } else {
       walletStatus.textContent = t().notConnected;
     }
   }
 
   if (withdrawWalletPreview) {
-    if (preferredWallet) {
-      withdrawWalletPreview.textContent = formatWallet(preferredWallet);
+    if (preferredWithdrawWallet) {
+      withdrawWalletPreview.textContent = formatWallet(preferredWithdrawWallet);
     } else {
       withdrawWalletPreview.textContent = "";
     }
@@ -721,12 +720,12 @@ function updateAccountPanel() {
 
   if (
     withdrawWalletInput &&
-    preferredWallet &&
+    preferredWithdrawWallet &&
     !withdrawWalletInput.dataset.walletAutofilled &&
     !withdrawWalletInput.matches(":focus") &&
     !withdrawWalletInput.value.trim()
   ) {
-    withdrawWalletInput.value = preferredWallet;
+    withdrawWalletInput.value = preferredWithdrawWallet;
     withdrawWalletInput.dataset.walletAutofilled = "1";
   }
 
@@ -918,10 +917,52 @@ function initTonConnect() {
 function getTonWalletAddress() {
   const accountAddress =
     tonWalletState?.account?.address ||
-    tonConnectUI?.account?.address ||
+    tonWalletState?.address ||
     "";
 
   return String(accountAddress || "").trim();
+}
+
+async function disconnectTonWallet() {
+  const ui = initTonConnect();
+  if (!ui) return false;
+
+  try {
+    if (typeof ui.disconnect === "function") {
+      await ui.disconnect();
+    }
+  } catch (e) {
+    console.error("TON Connect disconnect error:", e);
+  }
+
+  tonWalletState = null;
+  updateAccountPanel();
+  return true;
+}
+
+async function reconnectTonWallet() {
+  await disconnectTonWallet();
+
+  const ui = initTonConnect();
+  if (!ui) {
+    safeAlert(t().tonWalletUnavailable);
+    return false;
+  }
+
+  try {
+    await ui.openModal();
+  } catch (e) {
+    console.error("TON Connect openModal error:", e);
+  }
+
+  const connectedAddress = await waitForTonWalletConnection(25000);
+  if (!connectedAddress) {
+    safeAlert(t().tonWalletConnectFailed);
+    return false;
+  }
+
+  updateAccountPanel();
+  return true;
 }
 
 function toNanoString(amountTon) {
@@ -2474,13 +2515,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
-    changeWalletBtn.addEventListener("click", () => {
-      if (!withdrawWalletInput) return;
+    changeWalletBtn.addEventListener("click", async () => {
+      if (withdrawWalletInput) {
+        withdrawWalletInput.value = "";
+        setManualWithdrawWallet("");
+        delete withdrawWalletInput.dataset.walletAutofilled;
+      }
 
-      withdrawWalletInput.value = "";
-      setManualWithdrawWallet("");
-      delete withdrawWalletInput.dataset.walletAutofilled;
-      withdrawWalletInput.focus();
+      await reconnectTonWallet();
     });
   }
 
