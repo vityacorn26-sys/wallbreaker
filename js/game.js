@@ -1809,7 +1809,23 @@ function renderTasksPanel(payload) {
 
   const tp = getTasksPromoText();
   const tasks = payload?.tasks || {};
-  const entries = Object.values(tasks);
+
+  const taskOrder = [
+    "login_streak_daily",
+    "ads_10_daily",
+    "ads_15_daily",
+    "ads_20_daily",
+    "ref_valid_1",
+    "ref_valid_5"
+  ];
+
+  const entries = Object.values(tasks).sort((a, b) => {
+    const aKey = String(a?.key || "");
+    const bKey = String(b?.key || "");
+    const aIndex = taskOrder.indexOf(aKey);
+    const bIndex = taskOrder.indexOf(bKey);
+    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+  });
 
   if (!entries.length) {
     wrap.innerHTML = `
@@ -1827,6 +1843,13 @@ function renderTasksPanel(payload) {
     const progress = tp.progress(progressValue, targetValue);
     const reward = getTaskRewardText(task);
     const title = getTaskDisplayName(task.key);
+
+    let extraHint = "";
+    if (String(task.key || "") === "login_streak_daily" && progressValue >= 7) {
+      extraHint = currentLang === "RU"
+        ? `<p style="opacity:.82;">После 7-го дня: +5 000 ${getCurrency()} каждый следующий день, пока серия не прервётся.</p>`
+        : `<p style="opacity:.82;">After day 7: +5,000 ${getCurrency()} every next day while the streak continues.</p>`;
+    }
 
     let buttonText = tp.claim;
     let buttonClass = "premium";
@@ -1850,6 +1873,7 @@ function renderTasksPanel(payload) {
         <p><strong>${title}</strong></p>
         <p>${progress}</p>
         <p>${reward}</p>
+        ${extraHint}
         <div style="margin-top:12px;">
           <button
             class="wb-button ${buttonClass}"
