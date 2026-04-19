@@ -2516,13 +2516,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", async () => {
-      if (withdrawWalletInput) {
-        withdrawWalletInput.value = "";
-        setManualWithdrawWallet("");
-        delete withdrawWalletInput.dataset.walletAutofilled;
+      const ui = initTonConnect();
+      if (!ui) {
+        safeAlert(t().tonWalletUnavailable);
+        return;
       }
 
-      await reconnectTonWallet();
+      try {
+        if (getTonWalletAddress() && typeof ui.disconnect === "function") {
+          await ui.disconnect();
+        }
+      } catch (e) {
+        console.error("TON Connect disconnect error:", e);
+      }
+
+      tonWalletState = null;
+      updateAccountPanel();
+
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      try {
+        await ui.openModal();
+      } catch (e) {
+        console.error("TON Connect openModal error:", e);
+      }
+
+      const connectedAddress = await waitForTonWalletConnection(25000);
+      if (!connectedAddress) {
+        safeAlert(t().tonWalletConnectFailed);
+        return;
+      }
+
+      updateAccountPanel();
     });
   }
 
