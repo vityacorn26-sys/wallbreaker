@@ -2319,15 +2319,9 @@ window.showAds = async () => {
     const telegramId = tgUser?.id ? String(tgUser.id) : "anon";
     const ymid = `wbad_${telegramId}_${Date.now()}`;
 
-    try {
-      await showRewarded({ type: "preload", ymid });
-    } catch (preloadErr) {
-      console.warn("Monetag preload skipped:", preloadErr);
-    }
-
     await showRewarded({ ymid });
 
-    const rewardResp = await API.claimAdReward();
+    const rewardResp = await API.claimAdReward(ymid);
 
     if (rewardResp?.success) {
       userState = normalizeUserState({
@@ -2343,6 +2337,14 @@ window.showAds = async () => {
       syncEnergyBase();
       updateUI();
       safeAlert(t().adRewardOk);
+      return;
+    }
+
+    if (
+      rewardResp?.error === "ad_not_verified" ||
+      rewardResp?.error === "ad_already_claimed"
+    ) {
+      safeAlert(t().adWatchFail);
       return;
     }
 
