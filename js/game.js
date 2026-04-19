@@ -1,6 +1,21 @@
 const tg = window.Telegram?.WebApp || null;
 
-let currentLang = "RU";
+let currentLang = "EN";
+
+function detectPreferredLang() {
+  const tgLang = String(
+    tg?.initDataUnsafe?.user?.language_code ||
+    tg?.initDataUnsafe?.user?.languageCode ||
+    ""
+  ).toLowerCase();
+
+  if (tgLang.startsWith("ru")) return "RU";
+  return "EN";
+}
+
+function applyInitialLanguage() {
+  currentLang = detectPreferredLang();
+}
 
 let userState = {
   balance: 0,
@@ -832,7 +847,14 @@ function applyTexts() {
 }
 
 window.setLang = (lang) => {
-  currentLang = lang === "EN" ? "EN" : "RU";
+  currentLang = lang === "RU" ? "RU" : "EN";
+
+  if (tonConnectUI) {
+    tonConnectUI.uiOptions = {
+      language: currentLang === "RU" ? "ru" : "en"
+    };
+  }
+
   applyTexts();
 };
 
@@ -2420,6 +2442,8 @@ function showRankDetails(rankId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyInitialLanguage();
+  
   const gateway = document.getElementById("gateway");
 
   if (gateway) {
