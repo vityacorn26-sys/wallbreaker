@@ -14,22 +14,22 @@
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <script>
     function initAnalytics() {
-      if (!window.telegramAnalytics || typeof window.telegramAnalytics.init !== "function") {
-        return;
+      // Исправляем регистр: TelegramAnalytics вместо telegramAnalytics
+      const analytics = window.TelegramAnalytics;
+      if (analytics && typeof analytics.init === "function") {
+        analytics.init({
+          token: "eyJhcHBfbmFtZSI6IndhbGxicmVha2VyX2Vhcm5fdG9uIiwiYXBwX3VybCI6Imh0dHBzOi8vdC5tZS9CeXBhc3NXYWxsQm90IiwiYXBwX2RvbWFpbiI6Imh0dHBzOi8vdml0eWFjb3JuMjYtc3lzLmdpdGh1Yi5pby93YWxsYnJlYWtlci8ifQ==!Qxf4/30cqA47kIKUc5oZ9RsctFAvoTBwH8aGDw32ESU=",
+          appName: "wallbreaker_earn_ton"
+        });
       }
-
-      window.telegramAnalytics.init({
-        token: "eyJhcHBfbmFtZSI6IndhbGxicmVha2VyX2Vhcm5fdG9uIiwiYXBwX3VybCI6Imh0dHBzOi8vdC5tZS9CeXBhc3NXYWxsQm90IiwiYXBwX2RvbWFpbiI6Imh0dHBzOi8vdml0eWFjb3JuMjYtc3lzLmdpdGh1Yi5pby93YWxsYnJlYWtlci8ifQ==!Qxf4/30cqA47kIKUc5oZ9RsctFAvoTBwH8aGDw32ESU=",
-        appName: "wallbreaker_earn_ton"
-      });
     }
   </script>
   <script
-    async
-    src="https://tganalytics.xyz/index.js"
+    src="https://tganalytics.xyz"
     onload="initAnalytics()"
     type="text/javascript"
   ></script>
+
 </head>
 <body>
   <div id="loading-screen">
