@@ -56,9 +56,9 @@
 
   <div id="sidebar">
     <div class="lang-selector" id="lang-switch">
-      <span id="lang-ru" class="active-lang" onclick="setLang('RU')">RU</span>
+      <span id="lang-ru" onclick="setLang('RU')">RU</span>
       <span class="lang-divider">|</span>
-      <span id="lang-en" onclick="setLang('EN')">EN</span>
+      <span id="lang-en" class="active-lang" onclick="setLang('EN')">EN</span>
     </div>
 
     <button class="menu-item highlight" id="btn-ads" onclick="showAds()" type="button">
@@ -147,7 +147,7 @@
         <p><strong>Tunnel Master</strong></p>
         <p>25 $WBC / tap</p>
         <p>250,000 $WBC</p>
-        <p>Активен 7 дней.</p>
+        <p>Duration: 7 days</p>
         <button class="wb-button ghost" type="button">DETAILS</button>
       </div>
 
@@ -160,7 +160,7 @@
         <p><strong>Firewall Breaker</strong></p>
         <p>60 $WBC / tap</p>
         <p>0.5 TON</p>
-        <p>Активен 7 дней.</p>
+        <p>Duration: 7 days</p>
         <button class="wb-button premium" type="button">DETAILS</button>
       </div>
 
@@ -173,7 +173,7 @@
         <p><strong>Root Operator</strong></p>
         <p>150 $WBC / tap</p>
         <p>750,000 $WBC / 1 TON</p>
-        <p>Активен 7 дней.</p>
+        <p>Duration: 7 days</p>
         <button class="wb-button ghost" type="button">DETAILS</button>
       </div>
 
@@ -186,7 +186,7 @@
         <p><strong>Cyber Legend</strong></p>
         <p>400 $WBC / tap</p>
         <p>1,300,000 $WBC / 2.5 TON</p>
-        <p>Активен 7 дней.</p>
+        <p>Duration: 7 days</p>
         <button class="wb-button premium" type="button">DETAILS</button>
       </div>
     </div>
@@ -324,29 +324,29 @@
 
       <div class="info-card market-info-card">
         <p><strong>Zero-Day Key</strong></p>
-        <p>Доступ к участию в текущем draw.</p>
-        <p>1 Key = 1 вход в draw.</p>
+        <p>Access to the current draw.</p>
+        <p>1 Key = 1 entry into the draw.</p>
       </div>
 
       <div class="info-card market-info-card">
-        <p><strong>Цена</strong></p>
+        <p><strong>Price</strong></p>
         <p>2,000,000 $WBC</p>
-        <p>Максимум 2 ключа на один draw.</p>
+        <p>Maximum 2 keys per draw.</p>
       </div>
 
       <div class="info-card market-info-card">
-        <p><strong>Текущий баланс ключей</strong></p>
+        <p><strong>Current key balance</strong></p>
         <p id="zero-key-balance-value">0</p>
-        <p><strong>Уже внесено в draw</strong></p>
+        <p><strong>Already entered into the draw</strong></p>
         <p id="zero-key-entered-value">0 / 2</p>
       </div>
 
       <div class="market-actions" style="margin-top: 14px;">
         <button id="zero-key-buy-btn" class="wb-button premium" type="button">
-          КУПИТЬ KEY
+          BUY KEY
         </button>
         <button id="zero-key-enter-btn" class="wb-button ghost" type="button">
-          ВНЕСТИ В DRAW
+          ENTER DRAW
         </button>
       </div>
     
