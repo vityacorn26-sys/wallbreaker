@@ -462,10 +462,6 @@ function showNotify(type, message, ttl = 3000) {
 
   document.body.appendChild(root);
 
-  root.style.position = "fixed";
-  root.style.top = "12px";
-  root.style.left = "12px";
-  root.style.right = "12px";
   root.style.zIndex = "2147483647";
   root.style.pointerEvents = "none";
   root.style.display = "flex";
