@@ -2,15 +2,32 @@ const tg = window.Telegram?.WebApp || null;
 
 let currentLang = "EN";
 
+function normalizeLangCode(raw) {
+  const code = String(raw || "").trim().toLowerCase();
+
+  if (code === "ru" || code.startsWith("ru-")) return "RU";
+  if (code === "en" || code.startsWith("en-")) return "EN";
+  return "";
+}
+
 function detectPreferredLang() {
-  const tgLang = String(
+  const browserLangs = Array.isArray(navigator.languages) ? navigator.languages : [];
+
+  for (const lang of browserLangs) {
+    const normalized = normalizeLangCode(lang);
+    if (normalized) return normalized;
+  }
+
+  const navLang = normalizeLangCode(navigator.language);
+  if (navLang) return navLang;
+
+  const tgLang = normalizeLangCode(
     tg?.initDataUnsafe?.user?.language_code ||
     tg?.initDataUnsafe?.user?.languageCode ||
     ""
-  ).trim().toLowerCase();
+  );
+  if (tgLang) return tgLang;
 
-  if (tgLang === "ru" || tgLang.startsWith("ru-")) return "RU";
-  if (tgLang === "en" || tgLang.startsWith("en-")) return "EN";
   return "EN";
 }
 
