@@ -7,14 +7,15 @@ function detectPreferredLang() {
     tg?.initDataUnsafe?.user?.language_code ||
     tg?.initDataUnsafe?.user?.languageCode ||
     ""
-  ).toLowerCase();
+  ).trim().toLowerCase();
 
-  if (tgLang.startsWith("ru")) return "RU";
+  if (tgLang === "ru" || tgLang.startsWith("ru-")) return "RU";
+  if (tgLang === "en" || tgLang.startsWith("en-")) return "EN";
   return "EN";
 }
 
 function applyInitialLanguage() {
-  currentLang = detectPreferredLang();
+  setLang(detectPreferredLang());
 }
 
 let userState = {
