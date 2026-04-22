@@ -846,7 +846,7 @@ function applyTexts() {
   }
 }
 
-window.setLang = (lang) => {
+function setLang(lang) {
   currentLang = lang === "RU" ? "RU" : "EN";
 
   if (tonConnectUI) {
@@ -856,7 +856,9 @@ window.setLang = (lang) => {
   }
 
   applyTexts();
-};
+}
+
+window.setLang = setLang;
 
 function ensureTonConnectMount() {
   let mount = document.getElementById(TON_CONNECT_BUTTON_ROOT_ID);
