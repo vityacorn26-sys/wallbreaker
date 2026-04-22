@@ -443,6 +443,18 @@ function showNotify(type, message, ttl = 3000) {
     return;
   }
 
+  document.body.appendChild(root);
+
+  root.style.position = "fixed";
+  root.style.top = "12px";
+  root.style.left = "12px";
+  root.style.right = "12px";
+  root.style.zIndex = "2147483647";
+  root.style.pointerEvents = "none";
+  root.style.display = "flex";
+  root.style.flexDirection = "column";
+  root.style.gap = "10px";
+
   const notifyType = String(type || "info");
   const isSticky = notifyType === "info";
   const effectiveTtl =
@@ -452,6 +464,7 @@ function showNotify(type, message, ttl = 3000) {
 
   const item = document.createElement("div");
   item.className = `wb-notify wb-notify-${notifyType}`;
+  item.style.pointerEvents = "auto";
 
   const title = document.createElement("div");
   title.className = "wb-notify-title";
