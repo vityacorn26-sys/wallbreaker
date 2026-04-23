@@ -31,15 +31,15 @@ function saveLang(lang) {
 }
 
 function detectPreferredLang() {
-  const savedLang = getSavedLang();
-  if (savedLang) return savedLang;
-
   const tgLang = normalizeLangCode(
     tg?.initDataUnsafe?.user?.language_code ||
     tg?.initDataUnsafe?.user?.languageCode ||
     ""
   );
   if (tgLang) return tgLang;
+
+  const savedLang = getSavedLang();
+  if (savedLang) return savedLang;
 
   const browserLangs = Array.isArray(navigator.languages) ? navigator.languages : [];
   for (const lang of browserLangs) {
