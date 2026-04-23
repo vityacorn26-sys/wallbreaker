@@ -2,6 +2,26 @@ const tg = window.Telegram?.WebApp || null;
 
 let currentLang = "EN";
 
+const LANG_STORAGE_KEY = "wb_lang_v1";
+
+function getSavedLang() {
+  try {
+    const saved = String(localStorage.getItem(LANG_STORAGE_KEY) || "").trim().toUpperCase();
+    return saved === "RU" || saved === "EN" ? saved : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function saveLang(lang) {
+  try {
+    const normalized = String(lang || "").trim().toUpperCase();
+    if (normalized === "RU" || normalized === "EN") {
+      localStorage.setItem(LANG_STORAGE_KEY, normalized);
+    }
+  } catch (_) {}
+}
+
 function normalizeLangCode(raw) {
   const code = String(raw || "").trim().toLowerCase();
 
@@ -11,6 +31,16 @@ function normalizeLangCode(raw) {
 }
 
 function detectPreferredLang() {
+  const savedLang = getSavedLang();
+  if (savedLang) return savedLang;
+
+  const tgLang = normalizeLangCode(
+    tg?.initDataUnsafe?.user?.language_code ||
+    tg?.initDataUnsafe?.user?.languageCode ||
+    ""
+  );
+  if (tgLang) return tgLang;
+
   const browserLangs = Array.isArray(navigator.languages) ? navigator.languages : [];
 
   for (const lang of browserLangs) {
@@ -20,13 +50,6 @@ function detectPreferredLang() {
 
   const navLang = normalizeLangCode(navigator.language);
   if (navLang) return navLang;
-
-  const tgLang = normalizeLangCode(
-    tg?.initDataUnsafe?.user?.language_code ||
-    tg?.initDataUnsafe?.user?.languageCode ||
-    ""
-  );
-  if (tgLang) return tgLang;
 
   return "EN";
 }
