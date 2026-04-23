@@ -124,6 +124,15 @@
     <div id="gateway" aria-label="Open subscription bot">
       <img src="assets/server.jpg" alt="Gateway" />
     </div>
+
+    <nav id="bottom-tabbar" aria-label="WallBreaker sections">
+      <button class="wb-tab-btn active" id="tab-home" type="button" onclick="goHomeTab()">HOME</button>
+      <button class="wb-tab-btn" id="tab-tasks" type="button" onclick="showTasksPanel()">TASKS</button>
+      <button class="wb-tab-btn" id="tab-market" type="button" onclick="showRanks()">MARKET</button>
+      <button class="wb-tab-btn" id="tab-protocol" type="button" onclick="showProtocol()">CONTRACT</button>
+      <button class="wb-tab-btn" id="tab-account" type="button" onclick="showAccount()">ACCOUNT</button>
+    </nav>
+  </div>
   </div>
 
   <div id="market-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
