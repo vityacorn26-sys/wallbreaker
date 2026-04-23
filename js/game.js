@@ -44,7 +44,10 @@ let userState = {
   walletConnected: false,
   withdrawStatus: "none",
   lastWithdraw: null,
-  ton_balance: 0
+  ton_balance: 0,
+  public_nickname: "",
+  nickname_manual: 0,
+  nickname_free_used: 0
 };
 
 let tapQueue = 0;
@@ -625,19 +628,123 @@ function showFatalError(message) {
   safeAlert(message);
 }
 
+function getNicknameTitle() {
+  return currentLang === "RU" ? "Публичный никнейм" : "Public Nickname";
+}
+
+function getNicknameButtonText() {
+  return currentLang === "RU" ? "ИЗМЕНИТЬ НИКНЕЙМ" : "CHANGE NICKNAME";
+}
+
+function getNicknameMetaText() {
+  if (Number(userState.nickname_free_used || 0) !== 1) {
+    return currentLang === "RU"
+      ? "Первая смена никнейма бесплатна."
+      : "First nickname change is free.";
+  }
+
+  return currentLang === "RU"
+    ? "Следующая смена: 250000 WBC"
+    : "Next change: 250000 WBC";
+}
+
+function mapNicknameErrorMessage(code) {
+  const key = String(code || "").trim();
+
+  if (currentLang === "RU") {
+    if (key === "nickname_invalid") return "Никнейм должен быть длиной 3–24 символа.";
+    if (key === "nickname_taken") return "Этот никнейм уже занят.";
+    if (key === "nickname_no_wbc") return "Недостаточно WBC для смены никнейма.";
+    if (key === "nickname_stars_later") return "Смена за Stars будет добавлена позже.";
+    return "Не удалось изменить никнейм.";
+  }
+
+  if (key === "nickname_invalid") return "Nickname must be 3–24 characters long.";
+  if (key === "nickname_taken") return "This nickname is already taken.";
+  if (key === "nickname_no_wbc") return "Not enough WBC to change nickname.";
+  if (key === "nickname_stars_later") return "Stars rename will be added later.";
+  return "Failed to change nickname.";
+}
+
+async function requestNicknameChange() {
+  const currentNick = String(userState.public_nickname || "").trim();
+  const promptText = currentLang === "RU"
+    ? "Введи новый никнейм (3–24 символа):"
+    : "Enter a new nickname (3–24 characters):";
+
+  const raw = window.prompt(promptText, currentNick);
+  if (raw === null) return;
+
+  const nickname = String(raw || "").trim();
+  if (!nickname || nickname === currentNick) return;
+
+  if (!tg?.initData) {
+    safeAlert(currentLang === "RU" ? "Telegram initData не найден." : "Telegram initData not found.");
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${getConfig().API_BASE}/api/profile/nickname/set`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        initData: tg.initData,
+        nickname
+      })
+    });
+
+    const data = await resp.json().catch(() => null);
+
+    if (!data?.success) {
+      safeAlert(mapNicknameErrorMessage(data?.error));
+      return;
+    }
+
+    userState = normalizeUserState({
+      ...userState,
+      ...data,
+      balance: data.balance ?? userState.balance,
+      ton_balance: data.ton_balance ?? userState.ton_balance
+    });
+
+    updateUI();
+
+    if (String(data.mode || "") === "wbc") {
+      safeAlert(
+        currentLang === "RU"
+          ? `Никнейм обновлён. Списано ${Number(data.price_wbc || 0).toLocaleString()} WBC.`
+          : `Nickname updated. ${Number(data.price_wbc || 0).toLocaleString()} WBC charged.`
+      );
+      return;
+    }
+
+    safeAlert(
+      currentLang === "RU"
+        ? "Никнейм обновлён. Бесплатная смена использована."
+        : "Nickname updated. Free change used."
+    );
+  } catch (e) {
+    console.error("requestNicknameChange error:", e);
+    safeAlert(currentLang === "RU" ? "Не удалось изменить никнейм." : "Failed to change nickname.");
+  }
+}
+
 function normalizeUserState(data) {
   return {
     ...userState,
     ...data,
-    balance: Number(data?.balance || 0),
-    energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy || 0))),
-    rank_id: Number(data?.rank_id || 1),
-    rank_expires_at: Number(data?.rank_expires_at || 0),
-    zeroDayKeys: Number(data?.zeroDayKeys || data?.zero_day_keys || userState.zeroDayKeys || 0),
-    walletConnected: Boolean(data?.walletConnected || data?.wallet_connected || userState.walletConnected || false),
-    withdrawStatus: String(data?.withdrawStatus || data?.withdraw_status || userState.withdrawStatus || "none"),
+    balance: Number(data?.balance ?? userState.balance ?? 0),
+    energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy ?? userState.energy ?? 0))),
+    rank_id: Number(data?.rank_id ?? userState.rank_id ?? 1),
+    rank_expires_at: Number(data?.rank_expires_at ?? userState.rank_expires_at ?? 0),
+    zeroDayKeys: Number(data?.zeroDayKeys ?? data?.zero_day_keys ?? userState.zeroDayKeys ?? 0),
+    walletConnected: Boolean(data?.walletConnected ?? data?.wallet_connected ?? userState.walletConnected ?? false),
+    withdrawStatus: String(data?.withdrawStatus ?? data?.withdraw_status ?? userState.withdrawStatus ?? "none"),
     lastWithdraw: data?.lastWithdraw || data?.last_withdraw || userState.lastWithdraw || null,
-    ton_balance: Number(data?.ton_balance || userState.ton_balance || 0)
+    ton_balance: Number(data?.ton_balance ?? userState.ton_balance ?? 0),
+    public_nickname: String(data?.public_nickname ?? userState.public_nickname ?? "").trim(),
+    nickname_manual: Number(data?.nickname_manual ?? userState.nickname_manual ?? 0),
+    nickname_free_used: Number(data?.nickname_free_used ?? userState.nickname_free_used ?? 0)
   };
 }
 
@@ -702,6 +809,10 @@ function getTonWalletShort() {
 function updateAccountPanel() {
   const rank = getRankById(userState.rank_id);
 
+  const nicknameValue = document.getElementById("account-nickname-value");
+  const nicknameMeta = document.getElementById("account-nickname-meta");
+  const nicknameBtn = document.getElementById("change-nickname-btn");
+
   const rankValue = document.getElementById("account-rank-value");
   const tapValue = document.getElementById("account-tap-value");
   const keysValue = document.getElementById("account-keys-value");
@@ -717,6 +828,20 @@ function updateAccountPanel() {
       : (rank?.name || "Proxy Hacker");
   }
 
+  if (nicknameValue) {
+    nicknameValue.textContent =
+      String(userState.public_nickname || "").trim() ||
+      (currentLang === "RU" ? "Никнейм не назначен" : "No nickname assigned");
+  }
+
+  if (nicknameMeta) {
+    nicknameMeta.textContent = getNicknameMetaText();
+  }
+
+  if (nicknameBtn) {
+    nicknameBtn.textContent = getNicknameButtonText();
+  }
+  
   if (tapValue) tapValue.textContent = `${Number(rank?.mult || 10).toLocaleString()} ${getCurrency()} / tap`;
   if (keysValue) keysValue.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
   if (tonBalanceValue) {
@@ -768,13 +893,14 @@ function updateAccountPanel() {
   }
 
   const cards = document.querySelectorAll("#account-panel-overlay .account-card");
-  if (cards[0]) cards[0].querySelector("strong").textContent = t().currentRank;
-  if (cards[1]) cards[1].querySelector("strong").textContent = t().tapPower;
-  if (cards[2]) cards[2].querySelector("strong").textContent = t().zeroDayKeys;
-  if (cards[3]) cards[3].querySelector("strong").textContent = t().prizePool;
-  if (cards[4]) cards[4].querySelector("strong").textContent = t().tonBalance || "TON Balance";
-  if (cards[5]) cards[5].querySelector("strong").textContent = t().walletStatus;
-  if (cards[6]) cards[6].querySelector("strong").textContent = t().withdrawStatus;
+  if (cards[0]) cards[0].querySelector("strong").textContent = getNicknameTitle();
+  if (cards[1]) cards[1].querySelector("strong").textContent = t().currentRank;
+  if (cards[2]) cards[2].querySelector("strong").textContent = t().tapPower;
+  if (cards[3]) cards[3].querySelector("strong").textContent = t().zeroDayKeys;
+  if (cards[4]) cards[4].querySelector("strong").textContent = t().prizePool;
+  if (cards[5]) cards[5].querySelector("strong").textContent = t().tonBalance || "TON Balance";
+  if (cards[6]) cards[6].querySelector("strong").textContent = t().walletStatus;
+  if (cards[7]) cards[7].querySelector("strong").textContent = t().withdrawStatus;
 }
 
 function updateUI() {
@@ -2566,6 +2692,11 @@ document.addEventListener("DOMContentLoaded", () => {
     withdrawWalletInput.addEventListener("blur", () => {
       setManualWithdrawWallet(withdrawWalletInput.value);
     });
+  }
+
+  const changeNicknameBtn = document.getElementById("change-nickname-btn");
+  if (changeNicknameBtn) {
+    changeNicknameBtn.addEventListener("click", requestNicknameChange);
   }
 
   const changeWalletBtn = document.getElementById("change-wallet-btn");
