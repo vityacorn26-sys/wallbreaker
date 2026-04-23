@@ -972,6 +972,7 @@ function applyTexts() {
   if (tasks) tasks.textContent = getTasksPromoText().tasksBtn;
   if (promo) promo.textContent = getTasksPromoText().promoBtn;
   syncTasksPromoTexts();
+  syncBottomTabLabels();
   if (balanceCurrencyEl) balanceCurrencyEl.textContent = getCurrency();
 
   const ru = document.getElementById("lang-ru");
@@ -1652,26 +1653,90 @@ function closeSidebar() {
   if (sidebar) sidebar.classList.remove("active");
 }
 
+function getBottomTabText() {
+  if (currentLang === "RU") {
+    return {
+      home: "ГЛАВНАЯ",
+      tasks: "TASKS",
+      market: "МАРКЕТ",
+      protocol: "КОНТРАКТ",
+      account: "АККАУНТ"
+    };
+  }
+
+  return {
+    home: "HOME",
+    tasks: "TASKS",
+    market: "MARKET",
+    protocol: "CONTRACT",
+    account: "ACCOUNT"
+  };
+}
+
+function syncBottomTabLabels() {
+  const txt = getBottomTabText();
+
+  const home = document.getElementById("tab-home");
+  const tasks = document.getElementById("tab-tasks");
+  const market = document.getElementById("tab-market");
+  const protocol = document.getElementById("tab-protocol");
+  const account = document.getElementById("tab-account");
+
+  if (home) home.textContent = txt.home;
+  if (tasks) tasks.textContent = txt.tasks;
+  if (market) market.textContent = txt.market;
+  if (protocol) protocol.textContent = txt.protocol;
+  if (account) account.textContent = txt.account;
+}
+
+function setBottomTabActive(tabName = "home") {
+  document.querySelectorAll(".wb-tab-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  const activeBtn = document.getElementById(`tab-${tabName}`);
+  if (activeBtn) activeBtn.classList.add("active");
+}
+
+function getTabNameByOverlayId(overlayId) {
+  if (overlayId === "tasks-panel-overlay") return "tasks";
+  if (overlayId === "market-panel-overlay" || overlayId === "rank-details-overlay") return "market";
+  if (overlayId === "protocol-panel-overlay") return "protocol";
+  if (overlayId === "account-panel-overlay") return "account";
+  return "home";
+}
+
 window.toggleMenu = () => {
   const sidebar = document.getElementById("sidebar");
   if (sidebar) sidebar.classList.toggle("active");
 };
 
-function closeAllPanels() {
+function closeAllPanels(options = {}) {
   document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((el) => {
     el.classList.add("hidden");
     el.setAttribute("aria-hidden", "true");
   });
+
+  if (!options.keepTab) {
+    setBottomTabActive("home");
+  }
 }
 
 function openPanel(overlayId) {
-  closeAllPanels();
+  closeAllPanels({ keepTab: true });
   const el = document.getElementById(overlayId);
   if (!el) return;
   el.classList.remove("hidden");
   el.setAttribute("aria-hidden", "false");
   closeSidebar();
+  setBottomTabActive(getTabNameByOverlayId(overlayId));
 }
+
+window.goHomeTab = () => {
+  closeAllPanels();
+  closeSidebar();
+  setBottomTabActive("home");
+};
 
 function bindOverlayClosers() {
   document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((overlay) => {
