@@ -1648,9 +1648,23 @@ window.handleTap = () => {
   }, 90);
 };
 
+let lastPanelSource = "tabbar";
+
 function closeSidebar() {
   const sidebar = document.getElementById("sidebar");
   if (sidebar) sidebar.classList.remove("active");
+}
+
+function isFullPageOverlay(overlayId) {
+  return [
+    "tasks-panel-overlay",
+    "market-panel-overlay",
+    "rank-details-overlay",
+    "protocol-panel-overlay",
+    "account-panel-overlay",
+    "promo-panel-overlay",
+    "zero-key-panel-overlay"
+  ].includes(String(overlayId || ""));
 }
 
 function getBottomTabText() {
@@ -1700,7 +1714,7 @@ function setBottomTabActive(tabName = "home") {
 
 function getTabNameByOverlayId(overlayId) {
   if (overlayId === "tasks-panel-overlay") return "tasks";
-  if (overlayId === "market-panel-overlay" || overlayId === "rank-details-overlay") return "market";
+  if (overlayId === "market-panel-overlay" || overlayId === "rank-details-overlay" || overlayId === "zero-key-panel-overlay") return "market";
   if (overlayId === "protocol-panel-overlay") return "protocol";
   if (overlayId === "account-panel-overlay") return "account";
   return "home";
@@ -1717,23 +1731,50 @@ function closeAllPanels(options = {}) {
     el.setAttribute("aria-hidden", "true");
   });
 
+  document.body.classList.remove("wb-fullpanel-open");
+
   if (!options.keepTab) {
     setBottomTabActive("home");
   }
 }
 
 function openPanel(overlayId) {
+  const sidebar = document.getElementById("sidebar");
+  lastPanelSource = sidebar && sidebar.classList.contains("active") ? "sidebar" : "tabbar";
+
   closeAllPanels({ keepTab: true });
+
   const el = document.getElementById(overlayId);
   if (!el) return;
+
   el.classList.remove("hidden");
   el.setAttribute("aria-hidden", "false");
+
+  if (isFullPageOverlay(overlayId)) {
+    document.body.classList.add("wb-fullpanel-open");
+  }
+
   closeSidebar();
   setBottomTabActive(getTabNameByOverlayId(overlayId));
 }
 
 window.goHomeTab = () => {
   closeAllPanels();
+  closeSidebar();
+  setBottomTabActive("home");
+};
+
+window.closePanel = () => {
+  const reopenSidebar = lastPanelSource === "sidebar";
+
+  closeAllPanels();
+
+  if (reopenSidebar) {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) sidebar.classList.add("active");
+    return;
+  }
+
   closeSidebar();
   setBottomTabActive("home");
 };
@@ -2495,15 +2536,6 @@ async function handleZeroDayKeyEnter() {
   await refreshZeroDayKeyPanel();
   safeAlert(t().zeroKeyEnterOk);
 }
-
-window.closePanel = () => {
-  closeAllPanels();
-
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.classList.add("active");
-  }
-};
 
 function getMonetagRewardedHandler() {
   const fn = window.show_10848170;
