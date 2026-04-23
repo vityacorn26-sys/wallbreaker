@@ -4,6 +4,14 @@ let currentLang = "EN";
 
 const LANG_STORAGE_KEY = "wb_lang_v1";
 
+function normalizeLangCode(raw) {
+  const code = String(raw || "").trim().toLowerCase();
+
+  if (code === "ru" || code.startsWith("ru-")) return "RU";
+  if (code === "en" || code.startsWith("en-")) return "EN";
+  return "";
+}
+
 function getSavedLang() {
   try {
     const saved = String(localStorage.getItem(LANG_STORAGE_KEY) || "").trim().toUpperCase();
@@ -22,14 +30,6 @@ function saveLang(lang) {
   } catch (_) {}
 }
 
-function normalizeLangCode(raw) {
-  const code = String(raw || "").trim().toLowerCase();
-
-  if (code === "ru" || code.startsWith("ru-")) return "RU";
-  if (code === "en" || code.startsWith("en-")) return "EN";
-  return "";
-}
-
 function detectPreferredLang() {
   const savedLang = getSavedLang();
   if (savedLang) return savedLang;
@@ -42,7 +42,6 @@ function detectPreferredLang() {
   if (tgLang) return tgLang;
 
   const browserLangs = Array.isArray(navigator.languages) ? navigator.languages : [];
-
   for (const lang of browserLangs) {
     const normalized = normalizeLangCode(lang);
     if (normalized) return normalized;
@@ -1033,6 +1032,7 @@ function applyTexts() {
 
 function setLang(lang) {
   currentLang = lang === "RU" ? "RU" : "EN";
+  saveLang(currentLang);
 
   if (tonConnectUI) {
     tonConnectUI.uiOptions = {
