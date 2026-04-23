@@ -654,6 +654,7 @@ function mapNicknameErrorMessage(code) {
   if (currentLang === "RU") {
     if (key === "nickname_invalid") return "Никнейм должен быть длиной 3–24 символа.";
     if (key === "nickname_taken") return "Этот никнейм уже занят.";
+    if (key === "nickname_same") return "Этот никнейм уже установлен.";
     if (key === "nickname_no_wbc") return "Недостаточно WBC для смены никнейма.";
     if (key === "nickname_stars_later") return "Смена за Stars будет добавлена позже.";
     return "Не удалось изменить никнейм.";
@@ -661,6 +662,7 @@ function mapNicknameErrorMessage(code) {
 
   if (key === "nickname_invalid") return "Nickname must be 3–24 characters long.";
   if (key === "nickname_taken") return "This nickname is already taken.";
+  if (key === "nickname_same") return "This nickname is already set.";
   if (key === "nickname_no_wbc") return "Not enough WBC to change nickname.";
   if (key === "nickname_stars_later") return "Stars rename will be added later.";
   return "Failed to change nickname.";
@@ -708,6 +710,7 @@ async function requestNicknameChange() {
     });
 
     updateUI();
+    await refreshUserSilently();
 
     if (String(data.mode || "") === "wbc") {
       safeAlert(
