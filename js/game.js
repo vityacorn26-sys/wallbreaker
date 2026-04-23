@@ -41,6 +41,9 @@ let userState = {
   rank_id: 1,
   rank_expires_at: 0,
   zeroDayKeys: 0,
+  key_fragments: 0,
+  forge_ready: false,
+  forge_count: 0,
   walletConnected: false,
   withdrawStatus: "none",
   lastWithdraw: null,
@@ -740,7 +743,10 @@ function normalizeUserState(data) {
     energy: Math.max(0, Math.min(MAX_ENERGY, Number(data?.energy ?? userState.energy ?? 0))),
     rank_id: Number(data?.rank_id ?? userState.rank_id ?? 1),
     rank_expires_at: Number(data?.rank_expires_at ?? userState.rank_expires_at ?? 0),
-    zeroDayKeys: Number(data?.zeroDayKeys ?? data?.zero_day_keys ?? userState.zeroDayKeys ?? 0),
+    zeroDayKeys: Number(data?.zeroDayKeys ?? data?.zero_day_keys ?? data?.zero_day_keys_balance ?? userState.zeroDayKeys ?? 0),
+    key_fragments: Number(data?.key_fragments ?? userState.key_fragments ?? 0),
+    forge_ready: Boolean(data?.forge_ready ?? userState.forge_ready ?? false),
+    forge_count: Number(data?.forge_count ?? userState.forge_count ?? 0),
     walletConnected: Boolean(data?.walletConnected ?? data?.wallet_connected ?? userState.walletConnected ?? false),
     withdrawStatus: String(data?.withdrawStatus ?? data?.withdraw_status ?? userState.withdrawStatus ?? "none"),
     lastWithdraw: data?.lastWithdraw || data?.last_withdraw || userState.lastWithdraw || null,
@@ -1972,6 +1978,8 @@ function getTasksPromoText() {
       promoFail: "Не удалось активировать промокод",
       rewardWbc: (amount) => `Награда: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
       rewardKey: (amount) => `Награда: +${Number(amount || 0)} Zero-Day Key`,
+      rewardFragments: (amount) => `Награда: +${Number(amount || 0)} Key Fragments`,
+      rewardFragmentsBonus: (amount) => `Бонус серии: +${Number(amount || 0)} Key Fragment`,
       progress: (a, b) => `Прогресс: ${a} / ${b}`
     };
   }
@@ -1996,6 +2004,8 @@ function getTasksPromoText() {
     promoFail: "Failed to activate promo code",
     rewardWbc: (amount) => `Reward: +${Number(amount || 0).toLocaleString()} ${getCurrency()}`,
     rewardKey: (amount) => `Reward: +${Number(amount || 0)} Zero-Day Key`,
+    rewardFragments: (amount) => `Reward: +${Number(amount || 0)} Key Fragments`,
+    rewardFragmentsBonus: (amount) => `Streak bonus: +${Number(amount || 0)} Key Fragment`,
     progress: (a, b) => `Progress: ${a} / ${b}`
   };
 }
@@ -2055,16 +2065,25 @@ function getTaskDisplayName(taskKey) {
 
 function getTaskRewardText(task) {
   const tp = getTasksPromoText();
+  const lines = [];
 
   if (Number(task?.reward_wbc || 0) > 0) {
-    return tp.rewardWbc(task.reward_wbc);
+    lines.push(tp.rewardWbc(task.reward_wbc));
   }
 
   if (Number(task?.reward_key || 0) > 0) {
-    return tp.rewardKey(task.reward_key);
+    lines.push(tp.rewardKey(task.reward_key));
   }
 
-  return "";
+  if (Number(task?.reward_fragments || 0) > 0) {
+    lines.push(tp.rewardFragments(task.reward_fragments));
+  }
+
+  if (Number(task?.reward_fragments_bonus || 0) > 0) {
+    lines.push(tp.rewardFragmentsBonus(task.reward_fragments_bonus));
+  }
+
+  return lines.join(" • ");
 }
 
 function renderTasksPanel(payload) {
@@ -2111,8 +2130,8 @@ function renderTasksPanel(payload) {
     let extraHint = "";
     if (String(task.key || "") === "login_streak_daily" && progressValue >= 7) {
       extraHint = currentLang === "RU"
-        ? `<p style="opacity:.82;">После 7-го дня: +5 000 ${getCurrency()} каждый следующий день, пока серия не прервётся.</p>`
-        : `<p style="opacity:.82;">After day 7: +5,000 ${getCurrency()} every next day while the streak continues.</p>`;
+        ? `<p style="opacity:.82;">После выхода на 7/7 серия не сбрасывается. Каждый 7-й ежедневный claim на максимальной серии даёт +1 Key Fragment.</p>`
+        : `<p style="opacity:.82;">After reaching 7/7, the streak does not reset. Every 7th daily claim on max streak gives +1 Key Fragment.</p>`;
     }
 
     let buttonText = tp.claim;
@@ -2205,22 +2224,34 @@ window.claimTaskReward = async (taskKey) => {
       balance: result.balance ?? userState.balance,
       wbc_balance: result.wbc_balance ?? userState.wbc_balance,
       ton_balance: result.ton_balance ?? userState.ton_balance,
-      zeroDayKeys: result.zero_day_keys_balance ?? userState.zeroDayKeys
+      zeroDayKeys: result.zero_day_keys_balance ?? userState.zeroDayKeys,
+      key_fragments: result.key_fragments ?? userState.key_fragments,
+      forge_ready: result.forge_ready ?? userState.forge_ready,
+      forge_count: result.forge_count ?? userState.forge_count
     });
 
     syncEnergyBase();
     updateUI();
     await loadTasksPanel();
 
+    const tp = getTasksPromoText();
+
     if (Number(result.reward_wbc || 0) > 0) {
-      showNotify("success", getTasksPromoText().rewardWbc(result.reward_wbc));
-    } else if (Number(result.reward_key || 0) > 0) {
-      showNotify("success", getTasksPromoText().rewardKey(result.reward_key));
-    } else {
-      showNotify("success", currentLang === "RU" ? "Награда за задачу получена." : "Task reward received.");
+      showNotify("success", tp.rewardWbc(result.reward_wbc));
+      return;
     }
 
-    return;
+    if (Number(result.reward_key || 0) > 0) {
+      showNotify("success", tp.rewardKey(result.reward_key));
+      return;
+    }
+
+    if (Number(result.reward_fragments || 0) > 0) {
+      showNotify("success", tp.rewardFragments(result.reward_fragments));
+      return;
+    }
+
+    showNotify("success", currentLang === "RU" ? "Награда за задачу получена." : "Task reward received.");
   } catch (e) {
     console.error("claimTaskReward error:", e);
     showNotify("error", getTasksPromoText().tasksLoadFail);
