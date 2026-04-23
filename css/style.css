@@ -1448,6 +1448,84 @@ img {
     height: 60px;
   }
 }
+
+/* ===== FULL PAGE TAB PANELS ===== */
+
+body.wb-fullpanel-open #menu-btn,
+body.wb-fullpanel-open #gateway {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.wb-fullpanel-open #bottom-tabbar {
+  z-index: 10120;
+}
+
+#tasks-panel-overlay,
+#market-panel-overlay,
+#rank-details-overlay,
+#protocol-panel-overlay,
+#account-panel-overlay,
+#promo-panel-overlay,
+#zero-key-panel-overlay {
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  padding: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(3, 8, 14, 0.84), rgba(3, 8, 14, 0.92));
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+}
+
+#tasks-panel-overlay .wb-panel,
+#market-panel-overlay .wb-panel,
+#rank-details-overlay .wb-panel,
+#protocol-panel-overlay .wb-panel,
+#account-panel-overlay .wb-panel,
+#promo-panel-overlay .wb-panel,
+#zero-key-panel-overlay .wb-panel {
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  padding: 82px 16px calc(104px + env(safe-area-inset-bottom, 0px)) 16px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  box-shadow: none !important;
+  background:
+    linear-gradient(180deg, rgba(5, 10, 16, 0.94), rgba(7, 13, 22, 0.97)) !important;
+}
+
+#tasks-panel-overlay .wb-back-btn,
+#market-panel-overlay .wb-back-btn,
+#rank-details-overlay .wb-back-btn,
+#protocol-panel-overlay .wb-back-btn,
+#account-panel-overlay .wb-back-btn,
+#promo-panel-overlay .wb-back-btn,
+#zero-key-panel-overlay .wb-back-btn {
+  display: inline-flex;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin-bottom: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+#tasks-panel-overlay h2,
+#market-panel-overlay h2,
+#rank-details-overlay h2,
+#protocol-panel-overlay h2,
+#account-panel-overlay h2,
+#promo-panel-overlay h2,
+#zero-key-panel-overlay h2 {
+  margin-top: 0;
+}
 /* ===== WB NOTIFY SYSTEM ===== */
 
 #wb-notify-root {
