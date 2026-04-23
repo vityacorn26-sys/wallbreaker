@@ -193,14 +193,23 @@
   </div>
 
   <div id="account-panel-overlay" class="panel-overlay hidden" aria-hidden="true">
-    <div class="wb-panel" role="dialog" aria-labelledby="account-panel-title">
-      <h2 id="account-panel-title">Account</h2>
-      <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
+  <div class="wb-panel" role="dialog" aria-labelledby="account-panel-title">
+    <h2 id="account-panel-title">Account</h2>
+    <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
 
-      <div class="account-card">
-        <p><strong>Current Rank</strong></p>
-        <p id="account-rank-value">Proxy Hacker</p>
-      </div>
+    <div class="account-card">
+      <p><strong>Public Nickname</strong></p>
+      <p id="account-nickname-value">Loading...</p>
+      <p id="account-nickname-meta" style="margin-top:8px; font-size:12px; opacity:.84;">Loading...</p>
+      <button id="change-nickname-btn" class="wb-button ghost" type="button" style="margin-top:12px;">
+        CHANGE NICKNAME
+      </button>
+    </div>
+
+    <div class="account-card">
+      <p><strong>Current Rank</strong></p>
+      <p id="account-rank-value">Proxy Hacker</p>
+    </div>
 
       <div class="account-card">
         <p><strong>Tap Power</strong></p>
