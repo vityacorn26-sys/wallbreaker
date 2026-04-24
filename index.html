@@ -324,23 +324,47 @@
       <h2 id="zero-key-panel-title">ZERO-DAY KEY</h2>
       <button class="wb-back-btn" onclick="closePanel()">← BACK</button>
 
-      <div class="info-card market-info-card">
-        <p><strong>Zero-Day Key</strong></p>
-        <p>Access to the current draw.</p>
-        <p>1 Key = 1 entry into the draw.</p>
+      <div class="zero-key-entity-wrap">
+        <img
+          id="zero-key-entity-img"
+          class="zero-key-entity-img"
+          src="assets/zero-day-key.png"
+          alt="Zero-Day Key"
+        />
       </div>
 
       <div class="info-card market-info-card">
-        <p><strong>Price</strong></p>
-        <p>2,000,000 $WBC</p>
-        <p>Maximum 2 keys per draw.</p>
+        <p><strong id="zero-key-info-title">Zero-Day Key</strong></p>
+        <p id="zero-key-info-line1">Zero-Day Key is a breach artifact used to enter the draw.</p>
+        <p id="zero-key-info-line2">A user enters the draw only after submitting the 1st key.</p>
+        <p id="zero-key-info-line3">Activity score for the round counts from the round start, even before key entry.</p>
       </div>
 
       <div class="info-card market-info-card">
-        <p><strong>Current key balance</strong></p>
+        <p><strong id="zero-key-fragments-title">FORGE CIRCUIT</strong></p>
+        <p id="zero-key-fragments-value">Fragments: 0 / 10</p>
+        <p id="zero-key-fragments-status">FORGE LOCKED</p>
+        <button id="zero-key-forge-btn" class="wb-button ghost zero-key-forge-btn" type="button" disabled>
+          FORGE ZERO-DAY KEY
+        </button>
+      </div>
+
+      <div class="info-card market-info-card">
+        <p><strong id="zero-key-price-title">DIRECT BUY</strong></p>
+        <p id="zero-key-price-value">2,000,000 $WBC = 1 Zero-Day Key</p>
+        <p id="zero-key-price-note">Manual forge and direct buy can both be used.</p>
+      </div>
+
+      <div class="info-card market-info-card">
+        <p><strong id="zero-key-balance-title">Current key balance</strong></p>
         <p id="zero-key-balance-value">0</p>
-        <p><strong>Already entered into the draw</strong></p>
+
+        <p><strong id="zero-key-entered-title">Already entered into the draw</strong></p>
         <p id="zero-key-entered-value">0 / 2</p>
+
+        <p id="zero-key-second-hint" class="zero-key-second-hint">
+          1st key gives entry. 2nd key strengthens your position in the draw.
+        </p>
       </div>
 
       <div class="market-actions" style="margin-top: 14px;">
@@ -351,7 +375,7 @@
           ENTER DRAW
         </button>
       </div>
-    
+
       <p id="zero-key-status-line" style="margin-top:10px; font-size:12px; opacity:.82;">
         DRAW ENTRY OPEN
       </p>
