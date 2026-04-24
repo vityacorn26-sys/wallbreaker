@@ -2473,47 +2473,70 @@ window.showProtocol = async () => {
 };
 
 async function refreshZeroDayKeyPanel() {
-  const panel = document.getElementById("zero-key-panel-overlay");
+  const txt = getZeroKeyForgeText();
 
-  const titleEl = panel?.querySelector("h2");
-  const backBtn = panel?.querySelector(".wb-back-btn");
+  const titleEl = document.getElementById("zero-key-panel-title");
+  const infoTitle = document.getElementById("zero-key-info-title");
+  const infoLine1 = document.getElementById("zero-key-info-line1");
+  const infoLine2 = document.getElementById("zero-key-info-line2");
+  const infoLine3 = document.getElementById("zero-key-info-line3");
 
-  const infoCards = panel?.querySelectorAll(".info-card.market-info-card");
+  const fragmentsTitle = document.getElementById("zero-key-fragments-title");
+  const fragmentsValue = document.getElementById("zero-key-fragments-value");
+  const fragmentsStatus = document.getElementById("zero-key-fragments-status");
+  const forgeBtn = document.getElementById("zero-key-forge-btn");
+  const keyImg = document.getElementById("zero-key-entity-img");
 
-  const infoTitle = infoCards?.[0]?.querySelector("p strong");
-  const infoLines = infoCards?.[0]?.querySelectorAll("p");
+  const priceTitle = document.getElementById("zero-key-price-title");
+  const priceValue = document.getElementById("zero-key-price-value");
+  const priceNote = document.getElementById("zero-key-price-note");
 
-  const priceTitle = infoCards?.[1]?.querySelector("p strong");
-  const priceLines = infoCards?.[1]?.querySelectorAll("p");
-
-  const balanceTitle = infoCards?.[2]?.querySelectorAll("p strong");
-  const balanceLines = infoCards?.[2]?.querySelectorAll("p");
-
+  const balanceTitle = document.getElementById("zero-key-balance-title");
   const balanceEl = document.getElementById("zero-key-balance-value");
+  const enteredTitle = document.getElementById("zero-key-entered-title");
   const enteredEl = document.getElementById("zero-key-entered-value");
+  const secondHint = document.getElementById("zero-key-second-hint");
+
   const buyBtn = document.getElementById("zero-key-buy-btn");
   const enterBtn = document.getElementById("zero-key-enter-btn");
   const statusLine = document.getElementById("zero-key-status-line");
 
-  if (titleEl) titleEl.textContent = t().zeroKeyTitle;
-  if (backBtn) backBtn.textContent = t().zeroKeyBack;
+  if (titleEl) titleEl.textContent = t().zeroKeyTitle || "ZERO-DAY KEY";
+  if (infoTitle) infoTitle.textContent = txt.infoTitle;
+  if (infoLine1) infoLine1.textContent = txt.infoLine1;
+  if (infoLine2) infoLine2.textContent = txt.infoLine2;
+  if (infoLine3) infoLine3.textContent = txt.infoLine3;
 
-  if (infoTitle) infoTitle.textContent = t().zeroKeyInfoTitle;
-  if (infoLines?.[1]) infoLines[1].textContent = t().zeroKeyInfoLine1;
-  if (infoLines?.[2]) infoLines[2].textContent = t().zeroKeyInfoLine2;
+  if (fragmentsTitle) fragmentsTitle.textContent = txt.fragmentsTitle;
+  if (priceTitle) priceTitle.textContent = txt.priceTitle;
+  if (priceValue) priceValue.textContent = txt.priceValue();
+  if (priceNote) priceNote.textContent = txt.priceNote;
+  if (balanceTitle) balanceTitle.textContent = txt.balanceTitle;
+  if (enteredTitle) enteredTitle.textContent = txt.enteredTitle;
+  if (secondHint) secondHint.textContent = txt.secondHint;
 
-  if (priceTitle) priceTitle.textContent = t().zeroKeyPriceTitle;
-  if (priceLines?.[1]) priceLines[1].textContent = t().zeroKeyPriceValue();
-  if (priceLines?.[2]) priceLines[2].textContent = t().zeroKeyLimit;
+  const fragments = Number(userState.key_fragments || 0);
+  const keys = Number(userState.zeroDayKeys || 0);
 
-  if (balanceTitle?.[0]) balanceTitle[0].textContent = t().zeroKeyBalanceTitle;
-  if (balanceTitle?.[1]) balanceTitle[1].textContent = t().zeroKeyEnteredTitle;
+  if (fragmentsValue) fragmentsValue.textContent = txt.fragmentsValue(fragments);
 
-  if (buyBtn) buyBtn.textContent = t().zeroKeyBuyBtn;
-  if (enterBtn) enterBtn.textContent = t().zeroKeyEnterBtn;
+  if (forgeBtn) {
+    const ready = fragments >= 10;
+    forgeBtn.textContent = txt.forgeBtn;
+    forgeBtn.disabled = !ready;
+    forgeBtn.classList.toggle("ready", ready);
+  }
+
+  if (fragmentsStatus) {
+    fragmentsStatus.textContent = fragments >= 10 ? txt.forgeReady : txt.forgeLocked;
+  }
+
+  if (keyImg) {
+    keyImg.classList.toggle("is-ready", fragments >= 10);
+  }
 
   if (balanceEl) {
-    balanceEl.textContent = Number(userState.zeroDayKeys || 0).toLocaleString();
+    balanceEl.textContent = keys.toLocaleString();
   }
 
   if (enteredEl) {
@@ -2527,16 +2550,16 @@ async function refreshZeroDayKeyPanel() {
   const status = await API.getDrawStatus();
 
   if (status?.success) {
-    const keys = Number(status.keys || 0);
+    const freshKeys = Number(status.keys || 0);
     const entered = Number(status.entered || 0);
     const max = Number(status.max || 2);
     const poolState = String(status.pool_state || "").toLowerCase();
     const roundStatus = String(status.round_status || "").toLowerCase();
 
-    userState.zeroDayKeys = keys;
+    userState.zeroDayKeys = freshKeys;
 
     if (balanceEl) {
-      balanceEl.textContent = keys.toLocaleString();
+      balanceEl.textContent = freshKeys.toLocaleString();
     }
 
     if (enteredEl) {
@@ -2556,7 +2579,7 @@ async function refreshZeroDayKeyPanel() {
     } else if (entered >= max) {
       enterDisabled = true;
       lineText = t().zeroKeyStatusLimit;
-    } else if (keys <= 0) {
+    } else if (freshKeys <= 0) {
       enterDisabled = true;
       lineText = t().zeroKeyStatusNoKeys;
     }
@@ -2574,10 +2597,95 @@ async function refreshZeroDayKeyPanel() {
   }
 }
 
+function getZeroKeyForgeText() {
+  if (currentLang === "RU") {
+    return {
+      infoTitle: "Zero-Day Key",
+      infoLine1: "Zero-Day Key — breach-артефакт для входа в draw.",
+      infoLine2: "Юзер участвует в draw только после внесения 1-го key.",
+      infoLine3: "Активность для раунда считается с самого начала раунда, ещё до внесения key.",
+      fragmentsTitle: "КОНТУР КОВКИ",
+      fragmentsValue: (n) => `Фрагменты: ${Number(n || 0)} / 10`,
+      forgeLocked: "КОВКА ЗАБЛОКИРОВАНА",
+      forgeReady: "КОВКА ДОСТУПНА",
+      forgeBtn: "СОБРАТЬ ZERO-DAY KEY",
+      priceTitle: "ПРЯМАЯ ПОКУПКА",
+      priceValue: () => `${Number(getZeroDayKeyPrice()).toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`,
+      priceNote: "Ручная ковка и прямая покупка работают параллельно.",
+      balanceTitle: "Текущий баланс ключей",
+      enteredTitle: "Уже внесено в draw",
+      secondHint: "1-й key даёт вход. 2-й key усиливает позицию юзера в активном draw.",
+      forgeOk: "Zero-Day Key выкован. Ключ готов к внесению в draw.",
+      forgeFail: "Не удалось выковать Zero-Day Key.",
+      forgeNoFragments: "Недостаточно фрагментов для ковки."
+    };
+  }
+
+  return {
+    infoTitle: "Zero-Day Key",
+    infoLine1: "Zero-Day Key is a breach artifact used to enter the draw.",
+    infoLine2: "A user enters the draw only after submitting the 1st key.",
+    infoLine3: "Activity for the round is counted from the round start, even before key entry.",
+    fragmentsTitle: "FORGE CIRCUIT",
+    fragmentsValue: (n) => `Fragments: ${Number(n || 0)} / 10`,
+    forgeLocked: "FORGE LOCKED",
+    forgeReady: "FORGE AVAILABLE",
+    forgeBtn: "FORGE ZERO-DAY KEY",
+    priceTitle: "DIRECT BUY",
+    priceValue: () => `${Number(getZeroDayKeyPrice()).toLocaleString()} ${getCurrency()} = 1 Zero-Day Key`,
+    priceNote: "Manual forge and direct buy can both be used.",
+    balanceTitle: "Current key balance",
+    enteredTitle: "Already entered into the draw",
+    secondHint: "1st key gives entry. 2nd key strengthens the user position in the active draw.",
+    forgeOk: "Zero-Day Key forged. The key is ready to be entered into the draw.",
+    forgeFail: "Failed to forge Zero-Day Key.",
+    forgeNoFragments: "Not enough fragments to forge a key."
+  };
+}
+
+function playForgeBurst() {
+  const img = document.getElementById("zero-key-entity-img");
+  if (!img) return;
+
+  img.classList.remove("forge-burst");
+  void img.offsetWidth;
+  img.classList.add("forge-burst");
+
+  setTimeout(() => {
+    img.classList.remove("forge-burst");
+  }, 700);
+}
+
 window.showZeroDayKeyPanel = async () => {
   await refreshZeroDayKeyPanel();
   openPanel("zero-key-panel-overlay");
 };
+
+async function handleZeroDayKeyForge() {
+  const txt = getZeroKeyForgeText();
+  const result = await API.forgeZeroDayKey();
+
+  if (!result?.success) {
+    const errorCode = String(result?.error || "").toLowerCase();
+
+    if (errorCode === "not_enough_fragments") {
+      safeAlert(txt.forgeNoFragments);
+    } else {
+      safeAlert(txt.forgeFail);
+    }
+    return;
+  }
+
+  userState.key_fragments = Number(result.key_fragments || 0);
+  userState.zeroDayKeys = Number(result.zero_day_keys_balance || userState.zeroDayKeys || 0);
+  userState.forge_ready = Boolean(result.forge_ready);
+  userState.forge_count = Number(result.forge_count || 0);
+
+  playForgeBurst();
+  updateAccountPanel();
+  await refreshZeroDayKeyPanel();
+  safeAlert(txt.forgeOk);
+}
 
 async function handleZeroDayKeyBuy() {
   const result = await API.buyZeroDayKey();
@@ -2940,8 +3048,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   syncTasksPromoTexts();
   
+  const zeroKeyForgeBtn = document.getElementById("zero-key-forge-btn");
   const zeroKeyBuyBtn = document.getElementById("zero-key-buy-btn");
   const zeroKeyEnterBtn = document.getElementById("zero-key-enter-btn");
+
+  if (zeroKeyForgeBtn) {
+    zeroKeyForgeBtn.addEventListener("click", handleZeroDayKeyForge);
+  }
 
   if (zeroKeyBuyBtn) {
     zeroKeyBuyBtn.addEventListener("click", handleZeroDayKeyBuy);
