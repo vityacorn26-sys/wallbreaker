@@ -220,6 +220,18 @@ const API = {
     }
   },
 
+  async forgeZeroDayKey() {
+    try {
+      return await this.post('/api/key/forge');
+    } catch (e) {
+      console.error('API Error (forgeZeroDayKey):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'key_forge_failed'
+      };
+    }
+  },
+  
   async enterDrawWithKey() {
     try {
       return await this.post('/api/draw/ticket/enter');
