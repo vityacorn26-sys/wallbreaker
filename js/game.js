@@ -1684,6 +1684,38 @@ function closeSidebar() {
   if (sidebar) sidebar.classList.remove("active");
 }
 
+function isSidebarToggleTarget(target) {
+  return !!(
+    target &&
+    typeof target.closest === "function" &&
+    target.closest('.hamburger, .menu-btn, .menu-toggle, [onclick="toggleMenu()"], [data-menu-toggle]')
+  );
+}
+
+if (!window.__wbSidebarOutsideCloseBound) {
+  window.__wbSidebarOutsideCloseBound = true;
+
+  const sidebarOutsideCloseHandler = (e) => {
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar || !sidebar.classList.contains("active")) return;
+
+    const target = e.target;
+    if (sidebar.contains(target)) return;
+    if (isSidebarToggleTarget(target)) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === "function") {
+      e.stopImmediatePropagation();
+    }
+
+    closeSidebar();
+  };
+
+  document.addEventListener("click", sidebarOutsideCloseHandler, true);
+  document.addEventListener("touchstart", sidebarOutsideCloseHandler, true);
+}
+
 function isFullPageOverlay(overlayId) {
   return [
     "tasks-panel-overlay",
