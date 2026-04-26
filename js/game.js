@@ -2794,44 +2794,29 @@ window.showAds = async () => {
 
     await showRewarded({ ymid });
 
-    const rewardResp = await API.claimAdReward(ymid);
+    // ===== НОВОЕ: награда теперь начисляется автоматически через постбэк Monetag =====
+    safeAlert(t().adRewardOk);
 
-    if (rewardResp?.success) {
-      userState = normalizeUserState({
-        ...userState,
-        balance: rewardResp.balance,
-        wbc_balance: rewardResp.wbc_balance ?? rewardResp.balance ?? userState.wbc_balance,
-        energy: rewardResp.energy,
-        rank_id: rewardResp.rank_id ?? userState.rank_id,
-        rank_expires_at: rewardResp.rank_expires_at ?? userState.rank_expires_at,
-        ton_balance: rewardResp.ton_balance ?? userState.ton_balance
-      });
+    // Через 2.5 секунды обновим баланс и энергию (на случай небольшой задержки постбэка)
+    setTimeout(async () => {
+      try {
+        const fresh = await API.getUser();
+        if (fresh) {
+          userState = normalizeUserState(fresh);
+          syncEnergyBase();
+          updateUI();
+        }
+      } catch (_) {}
+    }, 2500);
 
-      syncEnergyBase();
-      updateUI();
-      safeAlert(t().adRewardOk);
-      return;
-    }
-
-    if (
-      rewardResp?.error === "ad_not_verified" ||
-      rewardResp?.error === "ad_already_claimed"
-    ) {
-      safeAlert(t().adWatchFail);
-      return;
-    }
-
-    safeAlert(t().adRewardFail);
   } catch (e) {
     console.error("showAds error:", e);
-
     const adErrText = parseAdErrorMessage(e);
     if (isMonetagCancelResult(adErrText)) {
       safeAlert(t().adWatchFail);
-      return;
+    } else {
+      safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
     }
-
-    safeAlert(`${t().adOpenFail}\n\n${t().adCooldownHint}`);
   } finally {
     adFlowLocked = false;
     setAdsButtonBusy(false);
