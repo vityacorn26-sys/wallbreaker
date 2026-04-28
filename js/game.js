@@ -2791,11 +2791,26 @@ window.showAds = async () => {
     const tgUser = API.getTelegramUser?.() || null;
     const telegramId = tgUser?.id ? String(tgUser.id) : "anon";
     const ymid = `wbad_${telegramId}_${Date.now()}`;
-
+    
     await showRewarded({ ymid });
 
-    // ===== НОВОЕ: награда теперь начисляется автоматически через постбэк Monetag =====
-    safeAlert(t().adRewardOk);
+    // 🔥 ВАЖНО: дергаем сервер для начисления награды
+    const rewardResult = await API.claimAdReward(ymid);
+
+    if (rewardResult?.success) {
+      safeAlert(t().adRewardOk);
+
+    const fresh = await API.getUser();
+    if (fresh) {
+      userState = normalizeUserState(fresh);
+      syncEnergyBase();
+      updateUI();
+    }
+
+  } else {
+    console.error('AD REWARD ERROR:', rewardResult);
+    safeAlert('Ошибка начисления награды');
+  }
 
     // Через 2.5 секунды обновим баланс и энергию (на случай небольшой задержки постбэка)
     setTimeout(async () => {
