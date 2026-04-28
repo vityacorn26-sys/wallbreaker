@@ -84,7 +84,10 @@ const API = {
 
   async claimAdReward(ymid) {
     try {
-      return await this.post('/api/ad-reward', { ymid });
+      return await this.post('/api/ad-reward', {
+        ymid,
+        initData: window.Telegram.WebApp.initData
+      });
     } catch (e) {
       console.error('API Error (claimAdReward):', e);
       return {
