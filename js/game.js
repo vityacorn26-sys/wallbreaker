@@ -2794,7 +2794,9 @@ window.showAds = async () => {
     
     await showRewarded({ ymid });
 
-    // 🔥 ВАЖНО: дергаем сервер для начисления награды
+    // ⏳ Ждём постбэк click
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
     const rewardResult = await API.claimAdReward(ymid);
 
     if (rewardResult?.success) {
