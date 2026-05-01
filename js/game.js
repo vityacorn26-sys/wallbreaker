@@ -1655,9 +1655,23 @@ async function refreshUserSilently() {
     if (!fresh) return false;
 
     userState = normalizeUserState(fresh);
+
     syncEnergyBase();
     updateUI();
+
+    // ===== LIVE SCORE SYNC (с сервера) =====
+    if (fresh && fresh.score && fresh.score.recomputed !== undefined) {
+      lastLiveScore = Number(fresh.score.recomputed || 0);
+
+      updateLiveScoreUI(
+        lastLiveScore,
+        0,
+        ""
+      );
+    }
+
     return true;
+
   } catch (e) {
     console.error("refreshUserSilently error:", e);
     return false;
