@@ -1951,3 +1951,57 @@ body.wb-fullpanel-open #bottom-tabbar {
 .score-sync {
   color: #8a93a0;
 }
+
+#live-score-box {
+  position: absolute;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+  text-align: center;
+}
+
+#live-score-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #b9f5ff; /* серебристый, НЕ белый */
+  text-shadow: 0 0 10px rgba(120,255,255,0.25);
+}
+
+#live-score-delta {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ===== COLORS ===== */
+
+.score-float.tap {
+  color: #3ef7c9;
+}
+
+.score-float.ads {
+  color: #ff7ad9;
+}
+
+.score-float.ref {
+  color: #9eff6b;
+}
+
+.score-float.ton {
+  color: #4ea6ff;
+}
+
+.score-float.stars {
+  color: #ffd54a;
+}
+
+/* label через псевдо */
+#live-score-delta::after {
+  content: attr(data-label);
+  display: block;
+  font-size: 9px;
+  opacity: 0.7;
+}
