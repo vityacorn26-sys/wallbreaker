@@ -1914,3 +1914,40 @@ body.wb-fullpanel-open #bottom-tabbar {
   45%{transform:scale(1.08) rotate(1deg);opacity:1;}
   100%{transform:scale(1) rotate(0deg);opacity:1;}
 }
+
+/* ===== LIVE SCORE COLORS ===== */
+
+/* CORE TAP — кибер бирюза */
+.score-core {
+  color: #00ffe0;
+  text-shadow: 0 0 10px rgba(0,255,224,0.45);
+}
+
+/* ADS — красный (агрессивный буст) */
+.score-ads {
+  color: #ff4d6d;
+  text-shadow: 0 0 10px rgba(255,77,109,0.4);
+}
+
+/* REF — золото */
+.score-ref {
+  color: #ffd166;
+  text-shadow: 0 0 10px rgba(255,209,102,0.4);
+}
+
+/* TON — СИНИЙ (как ты сказал) */
+.score-ton {
+  color: #3da5ff;
+  text-shadow: 0 0 12px rgba(61,165,255,0.45);
+}
+
+/* STARS — ЖЁЛТЫЙ */
+.score-stars {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255,215,0,0.45);
+}
+
+/* SYNC — нейтраль */
+.score-sync {
+  color: #8a93a0;
+}
