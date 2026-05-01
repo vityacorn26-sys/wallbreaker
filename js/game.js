@@ -90,21 +90,34 @@ function updateLiveScoreUI(score, delta = 0, label = "") {
   const box = document.getElementById("live-score-value");
   const deltaBox = document.getElementById("live-score-delta");
 
-  if (box) box.textContent = Number(score || 0).toFixed(2);
+  if (box) {
+    box.textContent = Number(score || 0).toFixed(2);
+  }
 
   if (deltaBox && delta !== 0) {
-    deltaBox.textContent = `${delta > 0 ? "+" : ""}${Number(delta).toFixed(2)} ${label}`;
+    // фикс ширины → НЕТ дёргания
+    deltaBox.style.minWidth = "110px";
 
-    deltaBox.className = "score-float " + (
-      label.includes("ADS") ? "ads" :
-      label.includes("TAP") ? "tap" :
-      label.includes("REF") ? "ref" :
-      "default"
-    );
+    deltaBox.textContent = `${delta > 0 ? "+" : ""}${Number(delta).toFixed(2)}`;
+
+    // ЧИСТАЯ логика типов (без includes)
+    let cls = "default";
+
+    if (label === "CORE TAP") cls = "tap";
+    else if (label === "ADS REWARD") cls = "ads";
+    else if (label === "REF BONUS") cls = "ref";
+    else if (label === "TON BUY") cls = "ton";
+    else if (label === "STARS BUY") cls = "stars";
+
+    deltaBox.className = "score-float " + cls;
+
+    // label отдельно → не ломает ширину
+    deltaBox.setAttribute("data-label", label);
 
     setTimeout(() => {
       deltaBox.textContent = "";
-    }, 1500);
+      deltaBox.removeAttribute("data-label");
+    }, 1200);
   }
 
   lastLiveScore = score;
