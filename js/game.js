@@ -1286,6 +1286,17 @@ async function loadUser() {
     await loadWithdrawStatus();
     await refreshDrawStatusGlobal();
 
+    // ===== INIT LIVE SCORE =====
+    if (data && data.score && data.score.recomputed !== undefined) {
+      lastLiveScore = Number(data.score.recomputed || 0);
+
+      updateLiveScoreUI(
+        lastLiveScore,
+        0,
+        ""
+      );
+    }
+
     applyTexts();
     startLocalEnergyTicker();
     showGameScreen();
