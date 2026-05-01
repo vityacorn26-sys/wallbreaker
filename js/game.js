@@ -84,6 +84,32 @@ let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
+let lastLiveScore = 0;
+
+function updateLiveScoreUI(score, delta = 0, label = "") {
+  const box = document.getElementById("live-score-value");
+  const deltaBox = document.getElementById("live-score-delta");
+
+  if (box) box.textContent = Number(score || 0).toFixed(2);
+
+  if (deltaBox && delta !== 0) {
+    deltaBox.textContent = `${delta > 0 ? "+" : ""}${Number(delta).toFixed(2)} ${label}`;
+
+    deltaBox.className = "score-float " + (
+      label.includes("ADS") ? "ads" :
+      label.includes("TAP") ? "tap" :
+      label.includes("REF") ? "ref" :
+      "default"
+    );
+
+    setTimeout(() => {
+      deltaBox.textContent = "";
+    }, 1500);
+  }
+
+  lastLiveScore = score;
+}
+
 let adFlowLocked = false;
 let tonBuyLocked = false;
 let starsBuyLocked = false;
@@ -1668,8 +1694,15 @@ window.handleTap = () => {
 
   tapQueue += 1;
   userState.energy = Math.max(0, visibleEnergy - 1);
+
   syncEnergyBase();
   updateUI();
+
+  updateLiveScoreUI(
+    lastLiveScore + 1.2,
+    1.2,
+    "CORE TAP"
+  );
 
   if (tapFlushTimer) clearTimeout(tapFlushTimer);
   tapFlushTimer = setTimeout(() => {
