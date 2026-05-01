@@ -1286,9 +1286,23 @@ async function loadUser() {
     await loadWithdrawStatus();
     await refreshDrawStatusGlobal();
 
-    // ===== INIT LIVE SCORE =====
-    if (data && data.score && data.score.recomputed !== undefined) {
-      lastLiveScore = Number(data.score.recomputed || 0);
+    // ===== INIT LIVE SCORE (robust) =====
+    let serverScore = 0;
+
+    if (data) {
+      if (data.score && data.score.recomputed !== undefined) {
+        serverScore = Number(data.score.recomputed || 0);
+      }
+      else if (data.draw_stats && data.draw_stats.score_cached !== undefined) {
+        serverScore = Number(data.draw_stats.score_cached || 0);
+      }
+      else if (data.user && data.user.draw_score_cached !== undefined) {
+        serverScore = Number(data.user.draw_score_cached || 0);
+      }
+    }
+
+    if (serverScore > 0) {
+      lastLiveScore = serverScore;
 
       updateLiveScoreUI(
         lastLiveScore,
