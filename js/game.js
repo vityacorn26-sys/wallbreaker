@@ -87,43 +87,47 @@ let lastServerEnergy = 100;
 let lastLiveScore = parseFloat(localStorage.getItem('wb_last_live_score') || '0');
 
 function updateLiveScoreUI(score, delta = 0, label = "") {
-  const box = document.getElementById("live-score-value");
-  const deltaBox = document.getElementById("live-score-delta");
+  if (window.LiveScoreAnimator) {
+    LiveScoreAnimator.renderLiveScoreDelta(delta, label);
 
-  if (box) {
-    box.textContent = Number(score || 0).toFixed(2);
+    const targetScore = Number(score || 0);
+    const currentScore = Number(lastLiveScore || 0);
+    let displayTarget = targetScore;
+
+    if (targetScore < currentScore) {
+      const diff = currentScore - targetScore;
+      const maxStep = Math.min(2.0, Math.max(diff * 0.28, 0.25));
+      if (diff > 1.5) {
+        displayTarget = currentScore - maxStep;
+      }
+    }
+
+    const duration = targetScore < currentScore ? 0.8 : 0.55;
+
+    LiveScoreAnimator.animateLiveScoreTo(
+      displayTarget,
+      currentScore,
+      duration,
+      (value) => {
+        const box = document.getElementById("live-score-value");
+        if (box) {
+          box.textContent = Number(value || 0).toFixed(2);
+        }
+        lastLiveScore = value;
+      },
+      (finalValue) => {
+        lastLiveScore = finalValue;
+        localStorage.setItem("wb_last_live_score", Number(finalValue).toFixed(2));
+      }
+    );
+  } else {
+    const box = document.getElementById("live-score-value");
+    if (box) {
+      box.textContent = Number(score || 0).toFixed(2);
+    }
+    lastLiveScore = Number(score || 0);
+    localStorage.setItem("wb_last_live_score", Number(score || 0).toFixed(2));
   }
-
-  if (deltaBox && delta > 0) {
-    // фикс ширины → НЕТ дёргания
-    deltaBox.style.minWidth = "110px";
-
-    deltaBox.textContent = `+${Number(delta).toFixed(2)}`;
-
-    // ЧИСТАЯ логика типов (без includes)
-    let cls = "default";
-
-    if (label === "CORE TAP") cls = "tap";
-    else if (label === "ADS REWARD") cls = "ads";
-    else if (label === "REF BONUS") cls = "ref";
-    else if (label === "TON BUY") cls = "ton";
-    else if (label === "STARS BUY") cls = "stars";
-
-    deltaBox.className = "score-float " + cls;
-
-    // label отдельно → не ломает ширину
-    deltaBox.setAttribute("data-label", label);
-    deltaBox.style.opacity = "1";
-    deltaBox.style.transform = "translateX(-50%) translateY(0)";
-
-    setTimeout(() => {
-      deltaBox.textContent = "";
-      deltaBox.removeAttribute("data-label");
-      deltaBox.style.opacity = "0";
-    }, 1200);
-  }
-
-  lastLiveScore = score;
 }
 
 function getLiveScoreFromData(data) {
@@ -154,8 +158,6 @@ function syncLiveScoreUI(data, label = "") {
 
   const delta = Number(nextScore - Number(lastLiveScore || 0));
   updateLiveScoreUI(nextScore, delta, label);
-  lastLiveScore = nextScore;
-  localStorage.setItem('wb_last_live_score', nextScore.toString());
 }
 
 let adFlowLocked = false;

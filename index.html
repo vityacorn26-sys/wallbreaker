@@ -90,9 +90,28 @@
       <span id="balance-currency">$WBC</span>
     </div>
 
-    <div id="live-score-box">
-      <div id="live-score-value">0</div>
-      <div id="live-score-delta"></div>
+    <div id="live-score-box" aria-label="Live score cloud">
+      <svg class="live-score-bg" viewBox="0 0 220 120" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="liveScoreGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+            <stop offset="45%" stop-color="rgba(255, 255, 255, 0.78)" />
+            <stop offset="100%" stop-color="rgba(255, 255, 255, 0.62)" />
+          </linearGradient>
+          <filter id="liveScoreGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <path d="M29.0,38.5C17.5,38.5,10.0,47.9,8.2,55.0C4.7,55.5,1.7,57.6,0.3,60.8C-1.1,64.0,-0.0,68.3,2.6,71.7C-0.2,78.4,3.5,84.9,10.1,88.0C9.8,94.6,14.3,100.2,20.7,101.7C26.4,111.4,35.5,117.0,45.9,117.0C55.0,117.0,63.8,112.1,69.7,104.8C82.6,108.6,97.2,108.4,108.8,101.0C123.4,108.4,141.3,110.3,152.6,99.8C164.2,89.0,168.1,65.3,152.7,55.7C158.9,51.9,161.7,45.1,161.1,38.9C165.8,36.7,169.8,32.7,171.2,27.4C172.7,21.6,171.0,15.5,167.2,10.8C162.1,4.8,154.2,1.7,145.8,1.7C137.8,1.7,129.9,4.3,123.4,9.1C114.6,3.8,104.6,1.7,94.5,1.7C79.0,1.7,63.5,4.6,52.0,14.2C44.1,6.1,35.5,1.7,26.5,1.7C17.7,1.7,9.3,5.9,3.5,13.1C-0.7,18.3,0.5,27.5,4.6,33.9C9.1,41.1,18.0,38.5,29.0,38.5Z" fill="url(#liveScoreGradient)" filter="url(#liveScoreGlow)" />
+      </svg>
+      <div class="live-score-content">
+        <div id="live-score-value">0</div>
+        <div id="live-score-delta"></div>
+      </div>
     </div>
     
     <div id="cat-box" onclick="handleTap()">
@@ -476,6 +495,8 @@
   
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="js/animations.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
