@@ -1954,29 +1954,84 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 #live-score-box {
   position: fixed;
-
   top: 110px;
   right: 12px;
-
   z-index: 30;
   pointer-events: none;
-
+  width: 190px;
+  min-height: 118px;
+  padding: 18px 16px;
+  border-radius: 90px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.55) 26%, rgba(255, 255, 255, 0.18) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 18px 50px rgba(255, 110, 216, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  animation: live-score-cloud-breathe 7s ease-in-out infinite;
+}
+
+#live-score-box::before,
+#live-score-box::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+}
+
+#live-score-box::before {
+  width: 72px;
+  height: 72px;
+  top: -22px;
+  left: 14px;
+}
+
+#live-score-box::after {
+  width: 48px;
+  height: 48px;
+  top: -14px;
+  right: 18px;
 }
 
 #live-score-value {
-  font-size: 12px;
-  font-weight: 800;
-  color: #b9f5ff;
-  text-shadow: 0 0 10px rgba(120,255,255,0.25);
+  position: relative;
+  z-index: 1;
+  font-size: 28px;
+  font-weight: 900;
+  color: #ff5bd6;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 16px rgba(255, 91, 214, 0.45),
+    0 0 24px rgba(255, 91, 214, 0.24);
 }
 
 #live-score-delta {
-  font-size: 11px;
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 1;
+  min-width: 110px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 12px;
   font-weight: 700;
-  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+  pointer-events: none;
+}
+
+#live-score-delta.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* ===== COLORS ===== */
@@ -1986,11 +2041,11 @@ body.wb-fullpanel-open #bottom-tabbar {
 }
 
 .score-float.ads {
-  color: #ff7ad9;
+  color: #55ff7f;
 }
 
 .score-float.ref {
-  color: #9eff6b;
+  color: #d36dff;
 }
 
 .score-float.ton {
@@ -2006,5 +2061,14 @@ body.wb-fullpanel-open #bottom-tabbar {
   content: attr(data-label);
   display: block;
   font-size: 9px;
-  opacity: 0.7;
+  opacity: 0.75;
+}
+
+@keyframes live-score-cloud-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }

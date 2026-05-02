@@ -64,6 +64,15 @@ const API = {
     }
   },
 
+  async getUserLiveScore() {
+    try {
+      return await this.post('/api/user/live-score');
+    } catch (e) {
+      console.error('API Error (getUserLiveScore):', e);
+      return null;
+    }
+  },
+
   async sendTap() {
     try {
       return await this.post('/api/tap');

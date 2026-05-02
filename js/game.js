@@ -113,14 +113,43 @@ function updateLiveScoreUI(score, delta = 0, label = "") {
 
     // label отдельно → не ломает ширину
     deltaBox.setAttribute("data-label", label);
+    deltaBox.style.opacity = "1";
+    deltaBox.style.transform = "translateX(-50%) translateY(0)";
 
     setTimeout(() => {
       deltaBox.textContent = "";
       deltaBox.removeAttribute("data-label");
+      deltaBox.style.opacity = "0";
     }, 1200);
   }
 
   lastLiveScore = score;
+}
+
+function getLiveScoreFromData(data) {
+  if (!data || typeof data !== "object") return null;
+
+  if (data.score?.recomputed != null) {
+    return Number(data.score.recomputed || 0);
+  }
+
+  if (data.draw_stats?.score_cached != null) {
+    return Number(data.draw_stats.score_cached || 0);
+  }
+
+  if (data.user?.draw_score_cached != null) {
+    return Number(data.user.draw_score_cached || 0);
+  }
+
+  return null;
+}
+
+function syncLiveScoreUI(data, label = "") {
+  const nextScore = getLiveScoreFromData(data);
+  if (nextScore === null) return;
+
+  const delta = Number(nextScore - Number(lastLiveScore || 0));
+  updateLiveScoreUI(nextScore, delta, label);
 }
 
 let adFlowLocked = false;
@@ -1287,28 +1316,13 @@ async function loadUser() {
     await refreshDrawStatusGlobal();
 
     // ===== INIT LIVE SCORE (robust) =====
-    let serverScore = 0;
-
-    if (data) {
-      if (data.score && data.score.recomputed !== undefined) {
-        serverScore = Number(data.score.recomputed || 0);
+    const liveScoreData = await API.getUserLiveScore();
+    if (liveScoreData) {
+      const serverScore = getLiveScoreFromData(liveScoreData);
+      if (serverScore !== null) {
+        lastLiveScore = serverScore;
+        updateLiveScoreUI(lastLiveScore, 0, "");
       }
-      else if (data.draw_stats && data.draw_stats.score_cached !== undefined) {
-        serverScore = Number(data.draw_stats.score_cached || 0);
-      }
-      else if (data.user && data.user.draw_score_cached !== undefined) {
-        serverScore = Number(data.user.draw_score_cached || 0);
-      }
-    }
-
-    if (serverScore > 0) {
-      lastLiveScore = serverScore;
-
-      updateLiveScoreUI(
-        lastLiveScore,
-        0,
-        ""
-      );
     }
 
     applyTexts();
@@ -1537,6 +1551,7 @@ async function buyRankForTon(rankId) {
 
     syncEnergyBase();
     updateUI();
+    await refreshUserSilently("TON BUY");
     closeAllPanels();
     safeAlert(t().tonRankActivated);
   } catch (e) {
@@ -1632,6 +1647,7 @@ async function buyRankForStars(rankId) {
 
     syncEnergyBase();
     updateUI();
+    await refreshUserSilently("STARS BUY");
     closeAllPanels();
     safeAlert(t().starsRankActivated);
   } catch (e) {
@@ -1674,7 +1690,7 @@ function animateTap() {
   }, 45);
 }
 
-async function refreshUserSilently() {
+async function refreshUserSilently(label = "") {
   try {
     const fresh = await API.getUser();
     if (!fresh) return false;
@@ -1685,16 +1701,10 @@ async function refreshUserSilently() {
     updateUI();
 
     // ===== LIVE SCORE SYNC (с сервера) =====
-    if (fresh && fresh.score && fresh.score.recomputed !== undefined) {
-      lastLiveScore = Number(fresh.score.recomputed || 0);
-
-      updateLiveScoreUI(
-        lastLiveScore,
-        0,
-        ""
-      );
+    const liveScoreData = await API.getUserLiveScore();
+    if (liveScoreData) {
+      syncLiveScoreUI(liveScoreData, label);
     }
-
     return true;
 
   } catch (e) {
@@ -2887,17 +2897,22 @@ window.showAds = async () => {
     if (rewardResult?.success) {
       safeAlert(t().adRewardOk);
 
-    const fresh = await API.getUser();
-    if (fresh) {
-      userState = normalizeUserState(fresh);
-      syncEnergyBase();
-      updateUI();
-    }
+      const fresh = await API.getUser();
+      if (fresh) {
+        userState = normalizeUserState(fresh);
+        syncEnergyBase();
+        updateUI();
+      }
 
-  } else {
-    console.error('AD REWARD ERROR:', rewardResult);
-    safeAlert('Ошибка начисления награды');
-  }
+      const liveScoreData = await API.getUserLiveScore();
+      if (liveScoreData) {
+        syncLiveScoreUI(liveScoreData, "ADS REWARD");
+      }
+
+    } else {
+      console.error('AD REWARD ERROR:', rewardResult);
+      safeAlert('Ошибка начисления награды');
+    }
 
     // Через 2.5 секунды обновим баланс и энергию (на случай небольшой задержки постбэка)
     setTimeout(async () => {
