@@ -1702,8 +1702,19 @@ async function refreshUserSilently(label = "") {
     // ===== LIVE SCORE SYNC (с сервера) =====
     const liveScoreData = await API.getUserLiveScore();
     if (liveScoreData) {
-      syncLiveScoreUI(liveScoreData, label);
+      lastLiveScore = Number(
+        liveScoreData?.score?.recomputed ??
+        liveScoreData?.score ??
+        0
+      );
+
+      updateLiveScoreUI(
+        lastLiveScore,
+        0,
+        ""
+      );
     }
+    
     return true;
 
   } catch (e) {
@@ -1748,15 +1759,22 @@ async function processTapQueue() {
 }
 
 window.handleTap = () => {
-  const visibleEnergy = Number(userState.energy || 0);
+  const visibleEnergy = getRenderedEnergy();
   if ((visibleEnergy - tapQueue) <= 0) return;
 
   animateTap();
 
   tapQueue += 1;
+  userState.energy = Math.max(0, visibleEnergy - 1);
+
+  syncEnergyBase();
+  updateUI();
+
+  // ✔ локальный мгновенный UI апдейт
+  const optimisticScore = (lastLiveScore || 0) + 1.2;
 
   updateLiveScoreUI(
-    lastLiveScore,
+    optimisticScore,
     1.2,
     "CORE TAP"
   );
