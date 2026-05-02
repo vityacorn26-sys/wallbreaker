@@ -1961,21 +1961,29 @@ body.wb-fullpanel-open #bottom-tabbar {
   width: 190px;
   min-height: 118px;
   padding: 18px 16px;
-  border-radius: 90px;
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.55) 26%, rgba(255, 255, 255, 0.18) 62%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
     0 18px 50px rgba(255, 110, 216, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    /* Перелив цветов по краям */
+    0 0 0 2px rgba(63, 255, 223, 0.3),
+    0 0 0 4px rgba(255, 30, 182, 0.2),
+    0 0 0 6px rgba(89, 158, 255, 0.1);
   backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  animation: live-score-cloud-breathe 7s ease-in-out infinite;
+  /* Волнистая форма облака */
+  clip-path: polygon(
+    0% 20%, 5% 15%, 15% 15%, 25% 10%, 35% 15%, 45% 10%, 55% 15%, 65% 10%, 75% 15%, 85% 10%, 95% 15%, 100% 20%,
+    100% 80%, 95% 85%, 85% 90%, 75% 85%, 65% 90%, 55% 85%, 45% 90%, 35% 85%, 25% 90%, 15% 85%, 5% 90%, 0% 80%
+  );
+  animation: live-score-cloud-breathe 4s ease-in-out infinite;
 }
 
 #live-score-box::before,
@@ -2066,9 +2074,9 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 @keyframes live-score-cloud-breathe {
   0%, 100% {
-    transform: scale(1);
+    transform: scale(1) translateY(0px);
   }
   50% {
-    transform: scale(1.02);
+    transform: scale(1.03) translateY(-2px);
   }
 }

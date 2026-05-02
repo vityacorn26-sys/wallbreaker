@@ -84,7 +84,7 @@ let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
 
-let lastLiveScore = 0;
+let lastLiveScore = parseFloat(localStorage.getItem('wb_last_live_score') || '0');
 
 function updateLiveScoreUI(score, delta = 0, label = "") {
   const box = document.getElementById("live-score-value");
@@ -129,6 +129,10 @@ function updateLiveScoreUI(score, delta = 0, label = "") {
 function getLiveScoreFromData(data) {
   if (!data || typeof data !== "object") return null;
 
+  if (data.live_score != null) {
+    return Number(data.live_score || 0);
+  }
+
   if (data.score?.recomputed != null) {
     return Number(data.score.recomputed || 0);
   }
@@ -150,6 +154,8 @@ function syncLiveScoreUI(data, label = "") {
 
   const delta = Number(nextScore - Number(lastLiveScore || 0));
   updateLiveScoreUI(nextScore, delta, label);
+  lastLiveScore = nextScore;
+  localStorage.setItem('wb_last_live_score', nextScore.toString());
 }
 
 let adFlowLocked = false;
@@ -1321,6 +1327,7 @@ async function loadUser() {
       const serverScore = getLiveScoreFromData(liveScoreData);
       if (serverScore !== null) {
         lastLiveScore = serverScore;
+        localStorage.setItem('wb_last_live_score', serverScore.toString());
         updateLiveScoreUI(lastLiveScore, 0, "");
       }
     }
