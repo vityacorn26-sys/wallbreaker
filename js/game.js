@@ -92,20 +92,10 @@ function updateLiveScoreUI(score, delta = 0, label = "") {
 
     const targetScore = Number(score || 0);
     const currentScore = Number(lastLiveScore || 0);
-    let displayTarget = targetScore;
-
-    if (targetScore < currentScore) {
-      const diff = currentScore - targetScore;
-      const maxStep = Math.min(2.0, Math.max(diff * 0.28, 0.25));
-      if (diff > 1.5) {
-        displayTarget = currentScore - maxStep;
-      }
-    }
-
-    const duration = targetScore < currentScore ? 0.8 : 0.55;
+    const duration = targetScore === currentScore ? 0 : 0.55;
 
     LiveScoreAnimator.animateLiveScoreTo(
-      displayTarget,
+      targetScore,
       currentScore,
       duration,
       (value) => {
@@ -3078,6 +3068,13 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       e.stopPropagation();
       window.open("https://t.me/hiddifyProxySale_bot", "_blank");
+    });
+  }
+
+  const catBox = document.getElementById("cat-box");
+  if (catBox) {
+    catBox.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
     });
   }
 
