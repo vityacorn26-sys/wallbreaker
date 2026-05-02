@@ -1760,11 +1760,8 @@ window.handleTap = () => {
   syncEnergyBase();
   updateUI();
 
-  // ✔ локальный мгновенный UI апдейт
-  const optimisticScore = (lastLiveScore || 0) + 1.2;
-
   updateLiveScoreUI(
-    optimisticScore,
+    lastLiveScore,
     1.2,
     "CORE TAP"
   );
