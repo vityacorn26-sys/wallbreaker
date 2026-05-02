@@ -1700,9 +1700,14 @@ async function refreshUserSilently(label = "") {
     updateUI();
 
     // ===== LIVE SCORE SYNC (с сервера) =====
-    const liveScoreData = await API.getUserLiveScore();
-    if (liveScoreData) {
-      syncLiveScoreUI(liveScoreData, label);
+    if (fresh?.score?.recomputed !== undefined) {
+      lastLiveScore = Number(fresh.score.recomputed || 0);
+
+      updateLiveScoreUI(
+        lastLiveScore,
+        0,
+        ""
+      );
     }
     
     return true;
@@ -1761,7 +1766,7 @@ window.handleTap = () => {
   updateUI();
 
   updateLiveScoreUI(
-    lastLiveScore +1.2,
+    lastLiveScore + 1.2,
     1.2,
     "CORE TAP"
   );
