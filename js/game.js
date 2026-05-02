@@ -1761,7 +1761,7 @@ window.handleTap = () => {
   updateUI();
 
   updateLiveScoreUI(
-    lastLiveScore,
+    lastLiveScore +1.2,
     1.2,
     "CORE TAP"
   );
