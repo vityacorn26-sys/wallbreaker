@@ -1748,19 +1748,15 @@ async function processTapQueue() {
 }
 
 window.handleTap = () => {
-  const visibleEnergy = getRenderedEnergy();
+  const visibleEnergy = Number(userState.energy || 0);
   if ((visibleEnergy - tapQueue) <= 0) return;
 
   animateTap();
 
   tapQueue += 1;
-  userState.energy = Math.max(0, visibleEnergy - 1);
-
-  syncEnergyBase();
-  updateUI();
 
   updateLiveScoreUI(
-    lastLiveScore + 1.2,
+    lastLiveScore,
     1.2,
     "CORE TAP"
   );
