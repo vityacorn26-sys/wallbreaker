@@ -1702,17 +1702,7 @@ async function refreshUserSilently(label = "") {
     // ===== LIVE SCORE SYNC (с сервера) =====
     const liveScoreData = await API.getUserLiveScore();
     if (liveScoreData) {
-      lastLiveScore = Number(
-        liveScoreData?.score?.recomputed ??
-        liveScoreData?.score ??
-        0
-      );
-
-      updateLiveScoreUI(
-        lastLiveScore,
-        0,
-        ""
-      );
+      syncLiveScoreUI(liveScoreData, label);
     }
     
     return true;
