@@ -1989,19 +1989,7 @@ body.wb-fullpanel-open #bottom-tabbar {
 }
 
 #live-score-box::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 54px;
-  background:
-    radial-gradient(circle at 20% 24%, rgba(255, 255, 255, 0.36), transparent 24%),
-    radial-gradient(circle at 84% 28%, rgba(196, 210, 237, 0.24), transparent 22%),
-    radial-gradient(circle at 52% 70%, rgba(174, 188, 214, 0.18), transparent 30%);
-  opacity: 0.78;
-  pointer-events: none;
-  filter: blur(18px);
-  animation: live-score-glow-flow 6.5s ease-in-out infinite;
-  mix-blend-mode: screen;
+  display: none;
 }
 
 .live-score-content {

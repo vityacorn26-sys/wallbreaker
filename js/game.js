@@ -154,9 +154,16 @@ function initLiveScoreEffects() {
   if (!window.gsap) return;
 
   const liveScoreBox = document.getElementById("live-score-box");
+  const liveScoreValue = document.getElementById("live-score-value");
   const liveScorePath = document.querySelector(".live-score-bg path");
 
+  if (liveScoreValue) {
+    liveScoreValue.style.color = "#FFB6C1";
+    liveScoreValue.style.textShadow = "0 0 14px rgba(255,182,193,0.45), 0 0 28px rgba(255,182,193,0.22)";
+  }
+
   if (liveScoreBox) {
+    gsap.set(liveScoreBox, { transformOrigin: "50% 50%" });
     gsap.to(liveScoreBox, {
       scale: 1.05,
       duration: 0.8,
