@@ -910,9 +910,26 @@ async function buyNicknameForStars(newNickname) {
   starsBuyLocked = true;
 
   try {
-    const create = await API.createNicknameStarsPurchase();
+    const telegramUser = API.getTelegramUser();
+    const telegramId = String(telegramUser?.id || "");
+    const username = String(telegramUser?.username || "");
 
-    if (!create?.success) {
+    if (!telegramId) {
+      safeAlert(currentLang === "RU" ? "Telegram user not found." : "Telegram user not found.");
+      return;
+    }
+
+    const response = await fetch('/api/nickname/buy-stars/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ telegramId, username })
+    });
+
+    const create = await response.json();
+    if (!response.ok || !create?.success) {
       safeAlert(create?.error || t().starsCreateFail);
       return;
     }
@@ -926,7 +943,6 @@ async function buyNicknameForStars(newNickname) {
     }
 
     let invoiceStatus = "";
-
     try {
       invoiceStatus = await openTelegramInvoice(invoiceLink);
     } catch (e) {
@@ -935,23 +951,24 @@ async function buyNicknameForStars(newNickname) {
       return;
     }
 
-    if (invoiceStatus && invoiceStatus !== "paid") {
+    if (!invoiceStatus || invoiceStatus !== "paid") {
       safeAlert(t().starsCancelled);
       return;
     }
 
     safeAlert(t().starsPending);
 
-    const statusResp = await waitForNicknameStarsConfirmation(payload);
+    const confirmResponse = await fetch('/api/nickname/buy-stars/confirm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ telegramId, payload, nickname: newNickname })
+    });
 
-    if (!statusResp?.success || statusResp?.payment?.status !== "paid") {
-      safeAlert(t().starsTimeout);
-      return;
-    }
-
-    const confirmResp = await API.confirmNicknameStarsPurchase(payload, newNickname);
-
-    if (!confirmResp?.success) {
+    const confirmResp = await confirmResponse.json();
+    if (!confirmResponse.ok || !confirmResp?.success) {
       safeAlert(confirmResp?.error || t().starsCreateFail);
       return;
     }
@@ -964,7 +981,6 @@ async function buyNicknameForStars(newNickname) {
     syncEnergyBase();
     updateUI();
     await refreshUserSilently("NICKNAME STARS BUY");
-    
     safeAlert(
       currentLang === "RU"
         ? `Никнейм обновлён на "${newNickname}"`
@@ -2181,6 +2197,26 @@ async function openBreachBoard() {
   loadBreachBoard();
 }
 
+async function fetchLeaderboardData() {
+  try {
+    const response = await fetch('/api/leaderboard', {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Leaderboard fetch failed');
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error('fetchLeaderboardData error:', e);
+    return [];
+  }
+}
+
 window.closeBreachBoard = () => {
   const overlay = document.getElementById("breach-board-overlay");
   if (overlay) {
@@ -2217,21 +2253,12 @@ async function loadBreachBoard() {
     tbody.innerHTML = "";
 
     // Load leaderboard data
-    const data = await API.getLeaderboard();
+    const data = await fetchLeaderboardData();
     
-    // Sort by live score desc, then by last tap time desc
+    // Sort by live score desc and take top 5
     const sorted = (data || [])
-      .filter(p => p.public_nickname)
-      .sort((a, b) => {
-        const scoreA = Number(a.live_score || 0);
-        const scoreB = Number(b.live_score || 0);
-        
-        if (scoreA !== scoreB) return scoreB - scoreA;
-        
-        const tapA = Number(a.last_tap_time || 0);
-        const tapB = Number(b.last_tap_time || 0);
-        return tapB - tapA;
-      })
+      .filter(p => String(p.public_nickname || '').trim())
+      .sort((a, b) => Number(b.live_score || 0) - Number(a.live_score || 0))
       .slice(0, 5);
 
     // Create table rows with SVG backgrounds
@@ -2244,7 +2271,7 @@ async function loadBreachBoard() {
       const nickname = String(player.public_nickname || "User").substring(0, 30);
 
       row.innerHTML = `
-        <td class="breach-board-rank">#${rank}</td>
+        <td class="breach-board-rank">${rank}</td>
         <td class="breach-board-nickname">
           <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
           <span>${nickname}</span>
@@ -3394,7 +3421,10 @@ document.addEventListener("DOMContentLoaded", () => {
   applyInitialLanguage();
 
   if (window.API && typeof window.API === 'object') {
-    window.API.BASE_URL = getConfig().API_BASE || window.API.BASE_URL;
+    const localOrigin = (window.location && window.location.origin) ? window.location.origin : '';
+    if (localOrigin && localOrigin !== 'null') {
+      window.API.BASE_URL = localOrigin;
+    }
   }
   
   const gateway = document.getElementById("gateway");

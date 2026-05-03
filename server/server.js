@@ -15,6 +15,7 @@ db.prepare(`
     username TEXT,
     balance INTEGER DEFAULT 0,
     energy INTEGER DEFAULT 100,
+    live_score INTEGER DEFAULT 0,
     lastTap INTEGER,
     public_nickname TEXT DEFAULT '',
     nickname_manual INTEGER DEFAULT 0,
@@ -26,7 +27,8 @@ const userColumns = db.prepare('PRAGMA table_info(users)').all().map((row) => ro
 const userSchemaUpdates = [
   { name: 'public_nickname', sql: 'ALTER TABLE users ADD COLUMN public_nickname TEXT DEFAULT ""' },
   { name: 'nickname_manual', sql: 'ALTER TABLE users ADD COLUMN nickname_manual INTEGER DEFAULT 0' },
-  { name: 'nickname_free_used', sql: 'ALTER TABLE users ADD COLUMN nickname_free_used INTEGER DEFAULT 0' }
+  { name: 'nickname_free_used', sql: 'ALTER TABLE users ADD COLUMN nickname_free_used INTEGER DEFAULT 0' },
+  { name: 'live_score', sql: 'ALTER TABLE users ADD COLUMN live_score INTEGER DEFAULT 0' }
 ];
 
 for (const update of userSchemaUpdates) {
@@ -76,11 +78,34 @@ app.post('/api/user', (req, res) => {
       ...user,
       public_nickname: String(user.public_nickname || '').trim(),
       nickname_manual: Number(user.nickname_manual || 0),
-      nickname_free_used: Number(user.nickname_free_used || 0)
+      nickname_free_used: Number(user.nickname_free_used || 0),
+      live_score: Number(user.live_score || 0)
     });
   } catch (e) {
     console.error('/api/user error:', e);
     res.status(500).json({ error: 'User load error' });
+  }
+});
+
+app.get('/api/leaderboard', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT public_nickname, live_score
+      FROM users
+      WHERE public_nickname IS NOT NULL AND public_nickname != ''
+      ORDER BY live_score DESC, lastTap DESC
+      LIMIT 5
+    `).all();
+
+    const leaderboard = (rows || []).map((row) => ({
+      public_nickname: String(row.public_nickname || '').trim(),
+      live_score: Number(row.live_score || 0)
+    }));
+
+    res.json(leaderboard);
+  } catch (e) {
+    console.error('/api/leaderboard error:', e);
+    res.status(500).json({ error: 'Leaderboard load error' });
   }
 });
 
@@ -95,16 +120,18 @@ app.post('/api/tap', (req, res) => {
 
     const newBalance = user.balance + 10;
     const newEnergy = user.energy - 1;
+    const newLiveScore = Number(user.live_score || 0) + 10;
 
     db.prepare(`
       UPDATE users
-      SET balance = ?, energy = ?, lastTap = ?
+      SET balance = ?, energy = ?, live_score = ?, lastTap = ?
       WHERE telegramId = ?
-    `).run(newBalance, newEnergy, Date.now(), telegramId);
+    `).run(newBalance, newEnergy, newLiveScore, Date.now(), telegramId);
 
     res.json({
       balance: newBalance,
       energy: newEnergy,
+      live_score: newLiveScore,
       rank_id: 1,
       tapsProcessed: 1
     });
@@ -136,16 +163,18 @@ app.post('/api/tap-batch', (req, res) => {
     const tapsProcessed = Math.min(user.energy, requested);
     const newBalance = user.balance + (tapsProcessed * 10);
     const newEnergy = user.energy - tapsProcessed;
+    const newLiveScore = Number(user.live_score || 0) + (tapsProcessed * 10);
 
     db.prepare(`
       UPDATE users
-      SET balance = ?, energy = ?, lastTap = ?
+      SET balance = ?, energy = ?, live_score = ?, lastTap = ?
       WHERE telegramId = ?
-    `).run(newBalance, newEnergy, Date.now(), telegramId);
+    `).run(newBalance, newEnergy, newLiveScore, Date.now(), telegramId);
 
     res.json({
       balance: newBalance,
       energy: newEnergy,
+      live_score: newLiveScore,
       rank_id: 1,
       tapsProcessed
     });
@@ -183,7 +212,7 @@ app.post('/api/nickname/buy-stars/create', (req, res) => {
         status,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, 'paid', ?, ?)
+      ) VALUES (?, ?, ?, 'created', ?, ?)
     `).run(telegramId, 50, payload, now, now);
 
     return res.json({
@@ -245,10 +274,6 @@ app.post('/api/nickname/buy-stars/confirm', (req, res) => {
       return res.status(404).json({ success: false, error: 'payment_not_found' });
     }
 
-    if (String(payment.status || '') !== 'paid') {
-      return res.status(400).json({ success: false, error: 'payment_not_paid' });
-    }
-
     if (!isNicknameValid(nickname)) {
       return res.status(400).json({ success: false, error: 'nickname_invalid' });
     }
@@ -260,9 +285,9 @@ app.post('/api/nickname/buy-stars/confirm', (req, res) => {
     const now = Date.now();
     db.prepare(`
       UPDATE star_nickname_payments
-      SET new_nickname = ?, updatedAt = ?
+      SET status = 'paid', new_nickname = ?, updatedAt = ?, paidAt = ?
       WHERE invoice_payload = ?
-    `).run(nickname, now, payload);
+    `).run(nickname, now, now, payload);
 
     db.prepare(`
       UPDATE users
