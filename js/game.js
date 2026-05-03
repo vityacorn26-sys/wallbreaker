@@ -131,6 +131,14 @@ function getLiveScoreFromData(data) {
     return Number(data.score.recomputed || 0);
   }
 
+  if (data.score?.cached != null) {
+    return Number(data.score.cached || 0);
+  }
+
+  if (data.cached_score != null) {
+    return Number(data.cached_score || 0);
+  }
+
   if (data.draw_stats?.score_cached != null) {
     return Number(data.draw_stats.score_cached || 0);
   }
@@ -163,6 +171,7 @@ function initLiveScoreEffects() {
   }
 
   if (liveScoreBox) {
+    liveScoreBox.style.color = "#FFB6C1";
     gsap.set(liveScoreBox, { transformOrigin: "50% 50%" });
     gsap.to(liveScoreBox, {
       scale: 1.05,
