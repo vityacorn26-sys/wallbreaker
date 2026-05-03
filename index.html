@@ -490,6 +490,38 @@
       </div>
     </div>
   </div>
+
+  <!-- BREACH BOARD OVERLAY -->
+  <div id="breach-board-overlay" class="panel-overlay hidden" aria-hidden="true">
+    <div class="wb-panel breach-board-panel" role="dialog" aria-labelledby="breach-board-title">
+      <h2 id="breach-board-title">BREACH BOARD</h2>
+      <button class="wb-back-btn" onclick="closeBreachBoard()">← BACK</button>
+      
+      <div class="breach-board-header">
+        <p>ELITE TOP-5 • LIVE SCORE RANKED</p>
+      </div>
+
+      <div id="breach-board-content" class="breach-board-content">
+        <div id="breach-board-loader" class="breach-board-loader">
+          <div class="scanner-text">Scanning Network...</div>
+          <div class="scanner-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <table id="breach-board-table" class="breach-board-table hidden">
+          <thead>
+            <tr>
+              <th class="rank-col">#</th>
+              <th class="nick-col">NICKNAME</th>
+              <th class="score-col">LIVE SCORE</th>
+            </tr>
+          </thead>
+          <tbody id="breach-board-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
   
   <!-- NOTIFY SYSTEM -->
   <div id="wb-notify-root"></div>

@@ -60,8 +60,8 @@ const ADS_HOUR_LIMIT = 15;
 const ADS_DAY_LIMIT = 48;
 
 const NICKNAME_RENAME_PRICE_WBC = 250000;
-const NICKNAME_RENAME_PRICE_STARS = 20;
-const NICKNAME_STARS_ENABLED = false;
+const NICKNAME_RENAME_PRICE_STARS = 50;
+const NICKNAME_STARS_ENABLED = true;
 
 if (!BOT_TOKEN) {
   console.error('❌ BOT_TOKEN is not set');
@@ -456,12 +456,16 @@ function regenEnergy(user) {
 
 const NICK_FIRST_PARTS = `
 Alex Adrian Aiden Arin Axel Blaze Cairo Dante Devin Elias Felix Gage Hugo Ivar Jax Kai Leon Luca Milan Nico Orion Pax Quentin Rafael Roman Theo Viktor Zane
+Nexus Cipher Phantom Vertex Quantum Syn Flux Byte Raze Blitz Ripper Slayer Venom Wraith Storm Titan Vortex Surge Pulse Echo Void Glitch Reaper Specter Hacker
 Aria Astra Ayla Bella Cora Elara Freya Iris Kaia Kara Luna Lyra Maia Mira Nadia Nika Nova Rhea Talia Vera Yuna Zara Selene Skye Nyra Vika Kira
+Morpho Serene Sable Aster Vex Pixel Lux Neon Siren Vesper Vortex Veritas Valkyrie Vida Vena Venus Vela Vale Vox Violet Vixen Void Vigil Viper Vapor
 `.trim().split(/\s+/);
 
 const NICK_LAST_PARTS = `
 Mercer Novak Volkov Voss Drake Frost Cross Vale Stone Mercer Thorn Vega Orion Blackwood Sterling Ward Kane Ryker Sable Arden Crow Fox Hale Knox Lynch
 Morrow North Quinn Reeve Slade Stark Vega Vance Wolfe York Zorin Ashford Calder Dorian Falcon Grayson Hayes Irons Jett Kestrel Locke Maddox Nash Pryce
+Chrome Matrix Sentinel Vector Titan Forge Spec Velocity Vanish Volt Vigil Vault Venture Vice Valiant Vex Vigor Virtue Vortex Vesper Void Viper Vigor Vane Valor
+Nexus Code Cipher Flux Zone Protocol Daemon Script Kernel Logic Bytes Bits Chip Cache Cycle Engine Flash Grid Hash Heap Link Node Pixel Query Regex Route
 `.trim().split(/\s+/);
 
 function generateRefCode() {
@@ -4646,6 +4650,35 @@ app.post('/telegram/webhook', async (req, res) => {
       const telegramId = String(update.message.from?.id || '');
       const now = Date.now();
 
+      // Handle nickname stars payments
+      if (payload.startsWith('wb_nick_')) {
+        db.prepare(`
+          INSERT OR IGNORE INTO star_nickname_payments (
+            telegramId,
+            amount_xtr,
+            invoice_payload,
+            telegram_payment_charge_id,
+            provider_payment_charge_id,
+            status,
+            createdAt,
+            updatedAt,
+            paidAt
+          ) VALUES (?, ?, ?, ?, ?, 'paid', ?, ?, ?)
+        `).run(
+          telegramId,
+          Number(sp.total_amount || 0),
+          payload,
+          sp.telegram_payment_charge_id || null,
+          sp.provider_payment_charge_id || null,
+          now,
+          now,
+          now
+        );
+
+        return res.json({ ok: true });
+      }
+
+      // Handle rank stars payments
       db.prepare(`
         INSERT OR IGNORE INTO star_rank_payments (
           telegramId,
@@ -4716,6 +4749,187 @@ app.post('/telegram/webhook', async (req, res) => {
 });
 // ====== END STARS WEBHOOK ======
 
+
+// ===== NICKNAME STARS PAYMENTS =====
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS star_nickname_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    telegramId TEXT NOT NULL,
+    amount_xtr INTEGER NOT NULL,
+    invoice_payload TEXT NOT NULL UNIQUE,
+    telegram_payment_charge_id TEXT,
+    provider_payment_charge_id TEXT,
+    status TEXT NOT NULL DEFAULT 'created',
+    new_nickname TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    paidAt INTEGER
+  )
+`);
+
+app.post('/api/nickname/buy-stars/create', requireTelegramAuth, async (req, res) => {
+  try {
+    const telegramUser = req.telegramUser;
+    const amount = 50;
+    const payload = `wb_nick_${telegramUser.id}_${Date.now()}`;
+
+    const invoiceLink = await telegramBotApi('createInvoiceLink', {
+      title: 'WallBreaker Nickname Change',
+      description: 'Change your public nickname',
+      payload,
+      currency: 'XTR',
+      prices: [
+        {
+          label: 'Nickname Change',
+          amount: amount
+        }
+      ]
+    });
+
+    return res.json({
+      success: true,
+      invoice_link: invoiceLink,
+      payload
+    });
+
+  } catch (e) {
+    console.error('nickname stars create error:', e);
+    return res.status(500).json({
+      success: false,
+      error: 'stars_create_failed'
+    });
+  }
+});
+
+app.post('/api/nickname/buy-stars/status', requireTelegramAuth, (req, res) => {
+  try {
+    const telegramUser = req.telegramUser;
+    const payload = String(req.body?.payload || '').trim();
+
+    if (!payload) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_payload'
+      });
+    }
+
+    const payment = db.prepare(`
+      SELECT *
+      FROM star_nickname_payments
+      WHERE invoice_payload = ? AND telegramId = ?
+      LIMIT 1
+    `).get(payload, String(telegramUser.id));
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        error: 'payment_not_found'
+      });
+    }
+
+    return res.json({
+      success: true,
+      payment: {
+        status: String(payment.status || 'created'),
+        payload: payment.invoice_payload,
+        createdAt: Number(payment.createdAt || 0)
+      }
+    });
+  } catch (e) {
+    console.error('nickname stars status error:', e);
+    return res.status(500).json({
+      success: false,
+      error: 'stars_status_failed'
+    });
+  }
+});
+
+app.post('/api/nickname/buy-stars/confirm', requireTelegramAuth, (req, res) => {
+  try {
+    const telegramUser = req.telegramUser;
+    const payload = String(req.body?.payload || '').trim();
+    const newNickname = String(req.body?.nickname || '').trim();
+
+    if (!payload || !newNickname) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_fields'
+      });
+    }
+
+    const payment = db.prepare(`
+      SELECT *
+      FROM star_nickname_payments
+      WHERE invoice_payload = ? AND telegramId = ?
+      LIMIT 1
+    `).get(payload, String(telegramUser.id));
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        error: 'payment_not_found'
+      });
+    }
+
+    if (String(payment.status || '') !== 'paid') {
+      return res.status(400).json({
+        success: false,
+        error: 'payment_not_paid'
+      });
+    }
+
+    let user = getOrCreateUser(telegramUser);
+    user = ensureUserNickname(user);
+
+    if (!isNicknameValid(newNickname)) {
+      return res.status(400).json({
+        success: false,
+        error: 'nickname_invalid'
+      });
+    }
+
+    if (nicknameExists(newNickname, String(telegramUser.id))) {
+      return res.status(400).json({
+        success: false,
+        error: 'nickname_taken'
+      });
+    }
+
+    const now = Date.now();
+
+    db.prepare(`
+      UPDATE star_nickname_payments
+      SET status = ?, new_nickname = ?, updatedAt = ?
+      WHERE invoice_payload = ?
+    `).run('confirmed', newNickname, now, payload);
+
+    db.prepare(`
+      UPDATE users
+      SET public_nickname = ?,
+          nickname_manual = 1,
+          nickname_free_used = 1,
+          nickname_updatedAt = ?,
+          updatedAt = ?
+      WHERE telegramId = ?
+    `).run(newNickname, now, now, String(telegramUser.id));
+
+    return res.json({
+      success: true,
+      public_nickname: newNickname,
+      nickname_manual: 1,
+      nickname_free_used: 1,
+      mode: 'stars',
+      price_stars: 50
+    });
+  } catch (e) {
+    console.error('nickname stars confirm error:', e);
+    return res.status(500).json({
+      success: false,
+      error: 'nickname_confirm_failed'
+    });
+  }
+});
+// ===== END NICKNAME STARS PAYMENTS =====
 
 
 // ===== DRAW FINISH =====

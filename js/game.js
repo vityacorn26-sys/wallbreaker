@@ -827,6 +827,7 @@ async function requestNicknameChange() {
     return;
   }
 
+  // Try free change first (WBC)
   try {
     const resp = await fetch(`${getConfig().API_BASE}/api/profile/nickname/set`, {
       method: "POST",
@@ -839,39 +840,144 @@ async function requestNicknameChange() {
 
     const data = await resp.json().catch(() => null);
 
-    if (!data?.success) {
-      safeAlert(mapNicknameErrorMessage(data?.error));
+    if (data?.success) {
+      userState = normalizeUserState({
+        ...userState,
+        ...data,
+        balance: data.balance ?? userState.balance,
+        ton_balance: data.ton_balance ?? userState.ton_balance
+      });
+
+      updateUI();
+      await refreshUserSilently();
+
+      if (String(data.mode || "") === "wbc") {
+        safeAlert(
+          currentLang === "RU"
+            ? `Никнейм обновлён. Списано ${Number(data.price_wbc || 0).toLocaleString()} WBC.`
+            : `Nickname updated. ${Number(data.price_wbc || 0).toLocaleString()} WBC charged.`
+        );
+      } else {
+        safeAlert(
+          currentLang === "RU"
+            ? "Никнейм обновлён. Бесплатная смена использована."
+            : "Nickname updated. Free change used."
+        );
+      }
+      return;
+    }
+
+    // If free change not available, prompt for payment method
+    const hasWbc = Number(userState.balance || 0) >= 250000;
+    if (!hasWbc && data?.error === "nickname_no_wbc") {
+      const useStars = confirm(
+        currentLang === "RU"
+          ? "Недостаточно WBC. Изменить за 50 Telegram Stars?"
+          : "Not enough WBC. Change nickname for 50 Telegram Stars?"
+      );
+
+      if (useStars) {
+        await buyNicknameForStars(nickname);
+      }
+      return;
+    }
+
+    safeAlert(mapNicknameErrorMessage(data?.error));
+  } catch (e) {
+    console.error("requestNicknameChange error:", e);
+    safeAlert(currentLang === "RU" ? "Не удалось изменить никнейм." : "Failed to change nickname.");
+  }
+}
+
+async function buyNicknameForStars(newNickname) {
+  if (starsBuyLocked) {
+    safeAlert(t().starsBuyBusy);
+    return;
+  }
+
+  starsBuyLocked = true;
+
+  try {
+    const create = await API.createNicknameStarsPurchase();
+
+    if (!create?.success) {
+      safeAlert(create?.error || t().starsCreateFail);
+      return;
+    }
+
+    const invoiceLink = String(create.invoice_link || "").trim();
+    const payload = String(create.payload || "").trim();
+
+    if (!invoiceLink || !payload) {
+      safeAlert(t().starsCreateFail);
+      return;
+    }
+
+    let invoiceStatus = "";
+
+    try {
+      invoiceStatus = await openTelegramInvoice(invoiceLink);
+    } catch (e) {
+      console.error("openInvoice error:", e);
+      safeAlert(t().starsOpenFail);
+      return;
+    }
+
+    if (invoiceStatus && invoiceStatus !== "paid") {
+      safeAlert(t().starsCancelled);
+      return;
+    }
+
+    safeAlert(t().starsPending);
+
+    const statusResp = await waitForNicknameStarsConfirmation(payload);
+
+    if (!statusResp?.success || statusResp?.payment?.status !== "paid") {
+      safeAlert(t().starsTimeout);
+      return;
+    }
+
+    const confirmResp = await API.confirmNicknameStarsPurchase(payload, newNickname);
+
+    if (!confirmResp?.success) {
+      safeAlert(confirmResp?.error || t().starsCreateFail);
       return;
     }
 
     userState = normalizeUserState({
       ...userState,
-      ...data,
-      balance: data.balance ?? userState.balance,
-      ton_balance: data.ton_balance ?? userState.ton_balance
+      ...(confirmResp || {})
     });
 
+    syncEnergyBase();
     updateUI();
-    await refreshUserSilently();
-
-    if (String(data.mode || "") === "wbc") {
-      safeAlert(
-        currentLang === "RU"
-          ? `Никнейм обновлён. Списано ${Number(data.price_wbc || 0).toLocaleString()} WBC.`
-          : `Nickname updated. ${Number(data.price_wbc || 0).toLocaleString()} WBC charged.`
-      );
-      return;
-    }
-
+    await refreshUserSilently("NICKNAME STARS BUY");
+    
     safeAlert(
       currentLang === "RU"
-        ? "Никнейм обновлён. Бесплатная смена использована."
-        : "Nickname updated. Free change used."
+        ? `Никнейм обновлён на "${newNickname}"`
+        : `Nickname changed to "${newNickname}"`
     );
   } catch (e) {
-    console.error("requestNicknameChange error:", e);
-    safeAlert(currentLang === "RU" ? "Не удалось изменить никнейм." : "Failed to change nickname.");
+    console.error("buyNicknameForStars error:", e);
+    safeAlert(t().starsOpenFail);
+  } finally {
+    starsBuyLocked = false;
   }
+}
+
+async function waitForNicknameStarsConfirmation(payload, maxAttempts = 12, delayMs = 2000) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const statusResp = await API.getNicknameStarsPurchaseStatus(payload);
+
+    if (statusResp?.success && statusResp?.payment?.status === "paid") {
+      return statusResp;
+    }
+
+    await sleep(delayMs);
+  }
+
+  return null;
 }
 
 function normalizeUserState(data) {
@@ -1996,6 +2102,10 @@ function bindOverlayClosers() {
   document.querySelectorAll(".panel-overlay, .modal-overlay").forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
       if (overlay.id === "launch-consent-overlay") return;
+      if (overlay.id === "breach-board-overlay" && e.target === overlay) {
+        closeBreachBoard();
+        return;
+      }
 
       if (e.target === overlay) {
         closeAllPanels();
@@ -2027,30 +2137,177 @@ window.showRefs = async () => {
 };
 
 window.showLeaderboard = async () => {
-  const status = await refreshDrawStatusGlobal();
+  openBreachBoard();
+};
 
-  let poolText = t().poolCharging;
-  if (status?.pool_state === "locked_ready_for_drop") {
-    poolText = t().poolLocked;
-  } else if (status?.pool_state === "completed") {
-    poolText = t().drawCompleted;
+async function openBreachBoard() {
+  const overlay = document.getElementById("breach-board-overlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+  overlay.setAttribute("aria-hidden", "false");
+  closeSidebar();
+
+  // GSAP animation - появление из центра
+  const panel = overlay.querySelector(".wb-panel");
+  if (panel && window.gsap) {
+    gsap.fromTo(panel, 
+      {
+        opacity: 0,
+        scale: 0.8,
+        transformOrigin: "center center"
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5,
+        ease: "back.out"
+      }
+    );
   }
 
-  const keys = Number(status?.keys || userState.zeroDayKeys || 0);
-  const entered = Number(status?.entered || 0);
-  const max = Number(status?.max || 2);
+  loadBreachBoard();
+}
 
-  const text = [
-    "BREACH BOARD",
-    "",
-    poolText,
-    "",
-    `ZERO-DAY KEYS: ${keys}`,
-    `DRAW ENTRY: ${entered} / ${max}`
-  ];
-
-  safeAlert(text.join("\n"));
+window.closeBreachBoard = () => {
+  const overlay = document.getElementById("breach-board-overlay");
+  if (overlay) {
+    overlay.classList.add("hidden");
+    overlay.setAttribute("aria-hidden", "true");
+  }
 };
+
+function getPlayerPrefix(liveScore) {
+  if (liveScore >= 5000000) return { text: "ELITE", class: "elite" };
+  if (liveScore >= 2000000) return { text: "PRO", class: "pro" };
+  if (liveScore >= 500000) return { text: "CORE", class: "core" };
+  if (liveScore >= 100000) return { text: "NODE", class: "node" };
+  return { text: "USER", class: "user" };
+}
+
+async function loadBreachBoard() {
+  try {
+    const content = document.getElementById("breach-board-content");
+    const loader = document.getElementById("breach-board-loader");
+    const table = document.getElementById("breach-board-table");
+    const tbody = document.getElementById("breach-board-tbody");
+
+    if (!content || !loader || !table || !tbody) return;
+
+    // Show loader
+    loader.classList.remove("hidden");
+    table.classList.add("hidden");
+    tbody.innerHTML = "";
+
+    // Load leaderboard data
+    const data = await API.getLeaderboard();
+    
+    // Sort by live score desc, then by last tap time desc
+    const sorted = (data || [])
+      .filter(p => p.public_nickname)
+      .sort((a, b) => {
+        const scoreA = Number(a.live_score || 0);
+        const scoreB = Number(b.live_score || 0);
+        
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        
+        const tapA = Number(a.last_tap_time || 0);
+        const tapB = Number(b.last_tap_time || 0);
+        return tapB - tapA;
+      })
+      .slice(0, 5);
+
+    // Create table rows with SVG backgrounds
+    let delayOffset = 0;
+    sorted.forEach((player, index) => {
+      const row = document.createElement("tr");
+      const rank = index + 1;
+      const liveScore = Number(player.live_score || 0);
+      const prefix = getPlayerPrefix(liveScore);
+      const nickname = String(player.public_nickname || "User").substring(0, 30);
+
+      row.innerHTML = `
+        <td class="breach-board-rank">#${rank}</td>
+        <td class="breach-board-nickname">
+          <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
+          <span>${nickname}</span>
+        </td>
+        <td class="breach-board-score">${Number(liveScore).toLocaleString()}</td>
+      `;
+
+      row.addEventListener("click", () => applyGlitchEffect(row));
+      tbody.appendChild(row);
+
+      // Stagger animation
+      if (window.gsap) {
+        delayOffset += 0.1;
+        gsap.from(row, {
+          opacity: 0,
+          x: -20,
+          duration: 0.4,
+          delay: delayOffset,
+          ease: "power2.out"
+        });
+      }
+    });
+
+    // Hide loader, show table
+    loader.classList.add("hidden");
+    table.classList.remove("hidden");
+
+  } catch (e) {
+    console.error("loadBreachBoard error:", e);
+    const loader = document.getElementById("breach-board-loader");
+    if (loader) {
+      loader.innerHTML = `
+        <div class="scanner-text">Network Error</div>
+        <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
+      `;
+    }
+  }
+}
+
+function applyGlitchEffect(element) {
+  if (!window.gsap) {
+    // Fallback without GSAP
+    element.style.opacity = "0.5";
+    setTimeout(() => {
+      element.style.opacity = "1";
+    }, 100);
+    return;
+  }
+
+  const timeline = gsap.timeline();
+  
+  timeline
+    .to(element, {
+      x: -3,
+      duration: 0.05
+    })
+    .to(element, {
+      x: 3,
+      duration: 0.05
+    }, "-=0.05")
+    .to(element, {
+      x: -2,
+      duration: 0.05
+    }, "-=0.05")
+    .to(element, {
+      x: 0,
+      duration: 0.05
+    }, "-=0.05");
+
+  // Color flash
+  timeline.to(element, {
+    backgroundColor: "rgba(0, 242, 255, 0.15)",
+    duration: 0.1
+  }, 0);
+
+  timeline.to(element, {
+    backgroundColor: "rgba(0, 242, 255, 0.05)",
+    duration: 0.2
+  });
+}
 
 function renderMarketPanel() {
   const marketOverlay = document.getElementById("market-panel-overlay");

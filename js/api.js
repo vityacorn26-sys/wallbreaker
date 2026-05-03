@@ -220,6 +220,47 @@ const API = {
     }
   },
 
+  async createNicknameStarsPurchase() {
+    try {
+      return await this.post('/api/nickname/buy-stars/create');
+    } catch (e) {
+      console.error('API Error (createNicknameStarsPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_create_failed'
+      };
+    }
+  },
+
+  async getNicknameStarsPurchaseStatus(payload) {
+    try {
+      return await this.post('/api/nickname/buy-stars/status', {
+        payload
+      });
+    } catch (e) {
+      console.error('API Error (getNicknameStarsPurchaseStatus):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_status_failed'
+      };
+    }
+  },
+
+  async confirmNicknameStarsPurchase(payload, nickname) {
+    try {
+      return await this.post('/api/nickname/buy-stars/confirm', {
+        payload,
+        nickname
+      });
+    } catch (e) {
+      console.error('API Error (confirmNicknameStarsPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'nickname_confirm_failed'
+      };
+    }
+  },
+
   async buyZeroDayKey() {
     try {
       return await this.post('/api/draw/ticket/buy');
