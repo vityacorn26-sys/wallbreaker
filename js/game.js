@@ -150,6 +150,41 @@ function syncLiveScoreUI(data, label = "") {
   updateLiveScoreUI(nextScore, delta, label);
 }
 
+function initLiveScoreEffects() {
+  if (!window.gsap) return;
+
+  const liveScoreBox = document.getElementById("live-score-box");
+  const liveScorePath = document.querySelector(".live-score-bg path");
+
+  if (liveScoreBox) {
+    gsap.to(liveScoreBox, {
+      scale: 1.05,
+      duration: 0.8,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+
+    gsap.to(liveScoreBox, {
+      filter: "drop-shadow(0 0 18px rgba(255,182,193,0.18)) drop-shadow(0 0 30px rgba(255,182,193,0.12))",
+      duration: 0.8,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+  }
+
+  if (liveScorePath) {
+    gsap.to(liveScorePath, {
+      stroke: "rgba(255,182,193,0.65)",
+      duration: 1.2,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+  }
+}
+
 let adFlowLocked = false;
 let tonBuyLocked = false;
 let starsBuyLocked = false;
@@ -1700,15 +1735,7 @@ async function refreshUserSilently(label = "") {
     updateUI();
 
     // ===== LIVE SCORE SYNC (с сервера) =====
-    if (fresh?.score?.recomputed !== undefined) {
-      lastLiveScore = Number(fresh.score.recomputed || 0);
-
-      updateLiveScoreUI(
-        lastLiveScore,
-        0,
-        ""
-      );
-    }
+    syncLiveScoreUI(fresh, label || "");
     
     return true;
 
@@ -1725,7 +1752,7 @@ async function processTapQueue() {
   try {
     while (tapQueue > 0) {
       const data = await API.sendTap();
-      tapQueue -= 1;
+      tapQueue = Math.max(0, tapQueue - 1);
 
       if (data && data.balance !== undefined) {
         userState = normalizeUserState({
@@ -1740,15 +1767,19 @@ async function processTapQueue() {
         syncEnergyBase();
         updateUI();
 
-        // Show floating delta
-        if (data.reward) {
-          LiveScoreAnimator.renderLiveScoreDelta(data.reward, "CORE TAP");
-        }
-
-        // Update live score from server
-        const liveScoreData = await API.getUserLiveScore();
-        if (liveScoreData) {
-          syncLiveScoreUI(liveScoreData, "CORE TAP");
+        if (data.score !== undefined && data.score !== null) {
+          syncLiveScoreUI(
+            {
+              live_score: Number(data.score || 0),
+              score: { recomputed: Number(data.score || 0) }
+            },
+            "CORE TAP"
+          );
+        } else {
+          const liveScoreData = await API.getUserLiveScore();
+          if (liveScoreData) {
+            syncLiveScoreUI(liveScoreData, "CORE TAP");
+          }
         }
       } else {
         tapQueue = 0;
@@ -3189,6 +3220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   bindOverlayClosers();
   applyTexts();
+  initLiveScoreEffects();
 
   if (hasLaunchConsent()) {
     startAppBoot();

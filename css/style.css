@@ -1983,8 +1983,9 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 .live-score-bg path {
   opacity: 1;
-  stroke: rgba(255, 182, 193, 0.3);
+  stroke: rgba(255, 182, 193, 0.35);
   stroke-width: 0.8;
+  filter: drop-shadow(0 0 12px rgba(255, 182, 193, 0.18));
 }
 
 #live-score-box::after {
@@ -2024,11 +2025,11 @@ body.wb-fullpanel-open #bottom-tabbar {
   z-index: 1;
   font-size: 28px;
   font-weight: 900;
-  color: #FFB6C1;
+  color: rgba(255, 182, 193, 0.88);
   letter-spacing: 0.02em;
   text-shadow:
-    0 0 12px rgba(234, 244, 255, 0.95),
-    0 0 22px rgba(120, 170, 240, 0.28);
+    0 0 14px rgba(255, 182, 193, 0.45),
+    0 0 28px rgba(255, 182, 193, 0.22);
 }
 
 #live-score-delta {
