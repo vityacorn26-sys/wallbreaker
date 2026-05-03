@@ -2207,9 +2207,19 @@ body.wb-fullpanel-open #bottom-tabbar {
   border-bottom: none;
 }
 
-.rank-col { width: 40px; }
-.nick-col { flex: 1; }
-.score-col { width: 120px; }
+.rank-col,
+.breach-board-rank {
+  display: none;
+}
+
+.nick-col {
+  width: auto;
+  flex: 1;
+}
+
+.score-col {
+  width: 120px;
+}
 
 .breach-board-table tbody tr {
   position: relative;

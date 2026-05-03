@@ -2187,6 +2187,11 @@ window.closeBreachBoard = () => {
     overlay.classList.add("hidden");
     overlay.setAttribute("aria-hidden", "true");
   }
+
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) {
+    sidebar.classList.add("active");
+  }
 };
 
 function getPlayerPrefix(liveScore) {
@@ -3387,6 +3392,10 @@ function showRankDetails(rankId) {
 
 document.addEventListener("DOMContentLoaded", () => {
   applyInitialLanguage();
+
+  if (window.API && typeof window.API === 'object') {
+    window.API.BASE_URL = getConfig().API_BASE || window.API.BASE_URL;
+  }
   
   const gateway = document.getElementById("gateway");
 
