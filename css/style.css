@@ -2091,35 +2091,53 @@ body.wb-fullpanel-open #bottom-tabbar {
 }
 
 /* ===== BREACH BOARD STYLES ===== */
+#breach-board-overlay {
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px;
+}
+
 .breach-board-panel {
-  max-width: 100%;
+  width: min(100%, 860px);
+  height: 90vh;
   max-height: 90vh;
-  overflow-y: auto;
-  background: rgba(0, 0, 0, 0.9);
-  border: 1px solid rgba(0, 242, 255, 0.25);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.breach-board-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%2300F2FF' stop-opacity='0.18'/%3E%3Cstop offset='1' stop-color='%23FFB6C1' stop-opacity='0.06'/%3E%3C/linearGradient%3E%3Cfilter id='b' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='24'/%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='220' cy='180' r='200' fill='url(%23g1)' filter='url(%23b)'/%3E%3Ccircle cx='620' cy='140' r='140' fill='%2300F2FF' fill-opacity='0.08'/%3E%3Ccircle cx='560' cy='620' r='220' fill='%23FFB6C1' fill-opacity='0.08'/%3E%3Cpath d='M0 410 C220 360 420 440 800 400 V800 H0 Z' fill='%2300F2FF' fill-opacity='0.04'/%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
 }
 
 .breach-board-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(0, 242, 255, 0.15);
+  padding: 20px 24px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
   color: #00F2FF;
-  text-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
+  text-shadow: 0 0 12px rgba(0, 242, 255, 0.45);
 }
 
 .breach-board-content {
   flex: 1;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
+  justify-content: flex-start;
+  min-height: 0;
 }
 
 .breach-board-loader {
@@ -2135,7 +2153,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   font-weight: 600;
   color: #00F2FF;
   letter-spacing: 1px;
-  text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+  text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
   animation: scan-pulse 1.5s ease-in-out infinite;
 }
 
@@ -2174,7 +2192,6 @@ body.wb-fullpanel-open #bottom-tabbar {
 }
 
 .breach-board-table thead tr {
-  border-bottom: 2px solid rgba(0, 242, 255, 0.3);
 }
 
 .breach-board-table th {
@@ -2186,7 +2203,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   text-transform: uppercase;
   letter-spacing: 1px;
   background: transparent;
-  border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+  border-bottom: none;
 }
 
 .rank-col { width: 40px; }
@@ -2195,7 +2212,6 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 .breach-board-table tbody tr {
   position: relative;
-  border-bottom: 1px solid rgba(0, 242, 255, 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -2242,23 +2258,50 @@ body.wb-fullpanel-open #bottom-tabbar {
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
-  background: rgba(255, 182, 193, 0.2);
-  border: 1px solid rgba(255, 182, 193, 0.4);
   border-radius: 3px;
-  color: #FFB6C1;
   letter-spacing: 0.5px;
 }
 
 .breach-board-prefix.elite {
   background: rgba(255, 50, 100, 0.25);
-  border-color: rgba(255, 50, 100, 0.5);
   color: #FF3264;
 }
 
 .breach-board-prefix.pro {
   background: rgba(255, 182, 193, 0.25);
-  border-color: rgba(255, 182, 193, 0.5);
   color: #FFB6C1;
+}
+
+.breach-board-prefix.core {
+  background: rgba(0, 242, 255, 0.16);
+  color: #00F2FF;
+}
+
+.breach-board-prefix.node {
+  background: rgba(0, 242, 255, 0.1);
+  color: #00F2FF;
+}
+
+.breach-board-prefix.user {
+  background: rgba(255, 255, 255, 0.08);
+  color: #00F2FF;
+}
+
+.breach-board-score {
+  text-align: right;
+  font-weight: 700;
+  color: #FFB6C1;
+}
+
+#breach-board-overlay .wb-back-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 1;
+}
+
+#breach-board-overlay h2 {
+  margin-top: 0;
 }
 
 .breach-board-score {

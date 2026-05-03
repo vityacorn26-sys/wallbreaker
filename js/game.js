@@ -889,6 +889,18 @@ async function requestNicknameChange() {
   }
 }
 
+async function requestNicknameChangeForStars() {
+  const currentNick = String(userState.public_nickname || "").trim();
+  const promptText = currentLang === "RU" ? "Введи новый никнейм (3–24 символа):" : "Enter a new nickname (3–24 characters):";
+  const raw = window.prompt(promptText, currentNick);
+  if (raw === null) return;
+
+  const nickname = String(raw || "").trim();
+  if (!nickname || nickname === currentNick) return;
+
+  await buyNicknameForStars(nickname);
+}
+
 async function buyNicknameForStars(newNickname) {
   if (starsBuyLocked) {
     safeAlert(t().starsBuyBusy);
@@ -3414,6 +3426,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeNicknameBtn = document.getElementById("change-nickname-btn");
   if (changeNicknameBtn) {
     changeNicknameBtn.addEventListener("click", requestNicknameChange);
+  }
+
+  const changeNicknameStarsBtn = document.getElementById("change-nickname-stars-btn");
+  if (changeNicknameStarsBtn) {
+    changeNicknameStarsBtn.addEventListener("click", requestNicknameChangeForStars);
   }
 
   const changeWalletBtn = document.getElementById("change-wallet-btn");
