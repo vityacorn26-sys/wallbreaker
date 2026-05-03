@@ -2109,6 +2109,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   border-radius: 0;
   box-shadow: none;
   position: relative;
+  padding: 82px 24px 24px;
 }
 
 .breach-board-panel::before {
@@ -2254,6 +2255,10 @@ body.wb-fullpanel-open #bottom-tabbar {
   gap: 8px;
 }
 
+.breach-board-nickname span {
+  color: #00F2FF;
+}
+
 .breach-board-prefix {
   font-size: 10px;
   font-weight: 700;
@@ -2294,14 +2299,31 @@ body.wb-fullpanel-open #bottom-tabbar {
 }
 
 #breach-board-overlay .wb-back-btn {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  z-index: 1;
+  display: inline-flex;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin-bottom: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 #breach-board-overlay h2 {
   margin-top: 0;
+}
+
+.account-nickname-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+}
+
+#change-nickname-stars-btn {
+  color: #ffffff;
+  background: linear-gradient(180deg, #ff85d0, #ff4ca8 52%, #ff1b8f);
+  box-shadow: 0 12px 28px rgba(255, 27, 143, 0.22);
 }
 
 .breach-board-score {
