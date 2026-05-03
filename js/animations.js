@@ -1,5 +1,6 @@
 const LiveScoreAnimator = (function () {
   let liveScoreTween = null;
+  let deltaTween = null;
 
   function getLiveScoreBox() {
     return document.getElementById("live-score-value");
@@ -18,6 +19,11 @@ const LiveScoreAnimator = (function () {
   function renderLiveScoreDelta(delta, label = "") {
     const deltaBox = getDeltaBox();
     if (!deltaBox) return;
+
+    // Kill previous animation
+    if (deltaTween && typeof deltaTween.kill === "function") {
+      deltaTween.kill();
+    }
 
     deltaBox.className = "score-float";
     deltaBox.removeAttribute("data-label");
@@ -39,15 +45,27 @@ const LiveScoreAnimator = (function () {
 
     deltaBox.className = `score-float ${cls}`;
     deltaBox.setAttribute("data-label", label);
-    deltaBox.style.opacity = "1";
-    deltaBox.style.transform = "translateX(-50%) translateY(0)";
 
-    setTimeout(() => {
-      deltaBox.textContent = "";
-      deltaBox.removeAttribute("data-label");
-      deltaBox.style.opacity = "0";
-      deltaBox.style.transform = "translateX(-50%) translateY(8px)";
-    }, 1200);
+    const delay = (label === "CORE TAP") ? 1.2 : 10;
+
+    if (window.gsap && typeof window.gsap.set === "function" && typeof window.gsap.to === "function") {
+      gsap.set(deltaBox, { opacity: 0, y: 8 });
+      gsap.to(deltaBox, { opacity: 1, y: 0, duration: 0.3 });
+      deltaTween = gsap.to(deltaBox, { opacity: 0, y: 8, duration: 0.3, delay: delay, onComplete: () => {
+        deltaBox.textContent = "";
+        deltaBox.removeAttribute("data-label");
+      }});
+    } else {
+      deltaBox.style.opacity = "1";
+      deltaBox.style.transform = "translateX(-50%) translateY(0)";
+
+      setTimeout(() => {
+        deltaBox.textContent = "";
+        deltaBox.removeAttribute("data-label");
+        deltaBox.style.opacity = "0";
+        deltaBox.style.transform = "translateX(-50%) translateY(8px)";
+      }, delay * 1000);
+    }
   }
 
   function animateLiveScoreTo(targetScore, currentScore, duration = 0.55, onUpdate = null, onComplete = null) {

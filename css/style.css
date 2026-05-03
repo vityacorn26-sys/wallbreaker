@@ -1963,10 +1963,8 @@ body.wb-fullpanel-open #bottom-tabbar {
   min-height: 94px;
   padding: 0;
   background: transparent;
-  box-shadow:
-    0 20px 50px rgba(40, 58, 86, 0.22),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
+  box-shadow: none;
+  backdrop-filter: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1985,7 +1983,7 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 .live-score-bg path {
   opacity: 1;
-  stroke: rgba(255, 255, 255, 0.18);
+  stroke: rgba(255, 182, 193, 0.3);
   stroke-width: 0.8;
 }
 
@@ -2026,7 +2024,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   z-index: 1;
   font-size: 28px;
   font-weight: 900;
-  color: #eaf4ff;
+  color: #FFB6C1;
   letter-spacing: 0.02em;
   text-shadow:
     0 0 12px rgba(234, 244, 255, 0.95),
@@ -2090,7 +2088,7 @@ body.wb-fullpanel-open #bottom-tabbar {
     transform: scale(1) translateY(0px);
   }
   50% {
-    transform: scale(1.025) translateY(-1px);
+    transform: scale(1.05) translateY(-2px);
   }
 }
 
@@ -2099,6 +2097,6 @@ body.wb-fullpanel-open #bottom-tabbar {
     transform: translate(0, 0);
   }
   50% {
-    transform: translate(-4px, 2px);
+    transform: translate(-6px, 3px);
   }
 }

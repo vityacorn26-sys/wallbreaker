@@ -1739,6 +1739,17 @@ async function processTapQueue() {
 
         syncEnergyBase();
         updateUI();
+
+        // Show floating delta
+        if (data.reward) {
+          LiveScoreAnimator.renderLiveScoreDelta(data.reward, "CORE TAP");
+        }
+
+        // Update live score from server
+        const liveScoreData = await API.getUserLiveScore();
+        if (liveScoreData) {
+          syncLiveScoreUI(liveScoreData, "CORE TAP");
+        }
       } else {
         tapQueue = 0;
         await refreshUserSilently();
@@ -1764,12 +1775,6 @@ window.handleTap = () => {
 
   syncEnergyBase();
   updateUI();
-
-  updateLiveScoreUI(
-    lastLiveScore + 1.2,
-    1.2,
-    "CORE TAP"
-  );
 
   if (tapFlushTimer) clearTimeout(tapFlushTimer);
   tapFlushTimer = setTimeout(() => {
