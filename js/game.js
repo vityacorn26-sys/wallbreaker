@@ -1,5 +1,4 @@
-const tg = window.Telegram?.WebApp || null;
-
+const tg = window.Telegram?.WebApp;
 let currentLang = "EN";
 
 const LANG_STORAGE_KEY = "wb_lang_v1";
@@ -1477,7 +1476,10 @@ async function loadUser() {
   try {
     showLoadingScreen();
 
-    if (!tg?.initData) {
+    const initData = tg?.initData || window.Telegram?.WebApp?.initData;
+
+    if (!initData) {
+      console.error("INIT DATA EMPTY");
       showFatalError(t().initDataFail);
       return;
     }
