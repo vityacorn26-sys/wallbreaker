@@ -24,12 +24,11 @@ const API = {
     const telegramId = tgUser?.id ? String(tgUser.id) : '';
     const username = tgUser?.username || '';
 
-    const response = await fetch(`${this.BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
+        const response = await fetch(`${this.BASE_URL}${endpoint}`, {
+            method: "POST",
+            body: JSON.stringify({ ...data, initData: window.Telegram?.WebApp?.initData || "" }), headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...data, initData: window.Telegram?.WebApp?.initData || "" })
+        });
       body: JSON.stringify({
         initData,
         telegramId,
@@ -109,7 +108,7 @@ const API = {
   async getLeaderboard() {
     try {
       const response = await fetch(`${this.BASE_URL}/api/leaderboard`, {
-        headers: { 'Accept': 'application/json' }
+        body: JSON.stringify({ ...data, initData: window.Telegram?.WebApp?.initData || "" }), headers: { 'Accept': 'application/json' }
       });
 
       if (!response.ok) {
