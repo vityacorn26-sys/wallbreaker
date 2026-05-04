@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WallBreaker Admin</title>
+  <style>
+    :root{
+      --bg:#071018; --panel:#0c1622; --line:#1e3550; --text:#d9f7ff;
+      --muted:#7fb5c7; --accent:#00ffd1; --accent2:#58a6ff;
+      --warn:#ffb347; --danger:#ff5f7a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial,sans-serif; color:var(--text);
+      background:linear-gradient(180deg,#050b12 0%,#08111b 100%);
+    }
+    .wrap{max-width:1400px;margin:0 auto;padding:20px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .title{font-size:28px;font-weight:800;letter-spacing:1px;color:var(--accent);text-transform:uppercase}
+    .sub{font-size:13px;color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+      margin:0 0 12px 0;
+    }
+    input, select{
+      background:#101d2c;color:var(--text);border:1px solid var(--line);
+      border-radius:10px;padding:10px 12px;font-weight:600;
+    }
+    input::placeholder{color:var(--muted)}
+    button{
+      background:#101d2c;color:var(--text);border:1px solid var(--line);
+      border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer
+    }
+    button:hover{border-color:var(--accent)}
+    .warn{color:var(--warn)}
+    .danger{color:var(--danger)}
+    .accent{color:var(--accent)}
+    .status{
+      margin:0 0 16px 0;padding:12px 14px;border-radius:12px;
+      border:1px solid var(--line);background:#0a1521;color:var(--muted);font-size:13px
+    }
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .mini-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .card{
+      background:rgba(12,22,34,.95);border:1px solid var(--line);
+      border-radius:16px;padding:14px
+    }
+    .round-card{
+      margin:0 0 18px 0;
+      background:rgba(12,22,34,.95);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+    .metric-label{font-size:12px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .metric-value{font-size:26px;font-weight:800;color:var(--accent)}
+    .section{margin-bottom:18px}
+    .section h2{margin:0 0 10px 0;color:var(--accent2);font-size:18px;text-transform:uppercase}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:rgba(12,22,34,.92)}
+    table{width:100%;border-collapse:collapse;min-width:900px}
+    th,td{padding:10px 12px;border-bottom:1px solid #13293f;text-align:left;font-size:13px;vertical-align:top}
+    th{background:#0d1a28;color:var(--accent);position:sticky;top:0}
+    .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .tiny-btn{padding:6px 10px;border-radius:8px;font-size:12px}
+    @media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width:700px){.grid{grid-template-columns:1fr}}
+  
+    .clickable-row{cursor:pointer}
+    .clickable-row:hover{background:#102131}
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.58);
+      display:none; align-items:center; justify-content:center; padding:20px; z-index:2000;
+    }
+    .modal-backdrop.active{display:flex}
+    .modal-card{
+      width:min(960px, 100%); max-height:90vh; overflow:auto;
+      background:rgba(12,22,34,.98); border:1px solid var(--line);
+      border-radius:18px; padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+    .modal-top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;
+    }
+    .modal-title{font-size:22px;font-weight:800;color:var(--accent)}
+    .kv{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:14px;
+    }
+    .kv-card{
+      background:#0d1a28; border:1px solid var(--line); border-radius:14px; padding:12px;
+    }
+    .kv-label{
+      font-size:12px; text-transform:uppercase; color:var(--muted); margin-bottom:8px;
+    }
+    .kv-value{
+      font-size:18px; font-weight:700; color:var(--text); word-break:break-word;
+    }
+    .mini-grid{
+      display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:14px;
+    }
+    @media (max-width:900px){
+      .kv{grid-template-columns:1fr}
+      .mini-grid{grid-template-columns:1fr}
+    }
+
+  
+    .promo-form{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr auto;
+      gap:10px;
+      margin:0 0 12px 0;
+      align-items:center;
+    }
+    .promo-form input{
+      min-width:0;
+    }
+    .promo-meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .toggle-on{color:var(--accent)}
+    .toggle-off{color:var(--danger)}
+    @media (max-width:1100px){
+      .promo-form{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:700px){
+      .promo-form{grid-template-columns:1fr}
+    }
+
+  
+    .sticky-head{
+      position:sticky;
+      top:0;
+      z-index:120;
+      background:linear-gradient(180deg,#050b12 0%,#08111b 100%);
+      padding-top:8px;
+    }
+
+    .wrap{
+      max-width:1400px;
+      margin:0 auto;
+      padding:20px 20px 96px;
+    }
+
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+
+    .section-stack{
+      display:grid;
+      gap:18px;
+    }
+
+    .section-card{
+      margin-bottom:18px;
+    }
+
+    .admin-bottom-nav{
+      position:fixed;
+      pointer-events:auto;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:1500;
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:8px;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      background:rgba(5,11,18,.96);
+      border-top:1px solid var(--line);
+      backdrop-filter:blur(10px);
+    }
+
+    .admin-nav-btn{
+      min-width:0;
+      position:relative;
+      z-index:1501;
+      pointer-events:auto;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+      padding:10px 8px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#0d1a28;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+
+    .admin-nav-btn.active{
+      color:#06131d;
+      background:var(--accent);
+      border-color:var(--accent);
+    }
+
+    @media (max-width:900px){
+      .admin-bottom-nav{
+        gap:6px;
+        padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .admin-nav-btn{
+        padding:9px 4px;
+        font-size:11px;
+      }
+    }
+
+  
+    .users-toolbar-rows{
+      display:grid;
+      gap:10px;
+      margin:0 0 12px 0;
+    }
+    .users-toolbar-main{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .users-search-input{
+      min-width:260px;
+      flex:1 1 280px;
+    }
+    .users-filter-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .users-filter-btn{
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .users-filter-btn.active{
+      background:var(--accent);
+      color:#06131d;
+      border-color:var(--accent);
+    }
+    .users-pager{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:12px 0;
+    }
+    .users-pager-info{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .users-pager-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .users-pager button[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    @media (max-width:800px){
+      .users-toolbar-main{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .users-search-input{
+        min-width:0;
+        width:100%;
+      }
+      .users-pager{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sticky-head">
+      <div class="topbar">
+        <div>
+          <div class="title">WallBreaker Admin</div>
+          <div class="sub">Hacker control panel / draw / users / payouts</div>
+        </div>
+        <div class="actions">
+          <button class="accent" id="refreshBtn">REFRESH</button>
+          <button class="warn" id="lockBtn">LOCK DRAW</button>
+          <button class="danger" id="finishBtn">FINISH DRAW</button>
+        </div>
+      </div>
+      <div id="status" class="status">Connecting to admin core...</div>
+    </div>
+
+    <div id="tab-dashboard" class="tab-pane active">
+      <div class="section-stack">
+        <div id="currentRoundCard" class="round-card">Current round sync pending...</div>
+        <div class="grid" id="metrics"></div>
+      </div>
+    </div>
+
+    <div id="tab-users" class="tab-pane">
+      <div class="section section-card">
+        <h2>Users</h2>
+
+        <div class="users-toolbar-rows">
+          <div class="users-toolbar-main">
+            <input id="usersSearch" class="users-search-input" type="text" placeholder="Search by TG ID / username / name">
+            <button id="usersSearchBtn" type="button">SEARCH</button>
+            <button id="usersResetBtn" type="button">RESET</button>
+
+            <select id="usersSort">
+              <option value="updatedAt">Updated</option>
+              <option value="drawScore">Draw Score</option>
+              <option value="keys">Keys</option>
+              <option value="tonDonate">TON Donate</option>
+              <option value="tonBalance">TON Balance</option>
+              <option value="stars">Stars</option>
+              <option value="taps">Taps</option>
+              <option value="ads">Ads</option>
+              <option value="wbc">WBC</option>
+              <option value="refs">Refs</option>
+              <option value="rank">Rank</option>
+              <option value="createdAt">Created</option>
+            </select>
+
+            <select id="usersOrder">
+              <option value="desc">DESC</option>
+              <option value="asc">ASC</option>
+            </select>
+
+            <select id="usersPageSize">
+              <option value="25">25 / page</option>
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
+
+          <div class="users-filter-row">
+            <button type="button" class="users-filter-btn" data-filter-key="online">ONLINE</button>
+            <button type="button" class="users-filter-btn" data-filter-key="hasKeys">KEYS &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="tonDonate">TON DONATE &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="tonBalance">TON BALANCE &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="stars">STARS &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="rankGt1">RANK &gt; 1</button>
+            <button type="button" class="users-filter-btn" data-filter-key="ads">ADS &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="refs">REFS &gt; 0</button>
+            <button type="button" class="users-filter-btn" data-filter-key="activeRecent">ACTIVE 24H</button>
+          </div>
+        </div>
+
+        <div id="usersPagerTop" class="users-pager"></div>
+        <div class="table-wrap"><table id="usersTable"></table></div>
+        <div id="usersPagerBottom" class="users-pager"></div>
+      </div>
+    </div>
+
+    <div id="tab-draw" class="tab-pane">
+      <div class="section-stack">
+        <div class="section section-card">
+          <h2>Draw Rounds</h2>
+          <div class="table-wrap"><table id="drawsTable"></table></div>
+        </div>
+        <div class="section section-card">
+          <h2>Winners</h2>
+          <div class="table-wrap"><table id="winnersTable"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-promos" class="tab-pane">
+      <div class="section section-card">
+        <h2>Promo Codes</h2>
+        <div class="promo-form">
+          <input id="promoCodeInput" type="text" placeholder="CODE (e.g. WBTON01)">
+          <input id="promoRewardTonInput" type="number" step="0.0001" min="0.0001" placeholder="TON reward">
+          <input id="promoDurationHoursInput" type="number" step="1" min="1" placeholder="Hours">
+          <input id="promoMaxClaimsInput" type="number" step="1" min="0" placeholder="Max claims (0=unlimited)">
+          <button id="createPromoBtn" class="accent">CREATE</button>
+        </div>
+        <div class="promo-meta">Manual code • TON only • duration in hours • set max claims or 0 for unlimited</div>
+        <div class="table-wrap"><table id="promoTable"></table></div>
+      </div>
+    </div>
+
+    <div id="tab-withdraws" class="tab-pane">
+      <div class="section section-card">
+        <h2>Withdraw Requests</h2>
+        <div class="toolbar">
+          <select id="withdrawStatusFilter">
+            <option value="">ALL</option>
+            <option value="pending">PENDING</option>
+            <option value="approved">APPROVED</option>
+            <option value="rejected">REJECTED</option>
+          </select>
+          <button id="withdrawFilterBtn">APPLY</button>
+          <button id="withdrawResetBtn">RESET</button>
+        </div>
+        <div class="table-wrap"><table id="withdrawsTable"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-bottom-nav">
+    <button type="button" class="admin-nav-btn active" data-tab-target="dashboard">Home</button>
+    <button type="button" class="admin-nav-btn" data-tab-target="users">Users</button>
+    <button type="button" class="admin-nav-btn" data-tab-target="draw">Draw</button>
+    <button type="button" class="admin-nav-btn" data-tab-target="promos">Promos</button>
+    <button type="button" class="admin-nav-btn" data-tab-target="withdraws">TON</button>
+  </div>
+
+  <div id="userDetailsModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div class="modal-title">User Details</div>
+        <button id="closeUserDetailsBtn">CLOSE</button>
+      </div>
+      <div id="userDetailsBody">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token') || '';
+    const statusEl = document.getElementById('status');
+
+    const state = {
+      usersQuery: '',
+      withdrawStatus: '',
+      usersPage: 1,
+      usersPageSize: 25,
+      usersSort: 'updatedAt',
+      usersOrder: 'desc',
+      usersTotalPages: 1,
+      usersFilters: {
+        online: false,
+        hasKeys: false,
+        tonDonate: false,
+        tonBalance: false,
+        stars: false,
+        rankGt1: false,
+        ads: false,
+        refs: false,
+        activeRecent: false
+      }
+    };
+    state.activeTab = 'dashboard';
+
+    function setActiveTab(tabName){
+      state.activeTab = tabName;
+
+      document.querySelectorAll('.tab-pane').forEach((node) => {
+        node.classList.toggle('active', node.id === `tab-${tabName}`);
+      });
+
+      document.querySelectorAll('.admin-nav-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tabTarget === tabName);
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    function bindAdminNav(){
+      document.querySelectorAll('.admin-nav-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setActiveTab(btn.dataset.tabTarget);
+        });
+      });
+    }
+
+    function setStatus(text){ statusEl.textContent = text; }
+
+    function fmt(v){
+      if (v === null || v === undefined) return '0';
+      if (v === '') return '0';
+      return String(v);
+    }
+
+    function fmtTs(v){
+      const n = Number(v || 0);
+      if (!n) return '—';
+      try { return new Date(n).toLocaleString(); }
+      catch(e) { return String(v); }
+    }
+
+    function qs(){ return '?token=' + encodeURIComponent(token); }
+
+    function renderTable(el, columns, rows){
+      const isUsersTable = el && el.id === 'usersTable';
+      const head = '<thead><tr>' + columns.map(c => `<th>${c.label}</th>`).join('') + '</tr></thead>';
+      const bodyRows = rows.length
+        ? rows.map(row => {
+            const attrs = isUsersTable
+              ? ` class="clickable-row" data-telegram-id="${String(row.telegramId || '')}"`
+              : '';
+            return '<tr' + attrs + '>' + columns.map(c => {
+              if (typeof c.render === 'function') {
+                return `<td>${c.render(row)}</td>`;
+              }
+              return `<td>${fmt(row[c.key])}</td>`;
+            }).join('') + '</tr>';
+          }).join('')
+        : `<tr><td colspan="${columns.length}">No data</td></tr>`;
+      el.innerHTML = head + '<tbody>' + bodyRows + '</tbody>';
+
+      if (isUsersTable) {
+        el.querySelectorAll('tbody tr[data-telegram-id]').forEach((tr) => {
+          tr.addEventListener('click', () => openUserDetails(tr.dataset.telegramId));
+        });
+      }
+    }
+    function renderMetrics(overview){
+      const metrics = [
+        ['Users', overview.totalUsers],
+        ['Online', overview.onlineUsers],
+        ['TON Revenue', overview.totalDonationTon, 4],
+        ['Stars Spent', overview.totalStarSpent],
+        ['Taps', overview.totalTaps],
+        ['Ads', overview.totalAds],
+        ['Refs', overview.totalReferrals],
+        ['Withdraw Pending', overview.pendingWithdrawRequests],
+        ['Draw Active', overview.activeDraws],
+        ['Draw Locked', overview.lockedDraws],
+        ['Draw Completed', overview.completedDraws]
+      ];
+      document.getElementById('metrics').innerHTML = metrics.map(([label, value, decimals]) => `
+        <div class="card">
+          <div class="metric-label">${label}</div>
+          <div class="metric-value">${decimals ? num(value, decimals) : fmt(value)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderCurrentRound(draws){
+      const card = document.getElementById('currentRoundCard');
+      const active = (draws || []).find(d => d.status === 'active');
+      const locked = (draws || []).find(d => d.status === 'locked');
+      const current = active || locked || (draws || [])[0];
+      if (!current) {
+        card.innerHTML = '<div class="metric-label">Current Round</div><div class="metric-value">No round</div>';
+        return;
+      }
+      card.innerHTML = `
+        <div class="metric-label">Current Round Control</div>
+        <div class="grid">
+          <div class="card">
+            <div class="metric-label">Round</div>
+            <div class="metric-value">${fmt(current.id)}</div>
+          </div>
+          <div class="card">
+            <div class="metric-label">Status</div>
+            <div class="metric-value">${fmt(current.status)}</div>
+          </div>
+          <div class="card">
+            <div class="metric-label">Participants</div>
+            <div class="metric-value">${fmt(current.participant_rows)}</div>
+          </div>
+          <div class="card">
+            <div class="metric-label">Entries</div>
+            <div class="metric-value">${fmt(current.total_entries)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function api(path, options){
+      const sep = qs().includes('?') ? '&' : '?';
+      const url = path + qs() + sep + '_ts=' + Date.now();
+      const r = await fetch(url, { cache:'no-store', ...(options || {}) });
+      const raw = await r.text();
+
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        data = {
+          success: r.ok,
+          status: r.status,
+          error: 'non_json_response',
+          raw: raw.slice(0, 200)
+        };
+      }
+
+      data._httpOk = r.ok;
+      data._httpStatus = r.status;
+      return data;
+    }
+
+    async function apiWithExtra(path, extraParams, options){
+      const extra = new URLSearchParams(extraParams || {}).toString();
+      const full = path + qs() + (extra ? '&' + extra : '');
+      const r = await fetch(full, options || {});
+      return r.json();
+    }
+
+    async function approveWithdraw(id){
+      try{
+        if (!confirm('Approve withdraw #' + id + '?')) return;
+        setStatus('Approving withdraw #' + id + ' ...');
+        const r = await api('/api/admin/withdraw/approve', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id })
+        });
+        setStatus(JSON.stringify(r));
+        if (r && (r.success || r._httpOk)) {
+          setTimeout(() => location.reload(), 300);
+          return;
+        }
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Withdraw approve failed.');
+      }
+    }
+
+    async function rejectWithdraw(id){
+      try{
+        if (!confirm('Reject withdraw #' + id + '?')) return;
+        setStatus('Rejecting withdraw #' + id + ' ...');
+        const r = await api('/api/admin/withdraw/reject', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id })
+        });
+        setStatus(JSON.stringify(r));
+        if (r && (r.success || r._httpOk)) {
+          setTimeout(() => location.reload(), 300);
+          return;
+        }
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Withdraw reject failed.');
+      }
+    }
+
+    async function markPaidWithdraw(id){
+      try{
+        if (!confirm('Mark withdraw #' + id + ' as paid?')) return;
+        setStatus('Marking withdraw #' + id + ' as paid ...');
+        const r = await api('/api/admin/withdraw/paid', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id })
+        });
+        setStatus(JSON.stringify(r));
+        if (r && (r.success || r._httpOk)) {
+          setTimeout(() => location.reload(), 300);
+          return;
+        }
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Withdraw mark paid failed.');
+      }
+    }
+
+
+    function card(label, value){
+      return `
+        <div class="kv-card">
+          <div class="kv-label">${label}</div>
+          <div class="kv-value">${value}</div>
+        </div>
+      `;
+    }
+
+    function num(v, d=0){
+      const n = Number(v || 0);
+      if (!Number.isFinite(n)) return '0';
+      return d > 0 ? n.toFixed(d) : String(n);
+    }
+
+    function closeUserDetails(){
+      document.getElementById('userDetailsModal').classList.remove('active');
+      document.getElementById('userDetailsBody').innerHTML = 'Loading...';
+    }
+
+    async function openUserDetails(telegramId){
+      try{
+        const modal = document.getElementById('userDetailsModal');
+        const body = document.getElementById('userDetailsBody');
+        modal.classList.add('active');
+        body.innerHTML = 'Loading user details...';
+
+        const data = await api('/api/admin/user/' + encodeURIComponent(telegramId));
+
+        if (!data || data.success === false) {
+          body.innerHTML = '<div class="kv-card"><div class="kv-value">Failed to load user details</div></div>';
+          return;
+        }
+
+        const u = data.user || {};
+        const s = data.draw_stats || {};
+        const e = data.draw_entry || {};
+        const m = data.multipliers || {};
+        const score = data.score || {};
+        const draw = data.active_draw || {};
+
+        body.innerHTML = `
+          <div class="section">
+            <h2>Account</h2>
+            <div class="kv">
+              ${card('TG ID', fmt(u.telegramId))}
+              ${card('Username', fmt(u.username))}
+              ${card('TG First Name', (u.first_name && String(u.first_name) !== '0') ? fmt(u.first_name) : '—')}
+              ${card('TG Last Name', (u.last_name && String(u.last_name) !== '0') ? fmt(u.last_name) : '—')}
+              ${card('Rank', fmt(u.rank_id))}
+              ${card('Energy', fmt(u.energy))}
+              ${card('Rank Expires', Number(u.rank_expires_at || 0) ? fmtTs(u.rank_expires_at) : '—')}
+              ${card('Ref Code', fmt(u.ref_code))}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Economy</h2>
+            <div class="kv">
+              ${card('WBC', fmt(u.wbc_balance))}
+              ${card('TON Balance', num(u.ton_balance, 4))}
+              ${card('TON Donated Total', num(u.donation_ton_total, 4))}
+              ${card('Stars Total', fmt(u.star_spent_total))}
+              ${card('Keys Balance', fmt(u.zero_day_keys_balance))}
+              ${card('Referrals Total', fmt(u.referrals_total))}
+              ${card('Ads Total', fmt(u.ads_total))}
+              ${card('Taps Total', fmt(u.taps_total))}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Round</h2>
+            <div class="mini-grid">
+              ${card('Draw ID', fmt(draw.id))}
+              ${card('Draw Status', fmt(draw.status))}
+              ${card('Entries in Round', fmt(e.entries))}
+              ${card('Eligible for Draw', fmt(e.eligible))}
+              ${card('Cached Score', fmt(score.cached))}
+              ${card('Live Score', fmt(score.recomputed))}
+            </div>
+
+            <div class="kv">
+              ${card('Taps Round', fmt(s.taps_round))}
+              ${card('Ads Round', fmt(s.ads_round))}
+              ${card('Refs Round', fmt(s.refs_round))}
+              ${card('TON Round', num(s.donation_ton_round, 4))}
+              ${card('Stars Round', fmt(s.stars_round))}
+              ${card('Draw Stats Updated', Number(s.updatedAt || 0) ? fmtTs(s.updatedAt) : '—')}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Score Formula</h2>
+            <div class="kv">
+              ${card('Score Base', fmt(m.BASE))}
+              ${card('Key Progress', fmt(m.keyProgress))}
+              ${card('Keys Multiplier', fmt(m.K))}
+              ${card('Refs Multiplier', fmt(m.R))}
+              ${card('Taps Multiplier', fmt(m.P))}
+              ${card('Stars Multiplier', fmt(m.S))}
+              ${card('Ads Multiplier', fmt(m.A))}
+              ${card('TON Multiplier', fmt(m.T))}
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Timestamps</h2>
+            <div class="kv">
+              ${card('Created', fmtTs(u.createdAt))}
+              ${card('Updated', fmtTs(u.updatedAt))}
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        console.error(e);
+        document.getElementById('userDetailsBody').innerHTML =
+          '<div class="kv-card"><div class="kv-value">User details load failed</div></div>';
+      }
+    }
+
+
+    async function createPromo(){
+      const btn = document.getElementById('createPromoBtn');
+      try{
+        if (btn) btn.disabled = true;
+
+        const code = (document.getElementById('promoCodeInput').value || '').trim().toUpperCase();
+        const reward_ton = Number(document.getElementById('promoRewardTonInput').value || 0);
+        const duration_hours = Number(document.getElementById('promoDurationHoursInput').value || 0);
+        const max_claims = Number(document.getElementById('promoMaxClaimsInput').value || 0);
+
+        if (!code) {
+          setStatus('Promo code is required.');
+          return;
+        }
+
+        setStatus('Creating promo code...');
+        const r = await api('/api/admin/promo/create', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ code, reward_ton, duration_hours, max_claims })
+        });
+
+        if (!r || !r.success) {
+          const msg =
+            (r && (r.error || r.message || r.raw)) ||
+            ('http_' + String((r && r._httpStatus) || 'unknown'));
+          setStatus('PROMO ERROR: ' + msg);
+          return;
+        }
+
+        setStatus('PROMO CREATED: ' + String((r.promo && r.promo.code) || code));
+
+        document.getElementById('promoCodeInput').value = '';
+        document.getElementById('promoRewardTonInput').value = '';
+        document.getElementById('promoDurationHoursInput').value = '';
+        document.getElementById('promoMaxClaimsInput').value = '';
+
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('PROMO CREATE FAILED: ' + String((e && e.message) || e));
+      }finally{
+        if (btn) btn.disabled = false;
+      }
+    }
+
+
+    async function deletePromo(id){
+      try{
+        if (!confirm('Delete promo #' + id + '? This action cannot be undone.')) return;
+        setStatus('Deleting promo #' + id + ' ...');
+        const r = await api('/api/admin/promo/delete', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id })
+        });
+        setStatus(JSON.stringify(r));
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Promo delete failed.');
+      }
+    }
+
+    async function togglePromo(id){
+      try{
+        setStatus('Toggling promo #' + id + ' ...');
+        const r = await api('/api/admin/promo/toggle', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ id })
+        });
+        setStatus(JSON.stringify(r));
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Promo toggle failed.');
+      }
+    }
+
+
+    function buildUsersParams(){
+      const params = {
+        limit: state.usersPageSize,
+        offset: (state.usersPage - 1) * state.usersPageSize,
+        sort: state.usersSort,
+        order: state.usersOrder
+      };
+
+      if (state.usersQuery) params.q = state.usersQuery;
+
+      Object.entries(state.usersFilters || {}).forEach(([key, value]) => {
+        if (value) params[key] = '1';
+      });
+
+      return params;
+    }
+
+    function syncUsersControls(){
+      const sortEl = document.getElementById('usersSort');
+      const orderEl = document.getElementById('usersOrder');
+      const pageSizeEl = document.getElementById('usersPageSize');
+
+      if (sortEl) sortEl.value = state.usersSort;
+      if (orderEl) orderEl.value = state.usersOrder;
+      if (pageSizeEl) pageSizeEl.value = String(state.usersPageSize);
+
+      document.querySelectorAll('.users-filter-btn').forEach((btn) => {
+        btn.classList.toggle('active', !!state.usersFilters[btn.dataset.filterKey]);
+      });
+    }
+
+    function renderUsersPager(payload){
+      const total = Number(payload?.total || 0);
+      const limit = Number(payload?.limit || state.usersPageSize || 25);
+      const offset = Number(payload?.offset || 0);
+      const page = Math.floor(offset / limit) + 1;
+      const totalPages = Math.max(1, Math.ceil(total / limit) || 1);
+
+      state.usersPage = page;
+      state.usersPageSize = limit;
+      state.usersTotalPages = totalPages;
+
+      const from = total === 0 ? 0 : offset + 1;
+      const to = Math.min(offset + limit, total);
+
+      const html = `
+        <div class="users-pager-info">Users ${from}-${to} of ${total} • Page ${page} / ${totalPages}</div>
+        <div class="users-pager-actions">
+          <button type="button" data-page-action="prev" ${page <= 1 ? 'disabled' : ''}>← PREV</button>
+          <button type="button" data-page-action="next" ${page >= totalPages ? 'disabled' : ''}>NEXT →</button>
+        </div>
+      `;
+
+      const top = document.getElementById('usersPagerTop');
+      const bottom = document.getElementById('usersPagerBottom');
+
+      if (top) top.innerHTML = html;
+      if (bottom) bottom.innerHTML = html;
+    }
+
+    async function loadAll(){
+      try{
+        setStatus('Syncing control panel...');
+        syncUsersControls();
+        const [overview, users, draws, winners, promos, withdraws] = await Promise.all([
+          api('/api/admin/overview'),
+          apiWithExtra('/api/admin/users', buildUsersParams()),
+          api('/api/admin/draws'),
+          api('/api/admin/winners'),
+          api('/api/admin/promos'),
+          apiWithExtra('/api/admin/withdraws', state.withdrawStatus ? { status: state.withdrawStatus } : {})
+        ]);
+
+        renderMetrics(overview);
+        renderCurrentRound(draws.draws || []);
+
+        renderTable(document.getElementById('usersTable'), [
+          {key:'telegramId',label:'TG ID'},
+          {key:'username',label:'Username'},
+          {key:'rank_id',label:'Rank'},
+          {key:'wbc_balance',label:'WBC'},
+          {key:'donation_ton_total',label:'TON Donate', render:(row) => num(row.donation_ton_total, 4)},
+          {key:'ton_balance',label:'TON Balance', render:(row) => num(row.ton_balance, 4)},
+          {key:'star_spent_total',label:'Stars'},
+          {key:'referrals_total',label:'Refs'},
+          {key:'ads_total',label:'Ads'},
+          {key:'taps_total',label:'Taps'},
+          {key:'zero_day_keys_balance',label:'Keys'},
+          {key:'draw_score_cached',label:'Draw Score'},
+          {key:'updatedAt',label:'Updated', render:(row) => fmtTs(row.updatedAt)}
+        ], users.users || []);
+        renderUsersPager(users);
+
+        renderTable(document.getElementById('drawsTable'), [
+          {key:'id',label:'Round'},
+          {key:'status',label:'Status'},
+          {key:'participant_rows',label:'Participants'},
+          {key:'total_entries',label:'Entries'},
+          {key:'createdAt',label:'Created', render:(row) => fmtTs(row.createdAt)},
+          {key:'closedAt',label:'Closed', render:(row) => fmtTs(row.closedAt)}
+        ], draws.draws || []);
+
+        renderTable(document.getElementById('winnersTable'), [
+          {key:'draw_id',label:'Round'},
+          {key:'telegramId',label:'TG ID'},
+          {key:'username',label:'Username'},
+          {key:'place',label:'Place'},
+          {key:'reward',label:'Reward'},
+          {key:'score',label:'Score'},
+          {key:'createdAt',label:'Created', render:(row) => fmtTs(row.createdAt)}
+        ], winners.winners || []);
+
+        renderTable(document.getElementById('promoTable'), [
+          {key:'id',label:'ID'},
+          {key:'code',label:'Code'},
+          {key:'reward_ton',label:'TON', render:(row) => num(row.reward_ton, 4)},
+          {key:'max_claims',label:'Max Claims'},
+          {key:'claims_count',label:'Used'},
+          {key:'remaining_claims',label:'Remaining'},
+          {key:'active',label:'Active', render:(row) => Number(row.active) === 1
+            ? '<span class="toggle-on">ON</span>'
+            : '<span class="toggle-off">OFF</span>'},
+          {key:'expires_at',label:'Expires', render:(row) => fmtTs(row.expires_at)},
+          {key:'actions',label:'Actions', render:(row) =>
+            `<div class="inline-actions">
+              <button class="tiny-btn" onclick="togglePromo(${Number(row.id)})">${Number(row.active) === 1 ? 'DISABLE' : 'ENABLE'}</button>
+              <button class="tiny-btn danger" onclick="deletePromo(${Number(row.id)})">DELETE</button>
+            </div>`}
+        ], promos.promos || []);
+
+        renderTable(document.getElementById('withdrawsTable'), [
+          {key:'id',label:'ID'},
+          {key:'telegramId',label:'TG ID'},
+          {key:'amount',label:'Amount'},
+          {key:'currency',label:'Currency'},
+          {key:'wallet',label:'Wallet'},
+          {key:'status',label:'Status'},
+          {key:'createdAt',label:'Created', render:(row) => fmtTs(row.createdAt)},
+          {key:'actions',label:'Actions', render:(row) => {
+            if (row.status === 'pending') {
+              return `<div class="inline-actions">
+                <button class="tiny-btn" onclick="approveWithdraw(${Number(row.id)})">APPROVE</button>
+                <button class="tiny-btn danger" onclick="rejectWithdraw(${Number(row.id)})">REJECT</button>
+              </div>`;
+            }
+            if (row.status === 'approved') {
+              return `<div class="inline-actions">
+                <button class="tiny-btn warn" onclick="markPaidWithdraw(${Number(row.id)})">MARK PAID</button>
+              </div>`;
+            }
+            return '—';
+          }}
+        ], withdraws.withdraws || []);
+
+        setStatus('Admin core synced.');
+      }catch(e){
+        console.error(e);
+        setStatus('Admin sync failed. Check token / server.');
+      }
+    }
+
+    document.getElementById('closeUserDetailsBtn').addEventListener('click', closeUserDetails);
+    document.getElementById('userDetailsModal').addEventListener('click', (e) => {
+      if (e.target.id === 'userDetailsModal') closeUserDetails();
+    });
+
+    document.getElementById('createPromoBtn').addEventListener('click', createPromo);
+    document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+    document.getElementById('usersSearchBtn').addEventListener('click', async () => {
+      state.usersQuery = (document.getElementById('usersSearch').value || '').trim();
+      state.usersPage = 1;
+      await loadAll();
+    });
+    document.getElementById('usersResetBtn').addEventListener('click', async () => {
+      document.getElementById('usersSearch').value = '';
+      state.usersQuery = '';
+      state.usersPage = 1;
+      state.usersSort = 'updatedAt';
+      state.usersOrder = 'desc';
+      state.usersPageSize = 25;
+      state.usersFilters = {
+        online: false,
+        hasKeys: false,
+        tonDonate: false,
+        tonBalance: false,
+        stars: false,
+        rankGt1: false,
+        ads: false,
+        refs: false,
+        activeRecent: false
+      };
+      syncUsersControls();
+      await loadAll();
+    });
+    document.getElementById('usersSearch').addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        state.usersQuery = (document.getElementById('usersSearch').value || '').trim();
+        state.usersPage = 1;
+        await loadAll();
+      }
+    });
+
+    document.getElementById('usersSort').addEventListener('change', async (e) => {
+      state.usersSort = e.target.value || 'updatedAt';
+      state.usersPage = 1;
+      await loadAll();
+    });
+
+    document.getElementById('usersOrder').addEventListener('change', async (e) => {
+      state.usersOrder = e.target.value || 'desc';
+      state.usersPage = 1;
+      await loadAll();
+    });
+
+    document.getElementById('usersPageSize').addEventListener('change', async (e) => {
+      state.usersPageSize = Math.max(1, Number(e.target.value || 25));
+      state.usersPage = 1;
+      await loadAll();
+    });
+
+    document.querySelectorAll('.users-filter-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const key = btn.dataset.filterKey;
+        state.usersFilters[key] = !state.usersFilters[key];
+        state.usersPage = 1;
+        syncUsersControls();
+        await loadAll();
+      });
+    });
+
+    document.addEventListener('click', async (e) => {
+      const pagerBtn = e.target.closest('[data-page-action]');
+      if (!pagerBtn) return;
+
+      const action = pagerBtn.dataset.pageAction;
+      if (action === 'prev' && state.usersPage > 1) {
+        state.usersPage -= 1;
+        await loadAll();
+      }
+      if (action === 'next' && state.usersPage < state.usersTotalPages) {
+        state.usersPage += 1;
+        await loadAll();
+      }
+    });
+
+    document.getElementById('withdrawFilterBtn').addEventListener('click', async () => {
+      state.withdrawStatus = document.getElementById('withdrawStatusFilter').value || '';
+      await loadAll();
+    });
+
+    document.getElementById('withdrawResetBtn').addEventListener('click', async () => {
+      document.getElementById('withdrawStatusFilter').value = '';
+      state.withdrawStatus = '';
+      await loadAll();
+    });
+
+    document.getElementById('lockBtn').addEventListener('click', async () => {
+      if (!confirm('Lock current draw?')) return;
+      try{
+        setStatus('Locking draw...');
+        const r = await api('/api/admin/draw/lock', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:'{}'
+        });
+        const msg = JSON.stringify(r);
+        setStatus(msg);
+        alert('LOCK RESPONSE: ' + msg);
+        if (r && r.success) {
+          location.reload();
+          return;
+        }
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        alert('LOCK ERROR: ' + String(e));
+        setStatus('Draw lock failed.');
+      }
+    });
+
+    document.getElementById('finishBtn').addEventListener('click', async () => {
+      if (!confirm('Finish current locked draw? This action creates the next round.')) return;
+      try{
+        setStatus('Executing draw finish...');
+        const r = await api('/api/admin/draw/finish', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:'{}'
+        });
+        setStatus(JSON.stringify(r));
+        if (r && (r.success || r._httpOk)) {
+          setTimeout(() => location.reload(), 300);
+          return;
+        }
+        await loadAll();
+      }catch(e){
+        console.error(e);
+        setStatus('Draw finish failed.');
+      }
+    });
+
+    bindAdminNav();
+    setActiveTab(state.activeTab || 'dashboard');
+    loadAll();
+
+    // AUTO REFRESH (keep admin panel in sync with backend)
+    setInterval(() => {
+      try {
+        loadAll();
+      } catch (e) {
+        console.error('auto refresh error:', e);
+      }
+    }, 60000);
+  </script>
+</body>
+</html>

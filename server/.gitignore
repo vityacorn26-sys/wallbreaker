@@ -1,0 +1,7 @@
+node_modules/
+*.db
+database*.db
+*.log
+.env
+*.save*
+*.SAFETY

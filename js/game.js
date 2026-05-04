@@ -2322,56 +2322,6 @@ function renderBreachTable(data) {
   table.classList.remove("hidden");
 }
 
-    // Create table rows with SVG backgrounds
-    let delayOffset = 0;
-    sorted.forEach((player, index) => {
-      const row = document.createElement("tr");
-      const rank = index + 1;
-      const liveScore = Number(player.live_score || 0);
-      const prefix = getPlayerPrefix(liveScore);
-      const nickname = String(player.public_nickname || "User").substring(0, 30);
-
-      row.innerHTML = `
-        <td class="breach-board-rank">${rank}</td>
-        <td class="breach-board-nickname">
-          <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
-          <span>${nickname}</span>
-        </td>
-        <td class="breach-board-score">${Number(liveScore).toLocaleString()}</td>
-      `;
-
-      row.addEventListener("click", () => applyGlitchEffect(row));
-      tbody.appendChild(row);
-
-      // Stagger animation
-      if (window.gsap) {
-        delayOffset += 0.1;
-        gsap.from(row, {
-          opacity: 0,
-          x: -20,
-          duration: 0.4,
-          delay: delayOffset,
-          ease: "power2.out"
-        });
-      }
-    });
-
-    // Hide loader, show table
-    loader.classList.add("hidden");
-    table.classList.remove("hidden");
-
-  } catch (e) {
-    console.error("loadBreachBoard error:", e);
-    const loader = document.getElementById("breach-board-loader");
-    if (loader) {
-      loader.innerHTML = `
-        <div class="scanner-text">Network Error</div>
-        <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
-      `;
-    }
-  }
-}
-
 function applyGlitchEffect(element) {
   if (!window.gsap) {
     // Fallback without GSAP
