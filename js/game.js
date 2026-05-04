@@ -2194,6 +2194,13 @@ async function openBreachBoard() {
     );
   }
 
+  fetch('/api/leaderboard')
+    .then((res) => res.json())
+    .then((data) => renderBreachTable(data))
+    .catch((err) => {
+      console.error('breach board fetch error:', err);
+    });
+
   loadBreachBoard();
 }
 
@@ -2254,12 +2261,66 @@ async function loadBreachBoard() {
 
     // Load leaderboard data
     const data = await fetchLeaderboardData();
-    
-    // Sort by live score desc and take top 5
-    const sorted = (data || [])
-      .filter(p => String(p.public_nickname || '').trim())
-      .sort((a, b) => Number(b.live_score || 0) - Number(a.live_score || 0))
-      .slice(0, 5);
+    renderBreachTable(data);
+  } catch (e) {
+    console.error("loadBreachBoard error:", e);
+    const loader = document.getElementById("breach-board-loader");
+    if (loader) {
+      loader.innerHTML = `
+        <div class="scanner-text">Network Error</div>
+        <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
+      `;
+    }
+  }
+}
+
+function renderBreachTable(data) {
+  const table = document.getElementById("breach-board-table");
+  const tbody = document.getElementById("breach-board-tbody");
+  const loader = document.getElementById("breach-board-loader");
+
+  if (!table || !tbody || !loader) return;
+
+  const sorted = (Array.isArray(data) ? data : [])
+    .filter((p) => String(p.public_nickname || '').trim())
+    .sort((a, b) => Number(b.live_score || 0) - Number(a.live_score || 0))
+    .slice(0, 5);
+
+  tbody.innerHTML = "";
+
+  sorted.forEach((player, index) => {
+    const row = document.createElement("tr");
+    const rank = index + 1;
+    const liveScore = Number(player.live_score || 0);
+    const prefix = getPlayerPrefix(liveScore);
+    const nickname = String(player.public_nickname || "User").substring(0, 30);
+
+    row.innerHTML = `
+      <td class="breach-board-rank">${rank}</td>
+      <td class="breach-board-nickname">
+        <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
+        <span>${nickname}</span>
+      </td>
+      <td class="breach-board-score">${Number(liveScore).toLocaleString()}</td>
+    `;
+
+    row.addEventListener("click", () => applyGlitchEffect(row));
+    tbody.appendChild(row);
+
+    if (window.gsap) {
+      gsap.from(row, {
+        opacity: 0,
+        x: -20,
+        duration: 0.4,
+        delay: index * 0.1,
+        ease: "power2.out"
+      });
+    }
+  });
+
+  loader.classList.add("hidden");
+  table.classList.remove("hidden");
+}
 
     // Create table rows with SVG backgrounds
     let delayOffset = 0;

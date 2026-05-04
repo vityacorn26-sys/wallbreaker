@@ -4044,6 +4044,26 @@ CREATE TABLE IF NOT EXISTS draw_entries (
 )
 `).run();
 
+// draw_user_stats - CRITICAL: Missing table that caused profile auth to fail
+db.prepare(`
+CREATE TABLE IF NOT EXISTS draw_user_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_id INTEGER NOT NULL,
+  telegramId TEXT NOT NULL,
+  taps_round INTEGER DEFAULT 0,
+  ads_round INTEGER DEFAULT 0,
+  refs_round INTEGER DEFAULT 0,
+  donation_ton_round REAL DEFAULT 0,
+  stars_round INTEGER DEFAULT 0,
+  entries INTEGER DEFAULT 0,
+  eligible INTEGER DEFAULT 0,
+  score_cached REAL DEFAULT 0,
+  createdAt INTEGER,
+  updatedAt INTEGER,
+  UNIQUE(draw_id, telegramId)
+)
+`).run();
+
 // ref_activations
 db.prepare(`
 CREATE TABLE IF NOT EXISTS ref_activations (
@@ -4539,6 +4559,36 @@ app.post('/api/draw/start', (req, res) => {
 });
 
 // ===== DRAW CONTROL END =====
+
+// ===== LEADERBOARD =====
+app.get('/api/leaderboard', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT
+        telegramId,
+        username,
+        first_name,
+        last_name,
+        public_nickname,
+        draw_score_cached as live_score,
+        rank_id,
+        zero_day_keys_balance,
+        wbc_balance,
+        donation_ton_total,
+        ads_total
+      FROM users
+      WHERE TRIM(COALESCE(public_nickname, '')) != ''
+        AND draw_score_cached > 0
+      ORDER BY draw_score_cached DESC, zero_day_keys_balance DESC, ads_total DESC
+      LIMIT 100
+    `).all();
+
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('leaderboard error:', e);
+    return res.status(500).json({error: 'leaderboard_failed'});
+  }
+});
 
 app.get('/health', (req, res) => {
   return res.json({ ok: true });
