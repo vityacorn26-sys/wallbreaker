@@ -1473,6 +1473,8 @@ async function ensureTonWalletConnected() {
 }
 
 async function loadUser() {
+  console.log("TG:", tg);
+  console.log("INIT:", tg?.initData);
   try {
     showLoadingScreen();
 
