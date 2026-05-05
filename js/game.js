@@ -2183,42 +2183,65 @@ async function loadBreachBoard() {
     var loader = document.getElementById("breach-board-loader");
     var table = document.getElementById("breach-board-table");
     var tbody = document.getElementById("breach-board-tbody");
-    if (!content || !loader || !table || !tbody) {
-      alert("Missing elements");
-      return;
-    }
-    // Принудительно показываем всё для отладки
-    loader.style.display = "none";
-    table.style.display = "table";
+    if (!content || !loader || !table || !tbody) return;
+
+    // Показываем лоадер, скрываем таблицу
+    loader.classList.remove("hidden");
+    table.classList.add("hidden");
     tbody.innerHTML = "";
+
     var data = await API.getLeaderboard();
     if (!data || !data.length) {
-      tbody.innerHTML = "<tr><td colspan='2'>No data</td></tr>";
+      loader.innerHTML = '<div class="scanner-text">No data yet</div>';
       return;
     }
-    var sorted = data.filter(function(p) { return p.public_nickname && Number(p.live_score || 0) > 0; })
-                     .sort(function(a, b) { return Number(b.live_score || 0) - Number(a.live_score || 0); })
-                     .slice(0, 5);
+
+    var sorted = data
+      .filter(function(p) { return p.public_nickname && Number(p.live_score || 0) > 0; })
+      .sort(function(a, b) { return Number(b.live_score || 0) - Number(a.live_score || 0); })
+      .slice(0, 5);
+
     if (sorted.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='2'>No players with score</td></tr>";
+      loader.innerHTML = '<div class="scanner-text">No players with score</div>';
       return;
     }
+
     sorted.forEach(function(player) {
       var row = document.createElement("tr");
       var nickname = String(player.public_nickname || "User").substring(0, 30);
       var liveScore = Number(player.live_score || 0);
       var entries = Number(player.entries || 0);
-      row.innerHTML = '<td>' + nickname + '</td><td>' + liveScore.toLocaleString() + '</td>';
+
+      // Цвет строки
       if (entries > 0) {
-        row.style.backgroundColor = "rgba(0,255,200,0.2)";
+        row.className = "has-key";
       } else {
-        row.style.backgroundColor = "rgba(255,50,100,0.2)";
+        row.className = "no-key";
       }
+
+      var html = '<td class="breach-board-nickname">' + nickname;
+      if (entries > 0) {
+        html += '<span class="key-badge">+' + entries + ' key' + (entries > 1 ? 's' : '') + '</span>';
+      }
+      html += '</td><td class="breach-board-score">' + liveScore.toLocaleString() + '</td>';
+      row.innerHTML = html;
+      row.addEventListener("click", function() { applyGlitchEffect(row); });
       tbody.appendChild(row);
+
+      if (window.gsap) {
+        gsap.from(row, { opacity: 0, x: -20, duration: 0.4, delay: tbody.children.length * 0.1, ease: "power2.out" });
+      }
     });
-    alert("Rows added: " + tbody.children.length + ", table display: " + window.getComputedStyle(table).display);
+
+    // Скрываем лоадер, показываем таблицу
+    loader.classList.add("hidden");
+    table.classList.remove("hidden");
   } catch (e) {
-    alert("Error: " + e.message);
+    console.error("loadBreachBoard error:", e);
+    var loaderEl = document.getElementById("breach-board-loader");
+    if (loaderEl) {
+      loaderEl.innerHTML = '<div class="scanner-text">Network Error</div><div style="font-size:10px;color:#00F2FF;opacity:0.6;">Please try again later</div>';
+    }
   }
 }
 
