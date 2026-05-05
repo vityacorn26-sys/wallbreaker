@@ -2178,34 +2178,37 @@ window.closeBreachBoard = () => {
 };
 
 function getPlayerPrefix(liveScore) {
-  if (liveScore >= 5000000) return { text: "ELITE", class: "elite" };
-  if (liveScore >= 2000000) return { text: "PRO", class: "pro" };
-  if (liveScore >= 500000) return { text: "CORE", class: "core" };
-  if (liveScore >= 100000) return { text: "NODE", class: "node" };
+  if (liveScore >= 1200) return { text: "ELITE", class: "elite" };
+  if (liveScore >= 1000) return { text: "PRO", class: "pro" };
+  if (liveScore >= 500) return { text: "CORE", class: "core" };
+  if (liveScore >= 100) return { text: "NODE", class: "node" };
   return { text: "USER", class: "user" };
 }
 
 async function loadBreachBoard() {
   try {
-    const content = document.getElementById("breach-board-content");
-    const loader = document.getElementById("breach-board-loader");
-    const table = document.getElementById("breach-board-table");
-    const tbody = document.getElementById("breach-board-tbody");
-    if (!content || !loader || !table || !tbody) return;
+    var content = document.getElementById("breach-board-content");
+    var loader = document.getElementById("breach-board-loader");
+    var table = document.getElementById("breach-board-table");
+    var tbody = document.getElementById("breach-board-tbody");
+    if (!content || !loader || !table || !tbody) {
+      alert("BreachBoard elements missing: content=" + !!content + " loader=" + !!loader + " table=" + !!table + " tbody=" + !!tbody);
+      return;
+    }
     loader.classList.remove("hidden");
     table.classList.add("hidden");
     tbody.innerHTML = "";
-    const data = await API.getLeaderboard();
-    alert("LB data: " + JSON.stringify(data));
-    const sorted = (data || [])
-      .filter(function(p) { return p.public_nickname; })
+    var data = await API.getLeaderboard();
+    if (!data || !data.length) {
+      loader.innerHTML = '<div class="scanner-text">No data yet</div>';
+      return;
+    }
+    var sorted = data
+      .filter(function(p) { return p.public_nickname && Number(p.live_score || 0) > 0; })
       .sort(function(a, b) {
         var scoreA = Number(a.live_score || 0);
         var scoreB = Number(b.live_score || 0);
-        if (scoreA !== scoreB) return scoreB - scoreA;
-        var tapA = Number(a.last_tap_time || 0);
-        var tapB = Number(b.last_tap_time || 0);
-        return tapB - tapA;
+        return scoreB - scoreA;
       })
       .slice(0, 5);
     var delayOffset = 0;
@@ -2213,12 +2216,8 @@ async function loadBreachBoard() {
       var row = document.createElement("tr");
       var liveScore = Number(player.live_score || 0);
       var entries = Number(player.entries || 0);
-      var nickname = String(player.public_nickname || "User").substring(0, 30);
-      if (entries > 0) {
-        row.className = "has-key";
-      } else {
-        row.className = "no-key";
-      }
+      var nickname = (player.public_nickname || "User").substring(0, 30);
+      row.className = entries > 0 ? "has-key" : "no-key";
       var html = '<td class="breach-board-nickname"><span>' + nickname + '</span>';
       if (entries > 0) {
         html += '<span class="key-badge">+' + entries + ' key' + (entries > 1 ? 's' : '') + '</span>';
