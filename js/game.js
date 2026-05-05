@@ -2212,6 +2212,7 @@ async function loadBreachBoard() {
       })
       .slice(0, 5);
     var delayOffset = 0;
+    alert("Sorted rows: " + sorted.length);
     sorted.forEach(function(player) {
       var row = document.createElement("tr");
       var liveScore = Number(player.live_score || 0);
