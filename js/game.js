@@ -2177,14 +2177,6 @@ window.closeBreachBoard = () => {
   }
 };
 
-function getPlayerPrefix(liveScore) {
-  if (liveScore >= 1200) return { text: "ELITE", class: "elite" };
-  if (liveScore >= 1000) return { text: "PRO", class: "pro" };
-  if (liveScore >= 500) return { text: "CORE", class: "core" };
-  if (liveScore >= 100) return { text: "NODE", class: "node" };
-  return { text: "USER", class: "user" };
-}
-
 async function loadBreachBoard() {
   try {
     var content = document.getElementById("breach-board-content");
@@ -2212,7 +2204,6 @@ async function loadBreachBoard() {
       })
       .slice(0, 5);
     var delayOffset = 0;
-    alert("Sorted rows: " + sorted.length);
     sorted.forEach(function(player) {
       var row = document.createElement("tr");
       var liveScore = Number(player.live_score || 0);
