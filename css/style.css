@@ -2277,3 +2277,22 @@ body.wb-fullpanel-open #bottom-tabbar {
 .breach-board-rank {
   display: none; /* убираем, если ещё есть */
 }
+
+/* Breach Board rows */
+.breach-board-table tbody tr.has-key {
+  background: rgba(0, 255, 200, 0.1);
+  border-left: 3px solid #00FFC8;
+}
+.breach-board-table tbody tr.no-key {
+  background: rgba(255, 50, 100, 0.15);
+  border-left: 3px solid #FF3264;
+}
+.key-badge {
+  font-size: 11px;
+  background: #00FFC8;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: 700;
+}

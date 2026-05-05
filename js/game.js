@@ -2247,19 +2247,6 @@ async function loadBreachBoard() {
     }
   }
 }
-        <div class="scanner-text">Network Error</div>
-        <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
-      `;
-    }
-  }
-}
-
-function applyGlitchEffect(element) {
-  if (!window.gsap) {
-    // Fallback without GSAP
-    element.style.opacity = "0.5";
-    setTimeout(() => {
-      element.style.opacity = "1";
     }, 100);
     return;
   }
