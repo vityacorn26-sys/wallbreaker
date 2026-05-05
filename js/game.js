@@ -2227,6 +2227,7 @@ async function loadBreachBoard() {
     });
 
     // Показываем таблицу, скрываем лоадер
+    alert("Added rows: " + tbody.children.length + "\ntbody HTML: " + tbody.innerHTML.substring(0, 200));
     loader.style.display = "none";
     table.style.display = "table";
   } catch (e) {
