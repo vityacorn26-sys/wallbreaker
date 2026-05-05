@@ -2177,64 +2177,92 @@ window.closeBreachBoard = () => {
   }
 };
 
+function getPlayerPrefix(liveScore) {
+  if (liveScore >= 5000000) return { text: "ELITE", class: "elite" };
+  if (liveScore >= 2000000) return { text: "PRO", class: "pro" };
+  if (liveScore >= 500000) return { text: "CORE", class: "core" };
+  if (liveScore >= 100000) return { text: "NODE", class: "node" };
+  return { text: "USER", class: "user" };
+}
+
 async function loadBreachBoard() {
   try {
-    var content = document.getElementById("breach-board-content");
-    var loader = document.getElementById("breach-board-loader");
-    var table = document.getElementById("breach-board-table");
-    var tbody = document.getElementById("breach-board-tbody");
+    const content = document.getElementById("breach-board-content");
+    const loader = document.getElementById("breach-board-loader");
+    const table = document.getElementById("breach-board-table");
+    const tbody = document.getElementById("breach-board-tbody");
+
     if (!content || !loader || !table || !tbody) return;
 
-    // Показываем лоадер, скрываем таблицу
-    loader.style.display = "block";
-    table.style.display = "none";
+    // Show loader
+    loader.classList.remove("hidden");
+    table.classList.add("hidden");
     tbody.innerHTML = "";
 
-    var data = await API.getLeaderboard();
-    if (!data || !data.length) {
-      loader.innerHTML = '<div class="scanner-text">No data yet</div>';
-      return;
-    }
-
-    var sorted = data
-      .filter(function(p) { return p.public_nickname && Number(p.live_score || 0) > 0; })
-      .sort(function(a, b) { return Number(b.live_score || 0) - Number(a.live_score || 0); })
+    // Load leaderboard data
+    const data = await API.getLeaderboard();
+    
+    // Sort by live score desc, then by last tap time desc
+    const sorted = (data || [])
+      .filter(p => p.public_nickname)
+      .sort((a, b) => {
+        const scoreA = Number(a.live_score || 0);
+        const scoreB = Number(b.live_score || 0);
+        
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        
+        const tapA = Number(a.last_tap_time || 0);
+        const tapB = Number(b.last_tap_time || 0);
+        return tapB - tapA;
+      })
       .slice(0, 5);
 
-    if (sorted.length === 0) {
-      loader.innerHTML = '<div class="scanner-text">No players with score</div>';
-      return;
-    }
+    // Create table rows with SVG backgrounds
+    let delayOffset = 0;
+    sorted.forEach((player, index) => {
+      const row = document.createElement("tr");
+      const rank = index + 1;
+      const liveScore = Number(player.live_score || 0);
+      const prefix = getPlayerPrefix(liveScore);
+      const nickname = String(player.public_nickname || "User").substring(0, 30);
 
-    sorted.forEach(function(player) {
-      var row = document.createElement("tr");
-      var nickname = String(player.public_nickname || "User").substring(0, 30);
-      var liveScore = Number(player.live_score || 0);
-      var entries = Number(player.entries || 0);
-      if (entries > 0) {
-        row.className = "has-key";
-      } else {
-        row.className = "no-key";
-      }
-      var html = '<td class="breach-board-nickname">' + nickname;
-      if (entries > 0) {
-        html += '<span class="key-badge">+' + entries + ' key' + (entries > 1 ? 's' : '') + '</span>';
-      }
-      html += '</td><td class="breach-board-score">' + liveScore.toLocaleString() + '</td>';
-      row.innerHTML = html;
-      row.addEventListener("click", function() { applyGlitchEffect(row); });
+      row.innerHTML = `
+        <td class="breach-board-rank">#${rank}</td>
+        <td class="breach-board-nickname">
+          <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
+          <span>${nickname}</span>
+        </td>
+        <td class="breach-board-score">${Number(liveScore).toLocaleString()}</td>
+      `;
+
+      row.addEventListener("click", () => applyGlitchEffect(row));
       tbody.appendChild(row);
+
+      // Stagger animation
+      if (window.gsap) {
+        delayOffset += 0.1;
+        gsap.from(row, {
+          opacity: 0,
+          x: -20,
+          duration: 0.4,
+          delay: delayOffset,
+          ease: "power2.out"
+        });
+      }
     });
 
-    // Показываем таблицу, скрываем лоадер
-    alert("Added rows: " + tbody.children.length + "\ntbody HTML: " + tbody.innerHTML.substring(0, 200));
-    loader.style.display = "none";
-    table.style.display = "table";
+    // Hide loader, show table
+    loader.classList.add("hidden");
+    table.classList.remove("hidden");
+
   } catch (e) {
     console.error("loadBreachBoard error:", e);
-    var loaderEl = document.getElementById("breach-board-loader");
-    if (loaderEl) {
-      loaderEl.innerHTML = '<div class="scanner-text">Network Error</div><div style="font-size:10px;color:#00F2FF;opacity:0.6;">Please try again later</div>';
+    const loader = document.getElementById("breach-board-loader");
+    if (loader) {
+      loader.innerHTML = `
+        <div class="scanner-text">Network Error</div>
+        <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
+      `;
     }
   }
 }
@@ -2250,7 +2278,7 @@ function applyGlitchEffect(element) {
   }
 
   const timeline = gsap.timeline();
-
+  
   timeline
     .to(element, {
       x: -3,
