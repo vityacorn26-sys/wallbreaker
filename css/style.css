@@ -2238,28 +2238,8 @@ body.wb-fullpanel-open #bottom-tabbar {
   gap: 8px;
 }
 
-.breach-board-prefix {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  background: rgba(255, 182, 193, 0.2);
-  border: 1px solid rgba(255, 182, 193, 0.4);
-  border-radius: 3px;
-  color: #FFB6C1;
-  letter-spacing: 0.5px;
-}
 
-.breach-board-prefix.elite {
-  background: rgba(255, 50, 100, 0.25);
-  border-color: rgba(255, 50, 100, 0.5);
-  color: #FF3264;
-}
 
-.breach-board-prefix.pro {
-  background: rgba(255, 182, 193, 0.25);
-  border-color: rgba(255, 182, 193, 0.5);
-  color: #FFB6C1;
-}
 
 .breach-board-score {
   text-align: right;
@@ -2274,4 +2254,26 @@ body.wb-fullpanel-open #bottom-tabbar {
 
 .breach-board-loader.hidden {
   display: none;
+}
+
+/* Breach Board rows */
+.breach-board-table tbody tr.has-key {
+  background: rgba(0, 255, 200, 0.1);
+  border-left: 3px solid #00FFC8;
+}
+.breach-board-table tbody tr.no-key {
+  background: rgba(255, 50, 100, 0.15);
+  border-left: 3px solid #FF3264;
+}
+.key-badge {
+  font-size: 11px;
+  background: #00FFC8;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: 700;
+}
+.breach-board-rank {
+  display: none; /* убираем, если ещё есть */
 }
