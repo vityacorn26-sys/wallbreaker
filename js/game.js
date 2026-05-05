@@ -2185,7 +2185,7 @@ async function loadBreachBoard() {
     var tbody = document.getElementById("breach-board-tbody");
     if (!content || !loader || !table || !tbody) return;
 
-    // Показываем лоадер, скрываем таблицу (на всякий случай)
+    // Показываем лоадер, скрываем таблицу
     loader.style.display = "block";
     table.style.display = "none";
     tbody.innerHTML = "";
@@ -2226,7 +2226,7 @@ async function loadBreachBoard() {
       tbody.appendChild(row);
     });
 
-    // Принудительно показываем таблицу, скрываем лоадер
+    // Показываем таблицу, скрываем лоадер
     loader.style.display = "none";
     table.style.display = "table";
   } catch (e) {
