@@ -2191,38 +2191,54 @@ async function loadBreachBoard() {
     const loader = document.getElementById("breach-board-loader");
     const table = document.getElementById("breach-board-table");
     const tbody = document.getElementById("breach-board-tbody");
+
     if (!content || !loader || !table || !tbody) return;
+
+    // Show loader
     loader.classList.remove("hidden");
     table.classList.add("hidden");
     tbody.innerHTML = "";
+
+    // Load leaderboard data
     const data = await API.getLeaderboard();
+    
+    // Sort by live score desc, then by last tap time desc
     const sorted = (data || [])
       .filter(p => p.public_nickname)
       .sort((a, b) => {
         const scoreA = Number(a.live_score || 0);
         const scoreB = Number(b.live_score || 0);
+        
         if (scoreA !== scoreB) return scoreB - scoreA;
+        
         const tapA = Number(a.last_tap_time || 0);
         const tapB = Number(b.last_tap_time || 0);
         return tapB - tapA;
       })
       .slice(0, 5);
+
+    // Create table rows with SVG backgrounds
     let delayOffset = 0;
-    sorted.forEach((player) => {
+    sorted.forEach((player, index) => {
       const row = document.createElement("tr");
+      const rank = index + 1;
       const liveScore = Number(player.live_score || 0);
-      const entries = Number(player.entries || 0);
+      const prefix = getPlayerPrefix(liveScore);
       const nickname = String(player.public_nickname || "User").substring(0, 30);
-      row.className = entries > 0 ? "has-key" : "no-key";
+
       row.innerHTML = `
+        <td class="breach-board-rank">#${rank}</td>
         <td class="breach-board-nickname">
+          <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
           <span>${nickname}</span>
-          ${entries > 0 ? `<span class="key-badge">+${entries} key${entries>1?'s':''}</span>` : ''}
         </td>
-        <td class="breach-board-score">${liveScore.toLocaleString()}</td>
+        <td class="breach-board-score">${Number(liveScore).toLocaleString()}</td>
       `;
+
       row.addEventListener("click", () => applyGlitchEffect(row));
       tbody.appendChild(row);
+
+      // Stagger animation
       if (window.gsap) {
         delayOffset += 0.1;
         gsap.from(row, {
@@ -2234,19 +2250,29 @@ async function loadBreachBoard() {
         });
       }
     });
+
+    // Hide loader, show table
     loader.classList.add("hidden");
     table.classList.remove("hidden");
+
   } catch (e) {
     console.error("loadBreachBoard error:", e);
-    const loaderEl = document.getElementById("breach-board-loader");
-    if (loaderEl) {
-      loaderEl.innerHTML = `
+    const loader = document.getElementById("breach-board-loader");
+    if (loader) {
+      loader.innerHTML = `
         <div class="scanner-text">Network Error</div>
         <div style="font-size: 10px; color: #00F2FF; opacity: 0.6;">Please try again later</div>
       `;
     }
   }
 }
+
+function applyGlitchEffect(element) {
+  if (!window.gsap) {
+    // Fallback without GSAP
+    element.style.opacity = "0.5";
+    setTimeout(() => {
+      element.style.opacity = "1";
     }, 100);
     return;
   }
