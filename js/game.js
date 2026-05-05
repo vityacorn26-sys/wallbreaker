@@ -2196,6 +2196,7 @@ async function loadBreachBoard() {
     table.classList.add("hidden");
     tbody.innerHTML = "";
     const data = await API.getLeaderboard();
+    alert("LB data: " + JSON.stringify(data));
     const sorted = (data || [])
       .filter(function(p) { return p.public_nickname; })
       .sort(function(a, b) {
