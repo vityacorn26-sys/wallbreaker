@@ -1,3 +1,4 @@
+alert("GAME JS LOADED - STEP 1");
 const tg = window.Telegram?.WebApp || null;
 
 let currentLang = "EN";
