@@ -1,4 +1,5 @@
-const tg = window.Telegram?.WebApp;
+const tg = window.Telegram?.WebApp || null;
+
 let currentLang = "EN";
 
 const LANG_STORAGE_KEY = "wb_lang_v1";
@@ -888,18 +889,6 @@ async function requestNicknameChange() {
   }
 }
 
-async function requestNicknameChangeForStars() {
-  const currentNick = String(userState.public_nickname || "").trim();
-  const promptText = currentLang === "RU" ? "Введи новый никнейм (3–24 символа):" : "Enter a new nickname (3–24 characters):";
-  const raw = window.prompt(promptText, currentNick);
-  if (raw === null) return;
-
-  const nickname = String(raw || "").trim();
-  if (!nickname || nickname === currentNick) return;
-
-  await buyNicknameForStars(nickname);
-}
-
 async function buyNicknameForStars(newNickname) {
   if (starsBuyLocked) {
     safeAlert(t().starsBuyBusy);
@@ -909,26 +898,9 @@ async function buyNicknameForStars(newNickname) {
   starsBuyLocked = true;
 
   try {
-    const telegramUser = API.getTelegramUser();
-    const telegramId = String(telegramUser?.id || "");
-    const username = String(telegramUser?.username || "");
+    const create = await API.createNicknameStarsPurchase();
 
-    if (!telegramId) {
-      safeAlert(currentLang === "RU" ? "Telegram user not found." : "Telegram user not found.");
-      return;
-    }
-
-    const response = await fetch('/api/nickname/buy-stars/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ telegramId, username })
-    });
-
-    const create = await response.json();
-    if (!response.ok || !create?.success) {
+    if (!create?.success) {
       safeAlert(create?.error || t().starsCreateFail);
       return;
     }
@@ -942,6 +914,7 @@ async function buyNicknameForStars(newNickname) {
     }
 
     let invoiceStatus = "";
+
     try {
       invoiceStatus = await openTelegramInvoice(invoiceLink);
     } catch (e) {
@@ -950,24 +923,23 @@ async function buyNicknameForStars(newNickname) {
       return;
     }
 
-    if (!invoiceStatus || invoiceStatus !== "paid") {
+    if (invoiceStatus && invoiceStatus !== "paid") {
       safeAlert(t().starsCancelled);
       return;
     }
 
     safeAlert(t().starsPending);
 
-    const confirmResponse = await fetch('/api/nickname/buy-stars/confirm', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ telegramId, payload, nickname: newNickname })
-    });
+    const statusResp = await waitForNicknameStarsConfirmation(payload);
 
-    const confirmResp = await confirmResponse.json();
-    if (!confirmResponse.ok || !confirmResp?.success) {
+    if (!statusResp?.success || statusResp?.payment?.status !== "paid") {
+      safeAlert(t().starsTimeout);
+      return;
+    }
+
+    const confirmResp = await API.confirmNicknameStarsPurchase(payload, newNickname);
+
+    if (!confirmResp?.success) {
       safeAlert(confirmResp?.error || t().starsCreateFail);
       return;
     }
@@ -980,6 +952,7 @@ async function buyNicknameForStars(newNickname) {
     syncEnergyBase();
     updateUI();
     await refreshUserSilently("NICKNAME STARS BUY");
+    
     safeAlert(
       currentLang === "RU"
         ? `Никнейм обновлён на "${newNickname}"`
@@ -1473,15 +1446,10 @@ async function ensureTonWalletConnected() {
 }
 
 async function loadUser() {
-  console.log("TG:", tg);
-  console.log("INIT:", tg?.initData);
   try {
     showLoadingScreen();
 
-    const initData = tg?.initData || window.Telegram?.WebApp?.initData;
-
-    if (!initData) {
-      console.error("INIT DATA EMPTY");
+    if (!tg?.initData) {
       showFatalError(t().initDataFail);
       return;
     }
@@ -2201,36 +2169,11 @@ async function openBreachBoard() {
   loadBreachBoard();
 }
 
-async function fetchLeaderboardData() {
-  try {
-    const response = await fetch('/api/leaderboard', {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Leaderboard fetch failed');
-    }
-
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
-  } catch (e) {
-    console.error('fetchLeaderboardData error:', e);
-    return [];
-  }
-}
-
 window.closeBreachBoard = () => {
   const overlay = document.getElementById("breach-board-overlay");
   if (overlay) {
     overlay.classList.add("hidden");
     overlay.setAttribute("aria-hidden", "true");
-  }
-
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.classList.add("active");
   }
 };
 
@@ -2257,12 +2200,21 @@ async function loadBreachBoard() {
     tbody.innerHTML = "";
 
     // Load leaderboard data
-    const data = await fetchLeaderboardData();
+    const data = await API.getLeaderboard();
     
-    // Sort by live score desc and take top 5
+    // Sort by live score desc, then by last tap time desc
     const sorted = (data || [])
-      .filter(p => String(p.public_nickname || '').trim())
-      .sort((a, b) => Number(b.live_score || 0) - Number(a.live_score || 0))
+      .filter(p => p.public_nickname)
+      .sort((a, b) => {
+        const scoreA = Number(a.live_score || 0);
+        const scoreB = Number(b.live_score || 0);
+        
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        
+        const tapA = Number(a.last_tap_time || 0);
+        const tapB = Number(b.last_tap_time || 0);
+        return tapB - tapA;
+      })
       .slice(0, 5);
 
     // Create table rows with SVG backgrounds
@@ -2275,7 +2227,7 @@ async function loadBreachBoard() {
       const nickname = String(player.public_nickname || "User").substring(0, 30);
 
       row.innerHTML = `
-        <td class="breach-board-rank">${rank}</td>
+        <td class="breach-board-rank">#${rank}</td>
         <td class="breach-board-nickname">
           <span class="breach-board-prefix ${prefix.class}">[${prefix.text}]</span>
           <span>${nickname}</span>
@@ -3423,13 +3375,6 @@ function showRankDetails(rankId) {
 
 document.addEventListener("DOMContentLoaded", () => {
   applyInitialLanguage();
-
-  if (window.API && typeof window.API === 'object') {
-    const localOrigin = (window.location && window.location.origin) ? window.location.origin : '';
-    if (localOrigin && localOrigin !== 'null') {
-      window.API.BASE_URL = localOrigin;
-    }
-  }
   
   const gateway = document.getElementById("gateway");
 
@@ -3469,11 +3414,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeNicknameBtn = document.getElementById("change-nickname-btn");
   if (changeNicknameBtn) {
     changeNicknameBtn.addEventListener("click", requestNicknameChange);
-  }
-
-  const changeNicknameStarsBtn = document.getElementById("change-nickname-stars-btn");
-  if (changeNicknameStarsBtn) {
-    changeNicknameStarsBtn.addEventListener("click", requestNicknameChangeForStars);
   }
 
   const changeWalletBtn = document.getElementById("change-wallet-btn");
@@ -3591,4 +3531,4 @@ function updateRankLabel() {
     <span class="rank-label-main">${rank.name}</span>
     <span class="rank-label-meta">${meta}</span>
   `;
-}
+ }

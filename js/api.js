@@ -64,6 +64,15 @@ const API = {
     }
   },
 
+  async getUserLiveScore() {
+    try {
+      return await this.post('/api/user/live-score');
+    } catch (e) {
+      console.error('API Error (getUserLiveScore):', e);
+      return null;
+    }
+  },
+
   async sendTap() {
     try {
       return await this.post('/api/tap');
@@ -84,7 +93,10 @@ const API = {
 
   async claimAdReward(ymid) {
     try {
-      return await this.post('/api/ad-reward', { ymid });
+      return await this.post('/api/ad-reward', {
+        ymid,
+        initData: window.Telegram.WebApp.initData
+      });
     } catch (e) {
       console.error('API Error (claimAdReward):', e);
       return {
@@ -204,6 +216,47 @@ const API = {
       return {
         success: false,
         error: e?.payload?.error || e?.message || 'stars_status_failed'
+      };
+    }
+  },
+
+  async createNicknameStarsPurchase() {
+    try {
+      return await this.post('/api/nickname/buy-stars/create');
+    } catch (e) {
+      console.error('API Error (createNicknameStarsPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_create_failed'
+      };
+    }
+  },
+
+  async getNicknameStarsPurchaseStatus(payload) {
+    try {
+      return await this.post('/api/nickname/buy-stars/status', {
+        payload
+      });
+    } catch (e) {
+      console.error('API Error (getNicknameStarsPurchaseStatus):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'stars_status_failed'
+      };
+    }
+  },
+
+  async confirmNicknameStarsPurchase(payload, nickname) {
+    try {
+      return await this.post('/api/nickname/buy-stars/confirm', {
+        payload,
+        nickname
+      });
+    } catch (e) {
+      console.error('API Error (confirmNicknameStarsPurchase):', e);
+      return {
+        success: false,
+        error: e?.payload?.error || e?.message || 'nickname_confirm_failed'
       };
     }
   },

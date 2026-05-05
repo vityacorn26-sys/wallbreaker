@@ -51,7 +51,7 @@ const LiveScoreAnimator = (function () {
     if (window.gsap && typeof window.gsap.set === "function" && typeof window.gsap.to === "function") {
       gsap.set(deltaBox, { opacity: 0, y: 8 });
       gsap.to(deltaBox, { opacity: 1, y: 0, duration: 0.3 });
-      deltaTween = gsap.to(deltaBox, { opacity: 0, y: 8, duration: label === "ADS REWARD" ? 10 : 0.3, delay: delay, onComplete: () => {
+      deltaTween = gsap.to(deltaBox, { opacity: 0, y: 8, duration: 0.3, delay: delay, onComplete: () => {
         deltaBox.textContent = "";
         deltaBox.removeAttribute("data-label");
       }});
