@@ -2185,9 +2185,9 @@ async function loadBreachBoard() {
     var tbody = document.getElementById("breach-board-tbody");
     if (!content || !loader || !table || !tbody) return;
 
-    // Показываем лоадер, скрываем таблицу
-    loader.classList.remove("hidden");
-    table.classList.add("hidden");
+    // Показываем лоадер, скрываем таблицу (на всякий случай)
+    loader.style.display = "block";
+    table.style.display = "none";
     tbody.innerHTML = "";
 
     var data = await API.getLeaderboard();
@@ -2211,14 +2211,11 @@ async function loadBreachBoard() {
       var nickname = String(player.public_nickname || "User").substring(0, 30);
       var liveScore = Number(player.live_score || 0);
       var entries = Number(player.entries || 0);
-
-      // Цвет строки
       if (entries > 0) {
         row.className = "has-key";
       } else {
         row.className = "no-key";
       }
-
       var html = '<td class="breach-board-nickname">' + nickname;
       if (entries > 0) {
         html += '<span class="key-badge">+' + entries + ' key' + (entries > 1 ? 's' : '') + '</span>';
@@ -2227,15 +2224,11 @@ async function loadBreachBoard() {
       row.innerHTML = html;
       row.addEventListener("click", function() { applyGlitchEffect(row); });
       tbody.appendChild(row);
-
-      if (window.gsap) {
-        gsap.from(row, { opacity: 0, x: -20, duration: 0.4, delay: tbody.children.length * 0.1, ease: "power2.out" });
-      }
     });
 
-    // Скрываем лоадер, показываем таблицу
-    loader.classList.add("hidden");
-    table.classList.remove("hidden");
+    // Принудительно показываем таблицу, скрываем лоадер
+    loader.style.display = "none";
+    table.style.display = "table";
   } catch (e) {
     console.error("loadBreachBoard error:", e);
     var loaderEl = document.getElementById("breach-board-loader");
