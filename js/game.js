@@ -2240,6 +2240,7 @@ async function loadBreachBoard() {
     loader.classList.add("hidden");
     table.classList.remove("hidden");
   } catch (e) {
+    alert("BreachBoard error: " + (e && e.message ? e.message : String(e)));
     console.error("loadBreachBoard error:", e);
     var loaderEl = document.getElementById("breach-board-loader");
     if (loaderEl) {
