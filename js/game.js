@@ -2216,6 +2216,7 @@ async function loadBreachBoard() {
       }
       tbody.appendChild(row);
     });
+    alert("Rows added: " + tbody.children.length + ", table display: " + window.getComputedStyle(table).display);
   } catch (e) {
     alert("Error: " + e.message);
   }
