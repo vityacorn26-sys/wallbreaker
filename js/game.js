@@ -2175,6 +2175,7 @@ window.closeBreachBoard = () => {
     overlay.classList.add("hidden");
     overlay.setAttribute("aria-hidden", "true");
   }
+  openSidebar();
 };
 
 async function loadBreachBoard() {
