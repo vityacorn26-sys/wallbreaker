@@ -2191,6 +2191,7 @@ async function loadBreachBoard() {
     loader.style.display = "block";
     table.style.display = "none";
     tbody.innerHTML = "";
+    initMatrixRain();
 
     var data = await API.getLeaderboard();
     if (!data || !data.length) {
@@ -3505,3 +3506,46 @@ function updateRankLabel() {
     <span class="rank-label-meta">${meta}</span>
   `;
  }
+
+// === Matrix Rain Canvas ===
+function initMatrixRain() {
+  var canvas = document.getElementById('matrix-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var panel = document.querySelector('.breach-board-panel');
+  if (!panel) return;
+
+  function resize() {
+    canvas.width = panel.clientWidth;
+    canvas.height = panel.clientHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var fontSize = 14;
+  if (canvas.width < 400) fontSize = 10;
+  var columns = Math.floor(canvas.width / fontSize);
+  var drops = [];
+  for (var i = 0; i < columns; i++) {
+    drops[i] = Math.random() * canvas.height;
+  }
+
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&?;:+=-_.';
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0F0';
+    ctx.font = fontSize + 'px monospace';
+
+    for (var i = 0; i < drops.length; i++) {
+      var text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  setInterval(draw, 40);
+}
