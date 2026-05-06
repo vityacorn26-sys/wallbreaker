@@ -2100,6 +2100,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   border: 1px solid rgba(0, 242, 255, 0.25);
   display: flex;
   position: relative;
+  z-index: 1;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -2317,17 +2318,13 @@ body.wb-fullpanel-open #bottom-tabbar {
   top: 0; left: 0; right: 0; bottom: 0;
   background: repeating-linear-gradient(
     0deg,
-    transparent 0px,
-    rgba(0, 255, 200, 0.03) 2px,
+    rgba(0, 255, 200, 0.15) 0px,
+    rgba(0, 255, 200, 0.15) 2px,
     transparent 4px
   );
   pointer-events: none;
   animation: matrixScan 8s linear infinite;
-}
-
-@keyframes matrixScan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100px; }
+  z-index: 0;
 }
 
 .breach-board-panel::after {
@@ -2336,12 +2333,13 @@ body.wb-fullpanel-open #bottom-tabbar {
   top: 20px;
   left: 10px;
   right: 10px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
-  color: rgba(0, 255, 200, 0.08);
+  color: rgba(0, 255, 200, 0.25);
   word-break: break-all;
   pointer-events: none;
   font-family: monospace;
   overflow: hidden;
   user-select: none;
+  z-index: 0;
 }
