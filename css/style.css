@@ -2099,6 +2099,7 @@ body.wb-fullpanel-open #bottom-tabbar {
   background: rgba(0, 0, 0, 0.92);
   border: 1px solid rgba(0, 242, 255, 0.25);
   display: flex;
+  position: relative;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -2307,4 +2308,40 @@ body.wb-fullpanel-open #bottom-tabbar {
   border-radius: 12px;
   margin-left: 8px;
   font-weight: 700;
+}
+
+/* Матричный фон для BreachBoard */
+.breach-board-panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    rgba(0, 255, 200, 0.03) 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  animation: matrixScan 8s linear infinite;
+}
+
+@keyframes matrixScan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+.breach-board-panel::after {
+  content: "010011010110000101110100011100100110100101111000";
+  position: absolute;
+  top: 20px;
+  left: 10px;
+  right: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: rgba(0, 255, 200, 0.08);
+  word-break: break-all;
+  pointer-events: none;
+  font-family: monospace;
+  overflow: hidden;
+  user-select: none;
 }
