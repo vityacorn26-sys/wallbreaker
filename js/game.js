@@ -1920,15 +1920,9 @@ async function processTapQueue() {
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
   if ((visibleEnergy - tapQueue) <= 0) return;
-
   animateTap();
-
   tapQueue += 1;
-  userState.energy = Math.max(0, visibleEnergy - 1);
-
-  syncEnergyBase();
   updateUI();
-
   if (tapFlushTimer) clearTimeout(tapFlushTimer);
   tapFlushTimer = setTimeout(() => {
     processTapQueue();
