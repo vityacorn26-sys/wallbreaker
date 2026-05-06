@@ -2185,13 +2185,8 @@ async function loadBreachBoard() {
     var tbody = document.getElementById("breach-board-tbody");
     if (!content || !loader || !table || !tbody) return;
 
-    // Принудительно показываем всех родителей
-    var overlay = document.getElementById("breach-board-overlay");
-    if (overlay) {
-      overlay.classList.remove("hidden");
-      overlay.style.display = "flex";
-    }
-    content.style.display = "block";
+    // Убираем класс hidden у таблицы, если есть, и управляем только стилями
+    table.classList.remove("hidden");
     loader.style.display = "block";
     table.style.display = "none";
     tbody.innerHTML = "";
@@ -2228,8 +2223,6 @@ async function loadBreachBoard() {
       }
       html += '</td><td class="breach-board-score">' + liveScore.toLocaleString() + '</td>';
       row.innerHTML = html;
-      // Явно делаем строку видимой
-      row.style.opacity = "1";
       row.addEventListener("click", function() { applyGlitchEffect(row); });
       tbody.appendChild(row);
     });
