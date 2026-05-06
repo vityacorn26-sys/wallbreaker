@@ -2185,9 +2185,15 @@ async function loadBreachBoard() {
     var tbody = document.getElementById("breach-board-tbody");
     if (!content || !loader || !table || !tbody) return;
 
-    // Показываем лоадер, скрываем таблицу
-    loader.classList.remove("hidden");
-    table.classList.add("hidden");
+    // Принудительно показываем всех родителей
+    var overlay = document.getElementById("breach-board-overlay");
+    if (overlay) {
+      overlay.classList.remove("hidden");
+      overlay.style.display = "flex";
+    }
+    content.style.display = "block";
+    loader.style.display = "block";
+    table.style.display = "none";
     tbody.innerHTML = "";
 
     var data = await API.getLeaderboard();
@@ -2196,7 +2202,6 @@ async function loadBreachBoard() {
       return;
     }
 
-    // Сортируем по убыванию live_score, фильтруем только с никнеймом
     var sorted = data
       .filter(function(p) { return p.public_nickname; })
       .sort(function(a, b) { return Number(b.live_score || 0) - Number(a.live_score || 0); })
@@ -2212,36 +2217,26 @@ async function loadBreachBoard() {
       var nickname = String(player.public_nickname || "User").substring(0, 30);
       var liveScore = Number(player.live_score || 0);
       var entries = Number(player.entries || 0);
-      
-      // Цвет строки
       if (entries > 0) {
         row.className = "has-key";
       } else {
         row.className = "no-key";
       }
-
       var html = '<td class="breach-board-nickname">' + nickname;
       if (entries > 0) {
         html += '<span class="key-badge">+' + entries + ' key' + (entries > 1 ? 's' : '') + '</span>';
       }
       html += '</td><td class="breach-board-score">' + liveScore.toLocaleString() + '</td>';
       row.innerHTML = html;
+      // Явно делаем строку видимой
+      row.style.opacity = "1";
       row.addEventListener("click", function() { applyGlitchEffect(row); });
       tbody.appendChild(row);
-
-      if (window.gsap) {
-        gsap.from(row, { opacity: 0, x: -20, duration: 0.4, delay: tbody.children.length * 0.1, ease: "power2.out" });
-      }
     });
 
-    // Принудительно убираем hidden у всех родителей таблицы
-    var el = table;
-    while (el) {
-      el.classList.remove("hidden");
-      el = el.parentElement;
-    }
+    // Показываем таблицу
+    loader.style.display = "none";
     table.style.display = "table";
-    loader.classList.add("hidden");
   } catch (e) {
     console.error("loadBreachBoard error:", e);
     var loaderEl = document.getElementById("breach-board-loader");
