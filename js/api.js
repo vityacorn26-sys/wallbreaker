@@ -349,7 +349,43 @@ const API = {
         error: e?.payload?.error || e?.message || 'promo_redeem_failed'
       };
     }
-  }
-};
+  },
 
+  // ===== CONTRACTS =====
+  async getContracts() {
+    try {
+      return await this.post('/api/contract/status');
+    } catch (e) {
+      console.error('API Error (getContracts):', e);
+      return { success: false, contracts: [] };
+    }
+  },
+
+  async startContract(layer, amount) {
+    try {
+      return await this.post('/api/contract/start', { layer, amount });
+    } catch (e) {
+      console.error('API Error (startContract):', e);
+      return { success: false, error: e?.payload?.error || e?.message || 'contract_start_failed' };
+    }
+  },
+
+  async finishContract(contractId) {
+    try {
+      return await this.post('/api/contract/finish', { contractId });
+    } catch (e) {
+      console.error('API Error (finishContract):', e);
+      return { success: false, error: e?.payload?.error || e?.message || 'contract_finish_failed' };
+    }
+  },
+
+  async boostContract(contractId) {
+    try {
+      return await this.post('/api/contract/boost', { contractId });
+    } catch (e) {
+      console.error('API Error (boostContract):', e);
+      return { success: false, error: e?.payload?.error || e?.message || 'contract_boost_failed' };
+    }
+  },
+};
 window.API = API;
