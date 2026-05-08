@@ -2962,15 +2962,14 @@ function startProtocolTimers() {
 }
 
 window.showProtocol = async () => {
-  var contractsData = await API.getContracts();
-  var contracts = (contractsData && contractsData.contracts) ? contractsData.contracts : [];
+  var contracts = [];
+  try {
+    var contractsData = await API.getContracts();
+    contracts = (contractsData && contractsData.contracts) ? contractsData.contracts : [];
+  } catch (e) {
+    console.error('getContracts error:', e);
+  }
   renderProtocolPanel(contracts);
-  openPanel("protocol-panel-overlay");
-};
-
-window.showProtocol = async () => {
-  const status = await refreshDrawStatusGlobal();
-  renderProtocolPanel(status);
   openPanel("protocol-panel-overlay");
 };
 
