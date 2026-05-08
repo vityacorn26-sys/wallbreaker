@@ -2321,3 +2321,81 @@ body.wb-fullpanel-open #bottom-tabbar {
   margin-left: 8px;
   font-weight: 700;
 }
+
+/* === ДАМП-ДЕШИФРАТОР === */
+.protocol-contracts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.protocol-active-contracts h3, .protocol-new-contract h3 {
+  color: #00FFC8;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+.protocol-active-card {
+  background: rgba(0, 20, 30, 0.8);
+  border: 1px solid rgba(0, 255, 200, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.protocol-timer {
+  font-family: monospace;
+  color: #FFB347;
+  font-weight: bold;
+  margin: 0 10px;
+}
+.protocol-layer-select {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+.protocol-layer-btn {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #00FFC8;
+  color: #00FFC8;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.protocol-layer-btn.active {
+  background: #00FFC8;
+  color: #000;
+  box-shadow: 0 0 12px #00FFC8;
+}
+.protocol-layer-name {
+  display: block;
+  font-size: 14px;
+}
+.protocol-layer-time {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
+}
+.protocol-amounts {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.protocol-amount-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.protocol-amount-btn:hover {
+  background: rgba(0, 255, 200, 0.2);
+  border-color: #00FFC8;
+}
