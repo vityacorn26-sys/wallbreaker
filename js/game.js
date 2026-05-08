@@ -2792,56 +2792,181 @@ function getProtocolDrawText(status) {
   return p.drawCharging || "HACKER'S PRIZE POOL IS CHARGING IN THE NETWORK";
 }
 
-function renderProtocolPanel(status = null) {
+// ===== ДАМП-ДЕШИФРАТОР (КОНТРАКТЫ) =====
+var contractLayers = {
+  1: { name: 'L1 Shallow Dump', time: 16, mins: [20000, 30000, 40000] },
+  2: { name: 'L2 Encrypted Core', time: 26, mins: [50000, 80000, 120000, 150000] },
+  3: { name: 'L3 Black Vault', time: 36, mins: [160000, 200000, 240000, 280000, 300000] }
+};
+
+function renderProtocolPanel(contracts) {
   const p = getProtocolConfig();
-
-  const titleEl = document.getElementById("protocol-panel-title");
   const contentEl = document.getElementById("protocol-content");
+  const titleEl = document.getElementById("protocol-panel-title");
   const backBtn = document.querySelector("#protocol-panel-overlay .wb-back-btn");
-
-  if (titleEl) titleEl.textContent = p.title || "MISSION PROTOCOL";
+  if (titleEl) titleEl.textContent = p.title || "ДАМП-ДЕШИФРАТОР";
   if (backBtn) backBtn.textContent = p.back || "← BACK";
   if (!contentEl) return;
 
-  const drawText = getProtocolDrawText(status);
+  var html = '<div class="protocol-contracts">';
 
-  contentEl.innerHTML = `
-    <div class="protocol-card">
-      <strong>${p.coreTitle || "TAP CORE"}</strong>
-      <p>${p.coreText || "Tap the core to farm $WBC."}</p>
-    </div>
+  // Секция активных контрактов
+  var activeContracts = (contracts || []).filter(function(c) { return c.status === 'active'; });
+  if (activeContracts.length > 0) {
+    html += '<div class="protocol-active-contracts">';
+    html += '<h3>' + (currentLang === "RU" ? "АКТИВНЫЕ ДЕШИФРАТОРЫ" : "ACTIVE DECRYPTORS") + '</h3>';
+    activeContracts.forEach(function(c) {
+      var remainingMs = Math.max(0, c.endsAt - Date.now());
+      var remainingH = Math.floor(remainingMs / 3600000);
+      var remainingM = Math.floor((remainingMs % 3600000) / 60000);
+      var layerName = (contractLayers[c.layer] && contractLayers[c.layer].name) || ('Layer ' + c.layer);
+      html += '<div class="protocol-active-card" data-contract-id="' + c.id + '">';
+      html += '<div class="protocol-active-info"><strong>' + layerName + '</strong> (' + (c.amount/1000).toFixed(0) + 'K WBC)</div>';
+      html += '<div class="protocol-timer" data-ends="' + c.endsAt + '">' + (remainingH + 'h ' + remainingM + 'm') + '</div>';
+      if (remainingMs <= 0) {
+        html += '<button class="wb-button premium" onclick="finishContract(' + c.id + ')">' + (currentLang === "RU" ? "ДЕШИФРОВАТЬ" : "DECRYPT") + '</button>';
+      } else {
+        html += '<button class="wb-button ghost" onclick="boostContract(' + c.id + ')">' + (currentLang === "RU" ? "УСКОРИТЬ (AD)" : "BOOST (AD)") + '</button>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
 
-    <div class="protocol-card">
-      <strong>${p.adsTitle || "CODE INJECTION"}</strong>
-      <p>${p.adsText || "Watch ads to get boosted rewards."}</p>
-    </div>
+  // Секция запуска нового контракта
+  html += '<div class="protocol-new-contract">';
+  html += '<h3>' + (currentLang === "RU" ? "ЗАПУСТИТЬ ДЕШИФРАТОР" : "START DECRYPTOR") + '</h3>';
 
-    <div class="protocol-card">
-      <strong>${p.rankTitle || "RANK UPGRADE"}</strong>
-      <p>${p.rankText || "Ranks increase tap output only."}</p>
-    </div>
+  // Выбор слоя
+  html += '<div class="protocol-layer-select">';
+  [1, 2, 3].forEach(function(layer) {
+    var cfg = contractLayers[layer];
+    html += '<button class="protocol-layer-btn" data-layer="' + layer + '" onclick="selectProtocolLayer(' + layer + ')">';
+    html += '<span class="protocol-layer-name">' + cfg.name + '</span>';
+    html += '<span class="protocol-layer-time">' + cfg.time + 'h</span>';
+    html += '</button>';
+  });
+  html += '</div>';
 
-    <div class="protocol-card">
-      <strong>${p.keyTitle || "ZERO-DAY KEY"}</strong>
-      <p>${p.keyText || "1 Key = 1 entry. Max 2 keys per round."}</p>
-    </div>
+  // Суммы (появятся после выбора слоя)
+  html += '<div id="protocol-amounts" class="protocol-amounts hidden"></div>';
 
-    <div class="protocol-card">
-      <strong>${p.activityTitle || "ACTIVITY LOGIC"}</strong>
-      <p>${p.activityText || ""}</p>
-    </div>
+  // Сообщение о результате
+  html += '<div id="protocol-result" class="protocol-result hidden"></div>';
 
-    <div class="protocol-highlight">
-      <strong>${p.drawTitle || "DRAW STATUS"}</strong>
-      <p>${drawText}</p>
-    </div>
+  html += '</div>'; // .protocol-new-contract
+  html += '</div>'; // .protocol-contracts
 
-    <div class="protocol-target">
-      <strong>${p.targetTitle || "TARGET"}</strong>
-      <p>${p.targetText || ""}</p>
-    </div>
-  `;
+  contentEl.innerHTML = html;
+
+  // Запуск таймеров для активных контрактов
+  startProtocolTimers();
 }
+
+// Выбор слоя
+window.selectProtocolLayer = function(layer) {
+  var cfg = contractLayers[layer];
+  if (!cfg) return;
+  var container = document.getElementById("protocol-amounts");
+  if (!container) return;
+  container.classList.remove("hidden");
+  var html = '<p>' + (currentLang === "RU" ? "Выберите сумму (WBC):" : "Choose amount (WBC):") + '</p>';
+  cfg.mins.forEach(function(amount) {
+    html += '<button class="wb-button ghost protocol-amount-btn" onclick="startNewContract(' + layer + ', ' + amount + ')">' + (amount/1000).toFixed(0) + 'K WBC</button>';
+  });
+  container.innerHTML = html;
+
+  // Подсветка выбранного слоя
+  document.querySelectorAll('.protocol-layer-btn').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.dataset.layer) === layer);
+  });
+};
+
+// Запуск контракта
+window.startNewContract = async function(layer, amount) {
+  var userWbc = Number(userState.wbc_balance || 0);
+  if (userWbc < amount) {
+    alert(currentLang === "RU" ? "Недостаточно WBC" : "Not enough WBC");
+    return;
+  }
+  var result = await API.startContract(layer, amount);
+  if (result && result.success) {
+    // Обновляем список контрактов
+    showProtocol();
+  } else {
+    alert((result && result.error) || "Contract start failed");
+  }
+};
+
+// Завершение контракта
+window.finishContract = async function(contractId) {
+  var result = await API.finishContract(contractId);
+  if (result && result.success) {
+    var msg = (currentLang === "RU" ? "Результат дешифрации: " : "Decryption result: ") + result.resultType;
+    if (result.reward > 0) msg += " (+" + result.reward + " WBC)";
+    alert(msg);
+    showProtocol();
+    refreshUserSilently();
+  } else {
+    alert((result && result.error) || "Finish failed");
+  }
+};
+
+// Буст контракта
+window.boostContract = async function(contractId) {
+  // Здесь нужна логика показа рекламы перед бустом
+  if (typeof showAds === 'function') {
+    // Сохраняем contractId для использования в колбеке рекламы
+    window._boostContractId = contractId;
+    showAds();
+  } else {
+    var result = await API.boostContract(contractId);
+    if (result && result.success) {
+      showProtocol();
+    } else {
+      alert((result && result.error) || "Boost failed");
+    }
+  }
+};
+
+// Таймеры для активных контрактов
+var protocolTimers = [];
+function startProtocolTimers() {
+  // Очищаем старые таймеры
+  protocolTimers.forEach(function(t) { clearInterval(t); });
+  protocolTimers = [];
+  document.querySelectorAll('.protocol-timer').forEach(function(el) {
+    var endsAt = parseInt(el.dataset.ends);
+    if (!endsAt) return;
+    var timer = setInterval(function() {
+      var remainingMs = Math.max(0, endsAt - Date.now());
+      var remainingH = Math.floor(remainingMs / 3600000);
+      var remainingM = Math.floor((remainingMs % 3600000) / 60000);
+      el.textContent = remainingH + 'h ' + remainingM + 'm';
+      if (remainingMs <= 0) {
+        clearInterval(timer);
+        // Показать кнопку дешифровки
+        var card = el.closest('.protocol-active-card');
+        if (card) {
+          var btn = card.querySelector('button');
+          if (btn) {
+            btn.textContent = (currentLang === "RU" ? "ДЕШИФРОВАТЬ" : "DECRYPT");
+            btn.className = 'wb-button premium';
+            btn.onclick = function() { finishContract(parseInt(card.dataset.contractId)); };
+          }
+        }
+      }
+    }, 10000);
+    protocolTimers.push(timer);
+  });
+}
+
+window.showProtocol = async () => {
+  var contractsData = await API.getContracts();
+  var contracts = (contractsData && contractsData.contracts) ? contractsData.contracts : [];
+  renderProtocolPanel(contracts);
+  openPanel("protocol-panel-overlay");
+};
 
 window.showProtocol = async () => {
   const status = await refreshDrawStatusGlobal();
