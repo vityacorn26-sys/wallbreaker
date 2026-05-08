@@ -31,6 +31,11 @@ function saveLang(lang) {
 }
 
 function detectPreferredLang() {
+  // 1. Сохранённый выбор
+  const savedLang = getSavedLang();
+  if (savedLang) return savedLang;
+
+  // 2. Язык Telegram
   const tgLang = normalizeLangCode(
     tg?.initDataUnsafe?.user?.language_code ||
     tg?.initDataUnsafe?.user?.languageCode ||
@@ -38,18 +43,16 @@ function detectPreferredLang() {
   );
   if (tgLang) return tgLang;
 
-  const savedLang = getSavedLang();
-  if (savedLang) return savedLang;
-
+  // 3. Браузер
   const browserLangs = Array.isArray(navigator.languages) ? navigator.languages : [];
   for (const lang of browserLangs) {
     const normalized = normalizeLangCode(lang);
     if (normalized) return normalized;
   }
-
   const navLang = normalizeLangCode(navigator.language);
   if (navLang) return navLang;
 
+  // 4. По умолчанию EN
   return "EN";
 }
 
