@@ -3295,7 +3295,7 @@ window.showAds = async () => {
     const tgUser = API.getTelegramUser?.() || null;
     const telegramId = tgUser?.id ? String(tgUser.id) : "anon";
     const ymid = `wbad_${telegramId}_${Date.now()}`;
-    
+
     await showRewarded({ ymid });
 
     // ⏳ Ждём постбэк click
@@ -3316,6 +3316,19 @@ window.showAds = async () => {
       const liveScoreData = await API.getUserLiveScore();
       if (liveScoreData) {
         syncLiveScoreUI(liveScoreData, "ADS REWARD");
+      }
+      // Буст контракта после рекламы
+      if (window._boostContractId) {
+        var contractId = window._boostContractId;
+        window._boostContractId = null;
+        try {
+          var boostResult = await API.boostContract(contractId);
+          if (boostResult && boostResult.success) {
+            showProtocol(); // обновить панель контрактов
+          }
+        } catch (e) {
+          console.error('boost after ad error:', e);
+        }
       }
 
     } else {
