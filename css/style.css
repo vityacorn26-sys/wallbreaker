@@ -2322,23 +2322,25 @@ body.wb-fullpanel-open #bottom-tabbar {
   font-weight: 700;
 }
 
-/* === ДАМП-ДЕШИФРАТОР === */
+/* === ДАМП-ДЕШИФРАТОР (Вертикальные карточки) === */
 .protocol-contracts {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 .protocol-active-contracts h3, .protocol-new-contract h3 {
   color: #00FFC8;
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   font-size: 18px;
+  text-shadow: 0 0 8px rgba(0,255,200,0.3);
 }
 .protocol-active-card {
-  background: rgba(0, 20, 30, 0.8);
-  border: 1px solid rgba(0, 255, 200, 0.2);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
+  background: rgba(0, 15, 25, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 255, 200, 0.25);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2349,53 +2351,79 @@ body.wb-fullpanel-open #bottom-tabbar {
   font-weight: bold;
   margin: 0 10px;
 }
-.protocol-layer-select {
-  display: flex;
-  gap: 10px;
-  margin: 10px 0;
-}
-.protocol-layer-btn {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #00FFC8;
-  color: #00FFC8;
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
+
+/* Карточка устройства (вертикальная) */
+.protocol-device-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(10, 25, 35, 0.75) 0%, rgba(5, 15, 25, 0.85) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 200, 0.3);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
   cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.protocol-layer-btn.active {
-  background: #00FFC8;
-  color: #000;
-  box-shadow: 0 0 12px #00FFC8;
+.protocol-device-card:hover {
+  border-color: rgba(0, 255, 200, 0.6);
+  box-shadow: 0 0 20px rgba(0, 255, 200, 0.15), 0 4px 25px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
 }
-.protocol-layer-name {
-  display: block;
-  font-size: 14px;
+.protocol-device-card.active {
+  border-color: #00FFC8;
+  background: linear-gradient(180deg, rgba(0, 40, 50, 0.8) 0%, rgba(0, 20, 30, 0.9) 100%);
+  box-shadow: 0 0 25px rgba(0, 255, 200, 0.25);
 }
-.protocol-layer-time {
-  display: block;
-  font-size: 12px;
-  opacity: 0.7;
+.protocol-device-glow {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(0, 255, 200, 0.05), transparent 70%);
+  pointer-events: none;
 }
+.protocol-device-content {
+  position: relative;
+  z-index: 1;
+}
+.protocol-device-name {
+  font-size: 18px;
+  font-weight: 900;
+  color: #00FFC8;
+  text-shadow: 0 0 8px rgba(0,255,200,0.5);
+  margin-bottom: 4px;
+}
+.protocol-device-time {
+  font-size: 13px;
+  color: #FFB347;
+  margin-bottom: 8px;
+}
+.protocol-device-desc {
+  font-size: 13px;
+  color: rgba(200, 220, 240, 0.8);
+  line-height: 1.4;
+}
+
+/* Суммы – оставляем стили, но добавим стекло */
 .protocol-amounts {
-  margin-top: 10px;
+  margin-top: 14px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 .protocol-amount-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
+  background: rgba(0, 20, 30, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 255, 200, 0.3);
+  color: #00FFC8;
+  padding: 10px 20px;
+  border-radius: 25px;
   font-weight: bold;
   cursor: pointer;
+  transition: 0.2s;
 }
 .protocol-amount-btn:hover {
-  background: rgba(0, 255, 200, 0.2);
+  background: rgba(0, 255, 200, 0.15);
   border-color: #00FFC8;
+  box-shadow: 0 0 12px rgba(0,255,200,0.2);
 }

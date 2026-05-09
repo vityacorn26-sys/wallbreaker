@@ -2813,7 +2813,7 @@ function renderProtocolPanel(contracts) {
 
   var html = '<div class="protocol-contracts">';
 
-  // Секция активных контрактов
+  // Активные контракты
   var activeContracts = (contracts || []).filter(function(c) { return c.status === 'active'; });
   if (activeContracts.length > 0) {
     html += '<div class="protocol-active-contracts">';
@@ -2836,34 +2836,41 @@ function renderProtocolPanel(contracts) {
     html += '</div>';
   }
 
-  // Секция запуска нового контракта
+  // Запуск нового контракта – вертикальные карточки
   html += '<div class="protocol-new-contract">';
   html += '<h3>' + (currentLang === "RU" ? "ЗАПУСТИТЬ ДЕШИФРАТОР" : "START DECRYPTOR") + '</h3>';
 
-  // Выбор слоя
-  html += '<div class="protocol-layer-select">';
   [1, 2, 3].forEach(function(layer) {
     var cfg = contractLayers[layer];
-    html += '<button class="protocol-layer-btn" data-layer="' + layer + '" onclick="selectProtocolLayer(' + layer + ')">';
-    html += '<span class="protocol-layer-name">' + cfg.name + '</span>';
-    html += '<span class="protocol-layer-time">' + cfg.time + 'h</span>';
-    html += '</button>';
+    html += '<div class="protocol-device-card" onclick="selectProtocolLayer(' + layer + ')" data-layer="' + layer + '">';
+    html += '<div class="protocol-device-glow"></div>';
+    html += '<div class="protocol-device-content">';
+    html += '<div class="protocol-device-name">' + cfg.name + '</div>';
+    html += '<div class="protocol-device-time">' + cfg.time + 'h</div>';
+    html += '<div class="protocol-device-desc">' + getLayerDescription(layer) + '</div>';
+    html += '</div></div>';
   });
-  html += '</div>';
 
-  // Суммы (появятся после выбора слоя)
   html += '<div id="protocol-amounts" class="protocol-amounts hidden"></div>';
-
-  // Сообщение о результате
   html += '<div id="protocol-result" class="protocol-result hidden"></div>';
-
   html += '</div>'; // .protocol-new-contract
   html += '</div>'; // .protocol-contracts
 
   contentEl.innerHTML = html;
-
-  // Запуск таймеров для активных контрактов
   startProtocolTimers();
+}
+
+function getLayerDescription(layer) {
+  if (currentLang === "RU") {
+    if (layer === 1) return "Сканирование low-security ноды. Быстрый цикл.";
+    if (layer === 2) return "Дешифровка защищённого хранилища данных.";
+    if (layer === 3) return "Обход чёрного файрвола. Высокий риск, редкий лут.";
+  } else {
+    if (layer === 1) return "Scanning low-security node. Fast cycle.";
+    if (layer === 2) return "Decrypting secured data vault.";
+    if (layer === 3) return "Bypassing black-layer firewall. High risk, rare loot.";
+  }
+  return "";
 }
 
 // Выбор слоя
