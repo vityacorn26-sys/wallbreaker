@@ -2842,12 +2842,13 @@ function renderProtocolPanel(contracts) {
 
   [1, 2, 3].forEach(function(layer) {
     var cfg = contractLayers[layer];
-    html += '<div class="protocol-device-card" onclick="selectProtocolLayer(' + layer + ')" data-layer="' + layer + '" style="background-image: url(\'assets/device-l' + layer + '.webp\');">';
-    html += '<div class="protocol-device-glow"></div>';
-    html += '<div class="protocol-device-content">';
+    html += '<div class="protocol-device-card" onclick="selectProtocolLayer(' + layer + ')" data-layer="' + layer + '">';
+    html += '<img class="protocol-device-img" src="assets/device-l' + layer + '.webp" alt="' + cfg.name + '">';
+    html += '<div class="protocol-device-info">';
     html += '<div class="protocol-device-name">' + cfg.name + '</div>';
     html += '<div class="protocol-device-time">' + cfg.time + 'h</div>';
     html += '<div class="protocol-device-desc">' + getLayerDescription(layer) + '</div>';
+    html += '<div class="protocol-device-chances">' + getLayerChancesHTML(layer) + '</div>';
     html += '</div></div>';
   });
 
@@ -2871,6 +2872,22 @@ function getLayerDescription(layer) {
     if (layer === 3) return "Bypassing black-layer firewall. High risk, rare loot.";
   }
   return "";
+}
+
+function getLayerChancesHTML(layer) {
+  var chances = {};
+  if (layer === 1) { chances = { loss: 14.5, zero: 30.5, win1: 40, win2: 15, frag: 0.01, key: 0.0005 }; }
+  else if (layer === 2) { chances = { loss: 30, zero: 51, win1: 10, win2: 5, frag: 4, key: 0.01 }; }
+  else if (layer === 3) { chances = { loss: 25, zero: 50, win1: 12, win2: 7, frag: 5, key: 0.01 }; }
+  else return '';
+  var html = '';
+  html += '<span>Loss</span><span class="chance-value">' + chances.loss + '%</span>';
+  html += '<span>Zero</span><span class="chance-value">' + chances.zero + '%</span>';
+  html += '<span>Win1</span><span class="chance-value">' + chances.win1 + '%</span>';
+  html += '<span>Win2</span><span class="chance-value">' + chances.win2 + '%</span>';
+  html += '<span>Fragment</span><span class="chance-value">' + chances.frag + '%</span>';
+  html += '<span>Key</span><span class="chance-value">' + chances.key + '%</span>';
+  return html;
 }
 
 // Выбор слоя
