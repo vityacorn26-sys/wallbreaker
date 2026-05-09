@@ -2842,7 +2842,7 @@ function renderProtocolPanel(contracts) {
 
   [1, 2, 3].forEach(function(layer) {
     var cfg = contractLayers[layer];
-    html += '<div class="protocol-device-card" onclick="selectProtocolLayer(' + layer + ')" data-layer="' + layer + '">';
+    html += '<div class="protocol-device-card" onclick="selectProtocolLayer(' + layer + ')" data-layer="' + layer + '" style="background-image: url(\'assets/device-l' + layer + '.webp\');">';
     html += '<div class="protocol-device-glow"></div>';
     html += '<div class="protocol-device-content">';
     html += '<div class="protocol-device-name">' + cfg.name + '</div>';
@@ -2916,7 +2916,6 @@ window.finishContract = async function(contractId) {
     if (result.reward > 0) msg += " (+" + result.reward + " WBC)";
     alert(msg);
     showProtocol();
-    refreshUserSilently();
   } else {
     alert((result && result.error) || "Finish failed");
   }
