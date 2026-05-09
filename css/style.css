@@ -2096,13 +2096,14 @@ body.wb-fullpanel-open #bottom-tabbar {
   height: 100%;
   max-height: 100vh;
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.92);
+  background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(0, 242, 255, 0.25);
   display: flex;
   position: relative;
   z-index: 1;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
 }
 
 .breach-board-canvas {
@@ -2281,47 +2282,6 @@ body.wb-fullpanel-open #bottom-tabbar {
   display: none;
 }
 
-/* Breach Board rows */
-.breach-board-table tbody tr.has-key {
-  background: rgba(0, 255, 200, 0.1);
-  border-left: 3px solid #00FFC8;
-}
-.breach-board-table tbody tr.no-key {
-  background: rgba(255, 50, 100, 0.15);
-  border-left: 3px solid #FF3264;
-}
-.key-badge {
-  font-size: 11px;
-  background: #00FFC8;
-  color: #000;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 8px;
-  font-weight: 700;
-}
-.breach-board-rank {
-  display: none; /* убираем, если ещё есть */
-}
-
-/* Breach Board rows */
-.breach-board-table tbody tr.has-key {
-  background: rgba(0, 255, 200, 0.1);
-  border-left: 3px solid #00FFC8;
-}
-.breach-board-table tbody tr.no-key {
-  background: rgba(255, 50, 100, 0.15);
-  border-left: 3px solid #FF3264;
-}
-.key-badge {
-  font-size: 11px;
-  background: #00FFC8;
-  color: #000;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 8px;
-  font-weight: 700;
-}
-
 /* === ДАМП-ДЕШИФРАТОР (Вертикальные карточки) === */
 .protocol-contracts {
   display: flex;
@@ -2426,4 +2386,41 @@ body.wb-fullpanel-open #bottom-tabbar {
   background: rgba(0, 255, 200, 0.15);
   border-color: #00FFC8;
   box-shadow: 0 0 12px rgba(0,255,200,0.2);
+}
+
+/* Пульсация карточек контрактов */
+.protocol-device-card {
+  animation: device-pulse 3s ease-in-out infinite;
+}
+.protocol-device-card:nth-child(2) { animation-delay: 0.5s; }
+.protocol-device-card:nth-child(3) { animation-delay: 1s; }
+
+@keyframes device-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+  50% { box-shadow: 0 4px 25px rgba(0, 255, 200, 0.15), 0 0 15px rgba(0, 255, 200, 0.1), inset 0 1px 0 rgba(255,255,255,0.08); }
+}
+
+/* Эффект дешифровки для активных контрактов */
+.protocol-active-card {
+  position: relative;
+  overflow: hidden;
+}
+.protocol-active-card::before {
+  content: "01010101 10101010 01010101 10101010";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: monospace;
+  font-size: 10px;
+  color: rgba(0, 255, 200, 0.15);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: decrypt-scroll 4s linear infinite;
+}
+
+@keyframes decrypt-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
