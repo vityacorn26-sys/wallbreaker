@@ -1905,7 +1905,7 @@ async function sendPackToServer() {
     throttleInterval = null;
   }
   try {
-    const data = await API.sendTap(countToSend);
+    const data = await (window.API || API).sendTap(countToSend);
     if (!data) return;
     userState = normalizeUserState({
       ...userState,
