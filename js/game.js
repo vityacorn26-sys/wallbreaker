@@ -1877,66 +1877,36 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  console.log("=== КЛИК ПО ЭКРАНУ. Текущая энергия:", visibleEnergy, "Буфер:", clicksBuffer);
-  
-  if (visibleEnergy - clicksBuffer <= 0) {
-    console.log("=== ОТМЕНА ТАПА: Недостаточно энергии!");
-    return;
-  }
-
+  if (visibleEnergy - clicksBuffer <= 0) return;
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
   syncEnergyBase();
   updateUI();
   animateTap();
-
   clicksBuffer++;
-
   if (!throttleInterval) {
-    console.log("=== ИНИЦИАЛИЗАЦИЯ ИНТЕРВАЛА THROTTLE (3 сек)");
     throttleInterval = setInterval(() => {
       sendPackToServer();
     }, MAX_LIVE_TIME);
   }
-
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    console.log("=== ТРИГГЕР DEBOUNCE (1 сек без тапов)");
     sendPackToServer();
   }, SEND_DELAY);
 };
-
 async function sendPackToServer() {
-  console.log("=== ВХОД В sendPackToServer. Буфер к отправке:", clicksBuffer);
-  
-  if (clicksBuffer <= 0) {
-    console.log("=== ОТМЕНА ОТПРАВКИ: Буфер пуст или уже сброшен");
-    return;
-  }
-  
+  if (clicksBuffer <= 0) return;
   const countToSend = clicksBuffer;
   clicksBuffer = 0;
-
   clearTimeout(debounceTimeout);
   if (throttleInterval) {
     clearInterval(throttleInterval);
     throttleInterval = null;
   }
-
   try {
-    console.log("=== ОТПРАВКА СЕТЕВОГО ЗАПРОСА. Пакетов:", countToSend);
     const data = await API.sendTap(countToSend);
-    
-    if (!data) {
-      console.error("=== КРИТИЧЕСКИЙ ЗАТЫК: API.sendTap вернул пустоту (null/false/undefined)!");
-      // Принудительный пинг бэкенда, чтобы увидеть след в pm2 logs
-      await API.sendTap(0).catch(() => {});
-      return;
-    }
-
-    console.log("=== СЕРВЕР ОТВЕТИЛ УСПЕШНО! Прилетели данные:", data);
-
+    if (!data) return;
     userState = normalizeUserState({
       ...userState,
       balance: data.balance,
@@ -1947,22 +1917,16 @@ async function sendPackToServer() {
     });
     syncEnergyBase();
     updateUI();
-
     if (data.live_score != null) {
-      console.log("=== ОБНОВЛЯЕМ LIVE SCORE ИЗ ОТВЕТА СЕРВЕРА:", data.live_score);
       syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
     } else {
-      console.log("=== ЛАЙВ СКОР В ОТВЕТЕ ПУСТОЙ, ЗАПРАШИВАЕМ ОТДЕЛЬНО");
       const liveScoreData = await API.getUserLiveScore();
       if (liveScoreData) syncLiveScoreUI(liveScoreData, "CORE TAP");
     }
   } catch (e) {
-    console.error("=== КРИТИЧЕСКАЯ ОШИБКА ВНУТРИ СЕТЕВОГО ЦИКЛА sendPackToServer:", e);
-    // Спамим в сеть, чтобы pm2 logs зафиксировал аварию на фронте
-    await API.sendTap(-1).catch(() => {});
+    console.error("sendPackToServer error:", e);
   }
 }
-
 
 let lastPanelSource = "tabbar";
 
