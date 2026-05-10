@@ -1877,7 +1877,12 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  if (visibleEnergy - clicksBuffer <= 0) return;
+  console.log("=== КЛИК ПО ЭКРАНУ. Текущая энергия:", visibleEnergy, "Буфер:", clicksBuffer);
+  
+  if (visibleEnergy - clicksBuffer <= 0) {
+    console.log("=== ОТМЕНА ТАПА: Недостаточно энергии!");
+    return;
+  }
 
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
@@ -1889,6 +1894,7 @@ window.handleTap = () => {
   clicksBuffer++;
 
   if (!throttleInterval) {
+    console.log("=== ИНИЦИАЛИЗАЦИЯ ИНТЕРВАЛА THROTTLE (3 сек)");
     throttleInterval = setInterval(() => {
       sendPackToServer();
     }, MAX_LIVE_TIME);
@@ -1896,12 +1902,19 @@ window.handleTap = () => {
 
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
+    console.log("=== ТРИГГЕР DEBOUNCE (1 сек без тапов)");
     sendPackToServer();
   }, SEND_DELAY);
 };
 
 async function sendPackToServer() {
-  if (clicksBuffer <= 0) return;
+  console.log("=== ВХОД В sendPackToServer. Буфер к отправке:", clicksBuffer);
+  
+  if (clicksBuffer <= 0) {
+    console.log("=== ОТМЕНА ОТПРАВКИ: Буфер пуст или уже сброшен");
+    return;
+  }
+  
   const countToSend = clicksBuffer;
   clicksBuffer = 0;
 
@@ -1912,8 +1925,17 @@ async function sendPackToServer() {
   }
 
   try {
+    console.log("=== ОТПРАВКА СЕТЕВОГО ЗАПРОСА. Пакетов:", countToSend);
     const data = await API.sendTap(countToSend);
-    if (!data) return;
+    
+    if (!data) {
+      console.error("=== КРИТИЧЕСКИЙ ЗАТЫК: API.sendTap вернул пустоту (null/false/undefined)!");
+      // Принудительный пинг бэкенда, чтобы увидеть след в pm2 logs
+      await API.sendTap(0).catch(() => {});
+      return;
+    }
+
+    console.log("=== СЕРВЕР ОТВЕТИЛ УСПЕШНО! Прилетели данные:", data);
 
     userState = normalizeUserState({
       ...userState,
@@ -1927,15 +1949,20 @@ async function sendPackToServer() {
     updateUI();
 
     if (data.live_score != null) {
+      console.log("=== ОБНОВЛЯЕМ LIVE SCORE ИЗ ОТВЕТА СЕРВЕРА:", data.live_score);
       syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
     } else {
+      console.log("=== ЛАЙВ СКОР В ОТВЕТЕ ПУСТОЙ, ЗАПРАШИВАЕМ ОТДЕЛЬНО");
       const liveScoreData = await API.getUserLiveScore();
       if (liveScoreData) syncLiveScoreUI(liveScoreData, "CORE TAP");
     }
   } catch (e) {
-    console.error("sendPackToServer error:", e);
+    console.error("=== КРИТИЧЕСКАЯ ОШИБКА ВНУТРИ СЕТЕВОГО ЦИКЛА sendPackToServer:", e);
+    // Спамим в сеть, чтобы pm2 logs зафиксировал аварию на фронте
+    await API.sendTap(-1).catch(() => {});
   }
 }
+
 
 let lastPanelSource = "tabbar";
 
