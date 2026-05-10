@@ -78,10 +78,11 @@ let userState = {
   nickname_free_used: 0
 };
 
-let tapQueue = 0;
-let tapWorkerRunning = false;
-let tapAnimLocked = false;
-let tapFlushTimer = null;
+let clicksBuffer = 0;
+let debounceTimeout = null;
+let throttleInterval = null;
+const SEND_DELAY = 1000;
+const MAX_LIVE_TIME = 3000;
 
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
@@ -1467,7 +1468,6 @@ async function loadUser() {
     }
 
     userState = normalizeUserState(data);
-    tapQueue = 0;
     syncEnergyBase();
 
     await loadWithdrawStatus();
@@ -1861,7 +1861,7 @@ async function refreshUserSilently(label = "") {
 
     // ===== LIVE SCORE SYNC (с сервера) =====
     syncLiveScoreUI(fresh, label || "");
-    
+
     return true;
 
   } catch (e) {
@@ -1870,67 +1870,72 @@ async function refreshUserSilently(label = "") {
   }
 }
 
-async function processTapQueue() {
-  if (tapWorkerRunning) return;
-  tapWorkerRunning = true;
-
-  try {
-    while (tapQueue > 0) {
-      const data = await API.sendTap();
-      tapQueue = Math.max(0, tapQueue - 1);
-
-      if (data && data.balance !== undefined) {
-        userState = normalizeUserState({
-          ...userState,
-          balance: data.balance,
-          energy: data.energy,
-          rank_id: data.rank_id ?? userState.rank_id,
-          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
-          ton_balance: data.ton_balance ?? userState.ton_balance
-        });
-
-        syncEnergyBase();
-        updateUI();
-
-        if (data.score !== undefined && data.score !== null) {
-          syncLiveScoreUI(
-            {
-              live_score: Number(data.score || 0),
-              score: { recomputed: Number(data.score || 0) }
-            },
-            "CORE TAP"
-          );
-        } else {
-          const liveScoreData = await API.getUserLiveScore();
-          if (liveScoreData) {
-            syncLiveScoreUI(liveScoreData, "CORE TAP");
-          }
-        }
-      } else {
-        tapQueue = 0;
-        await refreshUserSilently();
-      }
-    }
-  } catch (e) {
-    console.error("Tap queue error:", e);
-    tapQueue = 0;
-    await refreshUserSilently();
-  } finally {
-    tapWorkerRunning = false;
-  }
+function getRewardForRank(rankId) {
+  var rewards = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 400 };
+  return rewards[rankId] || 10;
 }
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  if ((visibleEnergy - tapQueue) <= 0) return;
-  animateTap();
-  tapQueue += 1;
+  if (visibleEnergy - clicksBuffer <= 0) return;
+
+  const reward = getRewardForRank(userState.rank_id);
+  userState.energy = Math.max(0, visibleEnergy - 1);
+  userState.balance = (userState.balance || 0) + reward;
+  syncEnergyBase();
   updateUI();
-  if (tapFlushTimer) clearTimeout(tapFlushTimer);
-  tapFlushTimer = setTimeout(() => {
-    processTapQueue();
-  }, 90);
+  animateTap();
+
+  clicksBuffer++;
+
+  if (!throttleInterval) {
+    throttleInterval = setInterval(() => {
+      sendPackToServer();
+    }, MAX_LIVE_TIME);
+  }
+
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    sendPackToServer();
+  }, SEND_DELAY);
 };
+
+async function sendPackToServer() {
+  if (clicksBuffer <= 0) return;
+  const countToSend = clicksBuffer;
+  clicksBuffer = 0;
+
+  clearTimeout(debounceTimeout);
+  if (throttleInterval) {
+    clearInterval(throttleInterval);
+    throttleInterval = null;
+  }
+
+  try {
+    const data = await API.sendTap(countToSend);
+    if (!data) return;
+
+    userState = normalizeUserState({
+      ...userState,
+      balance: data.balance,
+      energy: data.energy,
+      rank_id: data.rank_id ?? userState.rank_id,
+      rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
+      ton_balance: data.ton_balance ?? userState.ton_balance
+    });
+    syncEnergyBase();
+    updateUI();
+
+    if (data.live_score != null) {
+      syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
+    } else {
+      const liveScoreData = await API.getUserLiveScore();
+      if (liveScoreData) syncLiveScoreUI(liveScoreData, "CORE TAP");
+    }
+  } catch (e) {
+    console.error("sendPackToServer error:", e);
+  }
+}
 
 let lastPanelSource = "tabbar";
 
