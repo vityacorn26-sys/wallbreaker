@@ -1905,8 +1905,18 @@ async function sendPackToServer() {
     throttleInterval = null;
   }
   try {
+    // Всплывашка перед отправкой, чтобы понять, что функция вызвалась
+    alert("Попытка отправки пакета: " + countToSend); 
+
     const data = await (window.API || API).sendTap(countToSend);
-    if (!data) return;
+
+    if (!data) {
+      alert("Сервер вернул пустоту!");
+      return;
+    }
+
+    alert("Успех! Сервер ответил. Live Score: " + data.live_score);
+
     userState = normalizeUserState({
       ...userState,
       balance: data.balance,
@@ -1917,6 +1927,7 @@ async function sendPackToServer() {
     });
     syncEnergyBase();
     updateUI();
+
     if (data.live_score != null) {
       syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
     } else {
@@ -1924,7 +1935,8 @@ async function sendPackToServer() {
       if (liveScoreData) syncLiveScoreUI(liveScoreData, "CORE TAP");
     }
   } catch (e) {
-    console.error("sendPackToServer error:", e);
+    // Если падает из-за "API is not defined" или другой херни — покажет на экране телефона!
+    alert("КРИТИЧЕСКИЙ СБОЙ ФРОНТЕНДА: " + e.message + "\n" + e.stack);
   }
 }
 
