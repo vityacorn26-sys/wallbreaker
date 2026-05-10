@@ -80,9 +80,9 @@ let userState = {
 
 let clicksBuffer = 0;
 let debounceTimeout = null;
-let throttleInterval = null;
+let lastPackSentTime = 0;
 const SEND_DELAY = 1000;
-const MAX_LIVE_TIME = 3000;
+const MAX_LIVE_TIME = 2500;
 
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
@@ -1878,44 +1878,49 @@ function getRewardForRank(rankId) {
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
   if (visibleEnergy - clicksBuffer <= 0) return;
+
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
   syncEnergyBase();
   updateUI();
   animateTap();
+
   clicksBuffer++;
-  if (!throttleInterval) {
-    throttleInterval = setInterval(() => {
-      sendPackToServer();
-    }, MAX_LIVE_TIME);
+
+  const now = Date.now();
+
+  if (lastPackSentTime === 0) {
+    lastPackSentTime = now;
   }
+
+  if (now - lastPackSentTime >= MAX_LIVE_TIME) {
+    sendPackToServer();
+    return;
+  }
+
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
   }, SEND_DELAY);
 };
+
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
+
   const countToSend = clicksBuffer;
   clicksBuffer = 0;
+  lastPackSentTime = Date.now();
   clearTimeout(debounceTimeout);
-  if (throttleInterval) {
-    clearInterval(throttleInterval);
-    throttleInterval = null;
-  }
+
   try {
-    // Всплывашка перед отправкой, чтобы понять, что функция вызвалась
-    alert("Попытка отправки пакета: " + countToSend); 
-
-    const data = await (window.API || API).sendTap(countToSend);
-
-    if (!data) {
-      alert("Сервер вернул пустоту!");
+    const apiObject = window.API || API;
+    if (!apiObject || typeof apiObject.sendTap !== 'function') {
       return;
     }
 
-    alert("Успех! Сервер ответил. Live Score: " + data.live_score);
+    const data = await apiObject.sendTap(countToSend);
+    if (!data) return;
 
     userState = normalizeUserState({
       ...userState,
@@ -1931,12 +1936,11 @@ async function sendPackToServer() {
     if (data.live_score != null) {
       syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
     } else {
-      const liveScoreData = await API.getUserLiveScore();
+      const liveScoreData = await apiObject.getUserLiveScore();
       if (liveScoreData) syncLiveScoreUI(liveScoreData, "CORE TAP");
     }
   } catch (e) {
-    // Если падает из-за "API is not defined" или другой херни — покажет на экране телефона!
-    alert("КРИТИЧЕСКИЙ СБОЙ ФРОНТЕНДА: " + e.message + "\n" + e.stack);
+    console.error("sendPackToServer error:", e);
   }
 }
 
