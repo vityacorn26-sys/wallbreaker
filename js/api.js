@@ -75,7 +75,10 @@ const API = {
 
   async sendTap(count = 1) {
     try {
-      return await this.post('/api/tap', { count });
+      return await this.post('/api/tap', {
+        count: count,
+        initData: window.Telegram?.WebApp?.initData || '' // <--- Пробиваем авторизацию!
+      });
     } catch (e) {
       console.error('API Error (sendTap):', e);
       return null;
