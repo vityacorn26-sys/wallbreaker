@@ -78,6 +78,52 @@ let userState = {
   nickname_free_used: 0
 };
 
+class TapQueueManager {
+  constructor() {
+    this.accumulatedTaps = 0;
+    this.isSending = false;
+    this.intervalId = null;
+  }
+  addTap() {
+    this.accumulatedTaps++;
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => this.tick(), 600);
+    }
+  }
+  async tick() {
+    if (this.accumulatedTaps === 0) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+      return;
+    }
+    if (this.isSending) return;
+    const tapsToSend = Math.min(this.accumulatedTaps, 50);
+    this.accumulatedTaps -= tapsToSend;
+    this.isSending = true;
+    try {
+      const response = await fetch('/api/tap', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
+        },
+        body: JSON.stringify({ count: tapsToSend })
+      });
+      const data = await response.json();
+      this.isSending = false;
+      if (data.live_score !== undefined) {
+        window.dispatchEvent(new CustomEvent('sync_tap_success', { detail: data }));
+      } else {
+        this.accumulatedTaps += tapsToSend;
+      }
+    } catch (error) {
+      this.accumulatedTaps += tapsToSend;
+      this.isSending = false;
+    }
+  }
+}
+const tapManager = new TapQueueManager();
+
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
