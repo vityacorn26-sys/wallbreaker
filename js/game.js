@@ -1919,7 +1919,6 @@ async function sendPackToServer() {
     if (!currentAPI) return;
 
     const data = await currentAPI.sendTap(countToSend);
-    alert("Tap response: " + JSON.stringify(data));
     if (!data) return;
 
     // Синхронизируем баланс и энергию
