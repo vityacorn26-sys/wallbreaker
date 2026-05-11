@@ -3358,10 +3358,16 @@ window.showAds = async () => {
       const boostResult = await currentAPI.boostContract(contractId, ymid);
 
       if (boostResult?.success) {
+        // --- ОБНОВЛЕНИЕ LIVE SCORE И АНИМАЦИЯ ---
+        if (boostResult.live_score !== undefined) {
+          // Эта функция обновит число в облаке и запустит анимацию +число
+          syncLiveScoreUI({ live_score: boostResult.live_score }, "DECODER BOOST");
+        }
+
         safeAlert(currentLang === "RU" ? "🔒 Дешифратор ускорен!" : "🔒 Decryptor boosted!");
-        if (typeof showProtocol === 'function') showProtocol(); // Обновляем панель контрактов
+        if (typeof showProtocol === 'function') showProtocol(); 
       } else {
-        safeAlert(currentLang === "RU" ? "⚠️ Ошибка буста контракта" : "⚠️ Contract boost error");
+        safeAlert(currentLang === "RU" ? "⚠️ Ошибка буста: " + (boostResult?.error || "") : "⚠️ Boost error");
       }
     } else {
       // ЛОГИКА Б: ОБЫЧНАЯ РЕКЛАМА (За монеты и CPU)

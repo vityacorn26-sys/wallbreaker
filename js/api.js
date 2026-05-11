@@ -75,13 +75,14 @@ const API = {
   },
 
   async sendTap(count = 1) {
-    try {
-      return await this.post('/api/tap', { count });
-    } catch (e) {
-      console.error('API Error (sendTap):', e);
-      return null;
-    }
-  },
+      try {
+        // Мы отправляем пакет тапов. База на бэкенде теперь ожидает "count"
+        return await this.post('/api/tap', { count });
+      } catch (e) {
+        console.error('API Error (sendTap):', e);
+        return null; // Возвращаем null, чтобы caller (game.js) понимал, что запрос не удался
+      }
+    },
 
   async checkAdLimit() {
     try {
