@@ -74,6 +74,15 @@ const API = {
     }
   },
 
+  async sendTap(count = 1) {
+    try {
+      return await this.post('/api/tap', { count });
+    } catch (e) {
+      console.error('API Error (sendTap):', e);
+      return null;
+    }
+  },
+
   async checkAdLimit() {
     try {
       return await this.post('/api/ad-limit');

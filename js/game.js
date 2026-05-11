@@ -101,17 +101,9 @@ class TapQueueManager {
     this.accumulatedTaps -= tapsToSend;
     this.isSending = true;
     try {
-      const response = await fetch('/api/tap', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
-        },
-        body: JSON.stringify({ count: tapsToSend })
-      });
-      const data = await response.json();
+      const data = await window.API.sendTap(tapsToSend);
       this.isSending = false;
-      if (data.live_score !== undefined) {
+      if (data && data.live_score !== undefined) {
         window.dispatchEvent(new CustomEvent('sync_tap_success', { detail: data }));
       } else {
         this.accumulatedTaps += tapsToSend;
