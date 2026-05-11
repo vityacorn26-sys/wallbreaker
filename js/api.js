@@ -381,10 +381,9 @@ const API = {
       return { success: false, error: e?.payload?.error || e?.message || 'contract_finish_failed' };
     }
   },
-
-  async boostContract(contractId) {
+  async boostContract(contractId, ymid) {
     try {
-      return await this.post('/api/contract/boost', { contractId });
+      return await this.post('/api/contract/boost', { contractId, ymid });
     } catch (e) {
       console.error('API Error (boostContract):', e);
       return { success: false, error: e?.payload?.error || e?.message || 'contract_boost_failed' };

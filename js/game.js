@@ -3348,53 +3348,46 @@ window.showAds = async () => {
     // ⏳ Ждём постбэк click
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    const rewardResult = await API.claimAdReward(ymid);
+    // === НАЧАЛО РАЗДЕЛИК СИСТЕМЫ РЕКЛАМЫ ===
+    if (window._boostContractId) {
+      // ЛОГИКА А: Буст контракта (БЕЗ начисления монет и БЕЗ сброса CPU)
+      const contractId = window._boostContractId;
+      window._boostContractId = null;
 
-    if (rewardResult?.success) {
-      safeAlert(t().adRewardOk);
+      const currentAPI = window.API || API;
+      const boostResult = await currentAPI.boostContract(contractId, ymid);
 
-      const fresh = await API.getUser();
-      if (fresh) {
-        userState = normalizeUserState(fresh);
-        syncEnergyBase();
-        updateUI();
+      if (boostResult?.success) {
+        safeAlert(currentLang === "RU" ? "🔒 Дешифратор ускорен!" : "🔒 Decryptor boosted!");
+        if (typeof showProtocol === 'function') showProtocol(); // Обновляем панель контрактов
+      } else {
+        safeAlert(currentLang === "RU" ? "⚠️ Ошибка буста контракта" : "⚠️ Contract boost error");
       }
-
-      const liveScoreData = await API.getUserLiveScore();
-      if (liveScoreData) {
-        syncLiveScoreUI(liveScoreData, "ADS REWARD");
-      }
-      // Буст контракта после рекламы
-      if (window._boostContractId) {
-        var contractId = window._boostContractId;
-        window._boostContractId = null;
-        try {
-          var boostResult = await API.boostContract(contractId);
-          if (boostResult && boostResult.success) {
-            showProtocol(); // обновить панель контрактов
-          }
-        } catch (e) {
-          console.error('boost after ad error:', e);
-        }
-      }
-
     } else {
-      console.error('AD REWARD ERROR:', rewardResult);
-      safeAlert('Ошибка начисления награды');
-    }
+      // ЛОГИКА Б: ОБЫЧНАЯ РЕКЛАМА (За монеты и CPU)
+      const currentAPI = window.API || API;
+      const rewardResult = await currentAPI.claimAdReward(ymid);
 
-    // Через 2.5 секунды обновим баланс и энергию (на случай небольшой задержки постбэка)
-    setTimeout(async () => {
-      try {
-        const fresh = await API.getUser();
+      if (rewardResult?.success) {
+        safeAlert(t().adRewardOk);
+
+        const fresh = await currentAPI.getUser();
         if (fresh) {
           userState = normalizeUserState(fresh);
           syncEnergyBase();
           updateUI();
         }
-      } catch (_) {}
-    }, 2500);
 
+        const liveScoreData = await currentAPI.getUserLiveScore();
+        if (liveScoreData) {
+          syncLiveScoreUI(liveScoreData, "ADS REWARD");
+        }
+      } else {
+        console.error('AD REWARD ERROR:', rewardResult);
+        safeAlert(currentLang === "RU" ? "⚠️ Ошибка начисления награды" : "⚠️ Reward delivery error");
+      }
+    }
+    // === КОНЕЦ РАЗДЕЛИК СИСТЕМЫ РЕКЛАМЫ ===
   } catch (e) {
     console.error("showAds error:", e);
     const adErrText = parseAdErrorMessage(e);
