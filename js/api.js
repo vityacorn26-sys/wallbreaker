@@ -18,8 +18,9 @@ const API = {
   },
 
   async post(endpoint, extraBody = {}) {
-    const initData = this.getInitData();
-    const tgUser = this.getTelegramUser();
+    // Берем данные напрямую из window, чтобы не терять контекст this
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
 
     const telegramId = tgUser?.id ? String(tgUser.id) : '';
     const username = tgUser?.username || '';
@@ -31,9 +32,9 @@ const API = {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        initData,
-        telegramId,
-        username,
+        initData: initData, // Жестко прописываем валидную строку авторизации
+        telegramId: telegramId,
+        username: username,
         ...extraBody
       })
     });
@@ -75,10 +76,7 @@ const API = {
 
   async sendTap(count = 1) {
     try {
-      return await this.post('/api/tap', {
-        count: count,
-        initData: window.Telegram?.WebApp?.initData || '' // <--- Пробиваем авторизацию!
-      });
+      return await this.post('/api/tap', { count });
     } catch (e) {
       console.error('API Error (sendTap):', e);
       return null;
