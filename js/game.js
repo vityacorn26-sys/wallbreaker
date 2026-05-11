@@ -1917,45 +1917,26 @@ async function sendPackToServer() {
     // Жесткая и прямая ссылка на глобальный объект, которая не упадет в ReferenceError
     const currentAPI = window.API;
     if (!currentAPI) return;
-
     const data = await currentAPI.sendTap(countToSend);
-    if (!data) return;
 
-    // Синхронизируем баланс и энергию
-    userState.balance = Number(data.balance ?? data.wbc_balance ?? userState.balance);
-    userState.wbc_balance = userState.balance;
-    userState.energy = Number(data.energy ?? userState.energy);
-    if (data.rank_id) userState.rank_id = data.rank_id;
-    if (data.ton_balance) userState.ton_balance = data.ton_balance;
+    // КРИТИЧЕСКИЙ ФИКС: Обновляем стейт ТОЛЬКО если сервер подтвердил запись
+    if (data && data.success) {
+      userState.balance = Number(data.balance);
+      userState.wbc_balance = Number(data.balance);
+      userState.energy = Number(data.energy);
 
-    syncEnergyBase();
-    updateUI();
-
-    // Чиним анимацию +number скора
-    if (data.live_score !== undefined && data.live_score !== null) {
-      const nextScore = Number(data.live_score);
-      const oldScore = Number(localStorage.getItem('wb_last_live_score') || lastLiveScore || 0);
-      const delta = nextScore - oldScore;
-
-      // Принудительно пинаем аниматор, если есть прирост
-      if (delta > 0 && window.LiveScoreAnimator) {
-        window.LiveScoreAnimator.renderLiveScoreDelta(delta, "CORE TAP");
+      // Анимация скора (теперь будет синей)
+      if (data.live_score && window.LiveScoreAnimator) {
+        syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
       }
-
-      // Обновляем кэш
-      lastLiveScore = nextScore;
-      localStorage.setItem('wb_last_live_score', String(nextScore));
-
-      if (typeof syncLiveScoreUI === 'function') {
-        syncLiveScoreUI({ live_score: nextScore }, "CORE TAP");
-      }
+      updateUI(); // Рисуем данные, которые реально записались в базу
+    } else {
+      console.warn("Server failed to save taps or session expired");
     }
   } catch (e) {
-    // Ошибку пишем только в локальную консоль, код дальше не блокируется
     console.error("sendPackToServer runtime error:", e);
   }
 }
-
 let lastPanelSource = "tabbar";
 
 function closeSidebar() {
