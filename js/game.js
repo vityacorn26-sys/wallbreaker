@@ -1851,24 +1851,24 @@ function animateTap() {
 
 async function refreshUserSilently(label = "") {
   try {
-    const fresh = await API.getUser();
+    const currentAPI = window.API || API;
+    if (!currentAPI) return false;
+
+    const fresh = await currentAPI.getUser();
     if (!fresh) return false;
 
     userState = normalizeUserState(fresh);
-
     syncEnergyBase();
     updateUI();
-
-    // ===== LIVE SCORE SYNC (с сервера) =====
-    syncLiveScoreUI(fresh, label || "");
+    // ЛОМАЮЩИЙ КОСТЫЛЬ УДАЛЕН. Фоновый профиль больше не трогает Live Score!
 
     return true;
-
   } catch (e) {
     console.error("refreshUserSilently error:", e);
     return false;
   }
 }
+
 
 function getRewardForRank(rankId) {
   var rewards = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 400 };
