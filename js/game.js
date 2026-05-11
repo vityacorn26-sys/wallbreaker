@@ -78,12 +78,6 @@ let userState = {
   nickname_free_used: 0
 };
 
-let clicksBuffer = 0;
-let debounceTimeout = null;
-let lastPackSentTime = 0;
-const SEND_DELAY = 1000;
-const MAX_LIVE_TIME = 2500;
-
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
 let lastServerEnergy = 100;
@@ -1877,7 +1871,7 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  if (visibleEnergy - clicksBuffer <= 0) return;
+  if (visibleEnergy <= 0) return;
 
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
@@ -1886,23 +1880,7 @@ window.handleTap = () => {
   updateUI();
   animateTap();
 
-  clicksBuffer++;
-
-  const now = Date.now();
-
-  if (lastPackSentTime === 0) {
-    lastPackSentTime = now;
-  }
-
-  if (now - lastPackSentTime >= MAX_LIVE_TIME) {
-    sendPackToServer();
-    return;
-  }
-
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    sendPackToServer();
-  }, SEND_DELAY);
+  tapManager.addTap();
 };
 
 async function sendPackToServer() {
@@ -3710,3 +3688,36 @@ function initMatrixRain() {
 
   setInterval(draw, 40);
 }
+
+window.addEventListener('sync_tap_success', (event) => {
+  const serverData = event.detail;
+  if (!serverData) return;
+
+  // Обновляем баланс и энергию с сервера
+  userState.balance = Number(serverData.balance ?? userState.balance);
+  userState.wbc_balance = userState.balance;
+  userState.energy = Number(serverData.energy ?? userState.energy);
+  if (serverData.rank_id) userState.rank_id = serverData.rank_id;
+  if (serverData.ton_balance !== undefined) userState.ton_balance = serverData.ton_balance;
+
+  syncEnergyBase();
+  updateUI();
+
+  // Live Score
+  if (serverData.live_score !== undefined && serverData.live_score !== null) {
+    const nextScore = Number(serverData.live_score);
+    const oldScore = Number(localStorage.getItem('wb_last_live_score') || lastLiveScore || 0);
+    const delta = nextScore - oldScore;
+
+    if (delta > 0 && window.LiveScoreAnimator) {
+      window.LiveScoreAnimator.renderLiveScoreDelta(delta, "CORE TAP");
+    }
+
+    lastLiveScore = nextScore;
+    localStorage.setItem('wb_last_live_score', String(nextScore));
+
+    if (typeof syncLiveScoreUI === 'function') {
+      syncLiveScoreUI({ live_score: nextScore }, "CORE TAP");
+    }
+  }
+});
