@@ -1918,7 +1918,8 @@ window.handleTap = () => {
   updateUI();
   animateTap();
 
-  tapManager.addTap();
+clicksBuffer++; // Теперь отправщик увидит тапы
+  if (window.tapManager) tapManager.addTap();
 };
 
 async function sendPackToServer() {

@@ -36,12 +36,21 @@ const LiveScoreAnimator = (function () {
     deltaBox.style.minWidth = "110px";
     deltaBox.textContent = `+${Number(delta).toFixed(2)}`;
 
-    let cls = "default";
+let cls = "default";
+    deltaBox.style.color = ""; // Сброс цвета
+    deltaBox.style.textShadow = ""; // Сброс тени
+
     if (label === "CORE TAP") cls = "tap";
     else if (label === "ADS REWARD") cls = "ads";
     else if (label === "REF BONUS") cls = "ref";
     else if (label === "TON BUY") cls = "ton";
     else if (label === "STARS BUY") cls = "stars";
+    else if (label === "DECODER BOOST") { 
+      cls = "decoder";
+      // КРИТИЧЕСКИЙ ФИКС ЦВЕТА (СИНИЙ)
+      deltaBox.style.color = "#00f2ff"; 
+      deltaBox.style.textShadow = "0 0 10px #008cff, 0 0 20px #00f2ff";
+    }
 
     deltaBox.className = `score-float ${cls}`;
     deltaBox.setAttribute("data-label", label);
