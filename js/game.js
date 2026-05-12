@@ -1909,7 +1909,7 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  if (visibleEnergy <= 0) return;
+  if (visibleEnergy - clicksBuffer <= 0) return;
 
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
@@ -1918,7 +1918,15 @@ window.handleTap = () => {
   updateUI();
   animateTap();
 
-clicksBuffer++; // Теперь отправщик увидит тапы
+  // Накапливаем тапы в буфер
+  clicksBuffer++;
+
+  // Перезапускаем таймер отправки (отправит через 1 сек после последнего тапа)
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    sendPackToServer();
+  }, 1000);
+
   if (window.tapManager) tapManager.addTap();
 };
 
@@ -1926,34 +1934,33 @@ async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
 
   const countToSend = clicksBuffer;
-  clicksBuffer = 0;
+  // ВАЖНО: Не обнуляем clicksBuffer здесь, чтобы не потерять тапы при ошибке
   lastPackSentTime = Date.now();
-  clearTimeout(debounceTimeout);
 
   try {
-    // Жесткая и прямая ссылка на глобальный объект, которая не упадет в ReferenceError
-    const currentAPI = window.API;
-    if (!currentAPI) return;
+    const currentAPI = window.API || API;
     const data = await currentAPI.sendTap(countToSend);
 
-    // КРИТИЧЕСКИЙ ФИКС: Обновляем стейт ТОЛЬКО если сервер подтвердил запись
     if (data && data.success) {
+      // Только при успехе вычитаем отправленные тапы из буфера
+      clicksBuffer -= countToSend;
+
+      // Синхронизируем стейт данными из базы
       userState.balance = Number(data.balance);
       userState.wbc_balance = Number(data.balance);
       userState.energy = Number(data.energy);
 
-      // Анимация скора (теперь будет синей)
       if (data.live_score && window.LiveScoreAnimator) {
         syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
       }
-      updateUI(); // Рисуем данные, которые реально записались в базу
-    } else {
-      console.warn("Server failed to save taps or session expired");
+      updateUI();
     }
   } catch (e) {
-    console.error("sendPackToServer runtime error:", e);
+    console.error("Tap sync error:", e);
+    // При ошибке тапы остаются в буфере и уйдут со следующим пакетом
   }
 }
+
 let lastPanelSource = "tabbar";
 
 function closeSidebar() {
@@ -2948,15 +2955,23 @@ window.startNewContract = async function(layer, amount) {
 };
 
 // Завершение контракта
+
 window.finishContract = async function(contractId) {
   var result = await API.finishContract(contractId);
   if (result && result.success) {
+    // Мгновенное обновление баланса из ответа сервера
+    if (result.balance !== undefined) {
+      userState.balance = Number(result.balance);
+      userState.wbc_balance = Number(result.balance);
+      updateUI();
+    }
+
     var msg = (currentLang === "RU" ? "Результат дешифрации: " : "Decryption result: ") + result.resultType;
     if (result.reward > 0) msg += " (+" + result.reward + " WBC)";
-    alert(msg);
+    safeAlert(msg);
     showProtocol();
   } else {
-    alert((result && result.error) || "Finish failed");
+    safeAlert(result?.error || "Finish failed");
   }
 };
 
