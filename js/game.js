@@ -78,9 +78,6 @@ let userState = {
   nickname_free_used: 0
 };
 
-let clicksBuffer = 0;
-let debounceTimeout = null;
-let lastPackSentTime = 0;
 const SEND_DELAY = 1000;
 const MAX_LIVE_TIME = 2500;
 
@@ -1869,77 +1866,68 @@ async function refreshUserSilently(label = "") {
   }
 }
 
-
 function getRewardForRank(rankId) {
   var rewards = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 400 };
   return rewards[rankId] || 10;
 }
 
-window.handleTap = () => {
-  const visibleEnergy = getRenderedEnergy();
-  if (visibleEnergy - clicksBuffer <= 0) return;
+// ====================== TAP SYSTEM v2 (Batch + Reliable) ======================
 
-  const reward = getRewardForRank(userState.rank_id);
+window.handleTap = () => {
+  const visibleEnergy = getRenderedEnergy ? getRenderedEnergy() : (userState ? userState.energy : 0);
+  if (visibleEnergy <= 0 || visibleEnergy - clicksBuffer <= 0) return;
+
+  const reward = getRewardForRank ? getRewardForRank(userState.rank_id || 1) : 10;
+
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
-  
-  syncEnergyBase();
-  updateUI();
-  animateTap();
+  userState.wbc_balance = userState.balance;
 
-  // Добавляем тап в буфер
+  if (typeof syncEnergyBase === 'function') syncEnergyBase();
+  if (typeof updateUI === 'function') updateUI();
+  if (typeof animateTap === 'function') animateTap();
+
   clicksBuffer++;
 
-  // ТРИГГЕР: Отправляем пакет через 1 сек после последнего тапа
   clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    sendPackToServer();
-  }, 1000);
-  if (window.tapManager) tapManager.addTap();
+  debounceTimeout = setTimeout(sendPackToServer, 850);
+
+  if (window.tapManager && typeof window.tapManager.addTap === 'function') {
+    window.tapManager.addTap();
+  }
 };
 
-async function sendPackToServer() {
+async function sendPackToServer(force = false) {
   if (clicksBuffer <= 0) return;
+
   const countToSend = clicksBuffer;
+  const now = Date.now();
+
+  if (!force && now - lastSuccessfulTapTime < 600) return;
 
   try {
-    // Вызываем API напрямую
-    const data = await API.sendTap(countToSend);
-    
-    if (data && data.success) {
-      clicksBuffer -= countToSend; 
-      userState.balance = Number(data.balance);
-      userState.energy = Number(data.energy);
-      if (data.live_score) syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
-      updateUI();
-    }
-  } catch (e) {
-    console.error("Critical Tap Error:", e);
-  }
-}
+    console.log(`[Client TAP] Sending batch: ${countToSend}`);
 
-async function sendPackToServer() {
-  if (clicksBuffer <= 0) return;
-  const countToSend = clicksBuffer;
-
-  try {
     const data = await API.sendTap(countToSend);
 
-    if (data && data.success) {
-      // Вычитаем только то, что успешно записано в БД
-      clicksBuffer -= countToSend;
+    if (data && (data.success || data.energy !== undefined)) {
+      clicksBuffer = Math.max(0, clicksBuffer - countToSend);
+      lastSuccessfulTapTime = now;
 
-      userState.balance = Number(data.balance);
-      userState.wbc_balance = Number(data.balance);
-      userState.energy = Number(data.energy);
+      userState.balance = Number(data.balance || data.wbc_balance || userState.balance);
+      userState.wbc_balance = userState.balance;
+      userState.energy = Number(data.energy || userState.energy);
 
-      if (data.live_score && window.LiveScoreAnimator) {
-        syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
+      if (typeof updateUI === 'function') updateUI();
+      if (typeof syncLiveScoreUI === 'function' && data.live_score !== undefined) {
+        syncLiveScoreUI({ live_score: data.live_score });
       }
-      updateUI();
+
+      window.dispatchEvent(new CustomEvent('sync_tap_success', { detail: data }));
+      console.log(`[Client TAP] Batch success: ${countToSend} taps`);
     }
   } catch (e) {
-    console.error("Critical Tap Error:", e);
+    console.error("[Client TAP] Error:", e);
   }
 }
 
@@ -3756,4 +3744,43 @@ window.addEventListener('sync_tap_success', (event) => {
       syncLiveScoreUI({ live_score: nextScore }, "CORE TAP");
     }
   }
+});
+// TAP BATCH FINAL
+let clicksBuffer = 0;
+let debounceTimeout = null;
+let lastSuccessfulTapTime = 0;
+
+window.handleTap = () => {
+  const energy = userState?.energy || 0;
+  if (energy - clicksBuffer <= 0) return;
+
+  userState.energy = Math.max(0, energy - 1);
+  userState.balance = (userState.balance || 0) + 10;
+  userState.wbc_balance = userState.balance;
+
+  if (typeof updateUI === 'function') updateUI();
+  if (typeof animateTap === 'function') animateTap();
+
+  clicksBuffer++;
+
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => sendPackToServer(false), 800);
+};
+
+async function sendPackToServer(force = false) {
+  if (clicksBuffer <= 0) return;
+  const count = clicksBuffer;
+  try {
+    const res = await API.sendTap(count);
+    if (res?.energy !== undefined) {
+      clicksBuffer = 0;
+      userState.energy = res.energy;
+      userState.balance = res.balance || res.wbc_balance || userState.balance;
+      if (typeof updateUI === 'function') updateUI();
+    }
+  } catch(e) {}
+}
+
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && clicksBuffer > 0) sendPackToServer(true);
 });
