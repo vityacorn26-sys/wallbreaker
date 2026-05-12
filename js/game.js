@@ -1877,12 +1877,9 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
-  // Проверяем энергию с учетом того, что уже лежит в буфере ожидания
   if (visibleEnergy - clicksBuffer <= 0) return;
 
   const reward = getRewardForRank(userState.rank_id);
-
-  // Визуальное обновление в клиенте (мгновенно)
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
 
@@ -1890,10 +1887,8 @@ window.handleTap = () => {
   updateUI();
   animateTap();
 
-  // Добавляем тап в буфер
   clicksBuffer++;
 
-  // Запускаем таймер отправки на сервер
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
@@ -1902,31 +1897,18 @@ window.handleTap = () => {
 
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
-
   const countToSend = clicksBuffer;
-  lastPackSentTime = Date.now();
-
   try {
-    const currentAPI = window.API || API;
-    const data = await currentAPI.sendTap(countToSend);
-
+    const data = await window.API.sendTap(countToSend);
     if (data && data.success) {
-      // Только при успехе вычитаем отправленное из буфера
-      clicksBuffer -= countToSend;
-
-      // Синхронизируем стейт данными из базы (финальный баланс и CPU)
+      clicksBuffer -= countToSend; // Вычитаем только успешные
       userState.balance = Number(data.balance);
-      userState.wbc_balance = Number(data.balance);
       userState.energy = Number(data.energy);
-
-      if (data.live_score && window.LiveScoreAnimator) {
-        syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
-      }
+      if (data.live_score) syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
       updateUI();
     }
   } catch (e) {
     console.error("Tap sync error:", e);
-    // При ошибке тапы остаются в буфере и уйдут со следующим пакетом
   }
 }
 
