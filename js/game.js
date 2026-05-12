@@ -1895,6 +1895,7 @@ window.handleTap = () => {
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
   }, 1000);
+  if (window.tapManager) tapManager.addTap();
 };
 
 async function sendPackToServer() {
