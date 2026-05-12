@@ -1882,29 +1882,43 @@ window.handleTap = () => {
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
-
   syncEnergyBase();
   updateUI();
   animateTap();
 
+  // Инкремент буфера
   clicksBuffer++;
 
+  // ТАЙМЕР-ПИНОК: если юзер не тапает 1 секунду — отправляем пакет
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
   }, SEND_DELAY);
+
+  if (window.tapManager) tapManager.addTap();
 };
 
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
+
   const countToSend = clicksBuffer;
+  lastPackSentTime = Date.now();
+
   try {
-    const data = await window.API.sendTap(countToSend);
+    const currentAPI = window.API || API;
+    const data = await currentAPI.sendTap(countToSend);
+
     if (data && data.success) {
-      clicksBuffer -= countToSend; // Вычитаем только успешные
+      // Вычитаем только то, что база подтвердила
+      clicksBuffer -= countToSend;
+
       userState.balance = Number(data.balance);
+      userState.wbc_balance = Number(data.balance);
       userState.energy = Number(data.energy);
-      if (data.live_score) syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
+
+      if (data.live_score && window.LiveScoreAnimator) {
+        syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
+      }
       updateUI();
     }
   } catch (e) {
