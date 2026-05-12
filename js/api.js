@@ -17,43 +17,34 @@ const API = {
     }
   },
 
-  async post(endpoint, extraBody = {}) {
-    // Берем данные напрямую из window, чтобы не терять контекст this
+async post(endpoint, extraBody = {}) {
     const initData = window.Telegram?.WebApp?.initData || '';
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
-
     const telegramId = tgUser?.id ? String(tgUser.id) : '';
-    const username = tgUser?.username || '';
 
-    const response = await fetch(`${this.BASE_URL}${endpoint}`, {
+    // Используем константу вместо this.BASE_URL для надежности
+    const baseUrl = 'https://wbapi.corterbs.dpdns.org';
+
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        initData: initData, // Жестко прописываем валидную строку авторизации
-        telegramId: telegramId,
-        username: username,
+        initData,
+        telegramId,
+        username: tgUser?.username || '',
         ...extraBody
       })
     });
 
-    let data = null;
-    try {
-      data = await response.json();
-    } catch (e) {
-      data = null;
-    }
-
     if (!response.ok) {
-      const err = new Error(data?.error || `Request failed: ${endpoint}`);
-      err.status = response.status;
-      err.payload = data;
-      throw err;
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `HTTP ${response.status}`);
     }
 
-    return data;
+    return await response.json();
   },
 
   async getUser() {

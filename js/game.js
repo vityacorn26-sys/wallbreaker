@@ -1882,34 +1882,32 @@ window.handleTap = () => {
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
+
   syncEnergyBase();
   updateUI();
   animateTap();
 
-  // Инкремент буфера
+  // Накапливаем в буфер
   clicksBuffer++;
 
-  // ТАЙМЕР-ПИНОК: если юзер не тапает 1 секунду — отправляем пакет
+  // Запускаем таймер отправки (Debounce)
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
-  }, SEND_DELAY);
+  }, 1000);
 
   if (window.tapManager) tapManager.addTap();
 };
 
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
-
   const countToSend = clicksBuffer;
-  lastPackSentTime = Date.now();
 
   try {
-    const currentAPI = window.API || API;
-    const data = await currentAPI.sendTap(countToSend);
+    const data = await API.sendTap(countToSend);
 
     if (data && data.success) {
-      // Вычитаем только то, что база подтвердила
+      // Вычитаем только то, что успешно записано в БД
       clicksBuffer -= countToSend;
 
       userState.balance = Number(data.balance);
@@ -1922,7 +1920,7 @@ async function sendPackToServer() {
       updateUI();
     }
   } catch (e) {
-    console.error("Tap sync error:", e);
+    console.error("Critical Tap Error:", e);
   }
 }
 
