@@ -1882,22 +1882,40 @@ window.handleTap = () => {
   const reward = getRewardForRank(userState.rank_id);
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
-
+  
   syncEnergyBase();
   updateUI();
   animateTap();
 
-  // Накапливаем в буфер
+  // Добавляем тап в буфер
   clicksBuffer++;
 
-  // Запускаем таймер отправки (Debounce)
+  // ТРИГГЕР: Отправляем пакет через 1 сек после последнего тапа
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
   }, 1000);
-
-  if (window.tapManager) tapManager.addTap();
 };
+
+async function sendPackToServer() {
+  if (clicksBuffer <= 0) return;
+  const countToSend = clicksBuffer;
+
+  try {
+    // Вызываем API напрямую
+    const data = await API.sendTap(countToSend);
+    
+    if (data && data.success) {
+      clicksBuffer -= countToSend; 
+      userState.balance = Number(data.balance);
+      userState.energy = Number(data.energy);
+      if (data.live_score) syncLiveScoreUI({ live_score: data.live_score }, "CORE TAP");
+      updateUI();
+    }
+  } catch (e) {
+    console.error("Critical Tap Error:", e);
+  }
+}
 
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
