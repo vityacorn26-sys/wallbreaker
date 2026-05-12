@@ -21,25 +21,17 @@ async post(endpoint, extraBody = {}) {
     const initData = window.Telegram?.WebApp?.initData || '';
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
     const telegramId = tgUser?.id ? String(tgUser.id) : '';
-    const baseUrl = 'https://wbapi.corterbs.dpdns.org';
+    const baseUrl = 'https://wbapi.corterbs.dpdns.org'; // Жёсткий адрес
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        initData,
-        telegramId,
-        username: tgUser?.username || '',
-        ...extraBody
-      })
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ initData, telegramId, username: tgUser?.username || '', ...extraBody })
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP ${response.status}`);
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${response.status}`);
     }
     return await response.json();
   },
