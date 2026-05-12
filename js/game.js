@@ -78,43 +78,11 @@ let userState = {
   nickname_free_used: 0
 };
 
-class TapQueueManager {
-  constructor() {
-    this.accumulatedTaps = 0;
-    this.isSending = false;
-    this.intervalId = null;
-  }
-  addTap() {
-    this.accumulatedTaps++;
-    if (!this.intervalId) {
-      this.intervalId = setInterval(() => this.tick(), 600);
-    }
-  }
-  async tick() {
-    if (this.accumulatedTaps === 0) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-      return;
-    }
-    if (this.isSending) return;
-    const tapsToSend = Math.min(this.accumulatedTaps, 50);
-    this.accumulatedTaps -= tapsToSend;
-    this.isSending = true;
-    try {
-      const data = await window.API.sendTap(tapsToSend);
-      this.isSending = false;
-      if (data && data.live_score !== undefined) {
-        window.dispatchEvent(new CustomEvent('sync_tap_success', { detail: data }));
-      } else {
-        this.accumulatedTaps += tapsToSend;
-      }
-    } catch (error) {
-      this.accumulatedTaps += tapsToSend;
-      this.isSending = false;
-    }
-  }
-}
-const tapManager = new TapQueueManager();
+let clicksBuffer = 0;
+let debounceTimeout = null;
+let lastPackSentTime = 0;
+const SEND_DELAY = 1000;
+const MAX_LIVE_TIME = 2500;
 
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
@@ -1909,32 +1877,33 @@ function getRewardForRank(rankId) {
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
+  // Проверяем энергию с учетом того, что уже лежит в буфере ожидания
   if (visibleEnergy - clicksBuffer <= 0) return;
 
   const reward = getRewardForRank(userState.rank_id);
+
+  // Визуальное обновление в клиенте (мгновенно)
   userState.energy = Math.max(0, visibleEnergy - 1);
   userState.balance = (userState.balance || 0) + reward;
+
   syncEnergyBase();
   updateUI();
   animateTap();
 
-  // Накапливаем тапы в буфер
+  // Добавляем тап в буфер
   clicksBuffer++;
 
-  // Перезапускаем таймер отправки (отправит через 1 сек после последнего тапа)
+  // Запускаем таймер отправки на сервер
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     sendPackToServer();
-  }, 1000);
-
-  if (window.tapManager) tapManager.addTap();
+  }, SEND_DELAY);
 };
 
 async function sendPackToServer() {
   if (clicksBuffer <= 0) return;
 
   const countToSend = clicksBuffer;
-  // ВАЖНО: Не обнуляем clicksBuffer здесь, чтобы не потерять тапы при ошибке
   lastPackSentTime = Date.now();
 
   try {
@@ -1942,10 +1911,10 @@ async function sendPackToServer() {
     const data = await currentAPI.sendTap(countToSend);
 
     if (data && data.success) {
-      // Только при успехе вычитаем отправленные тапы из буфера
+      // Только при успехе вычитаем отправленное из буфера
       clicksBuffer -= countToSend;
 
-      // Синхронизируем стейт данными из базы
+      // Синхронизируем стейт данными из базы (финальный баланс и CPU)
       userState.balance = Number(data.balance);
       userState.wbc_balance = Number(data.balance);
       userState.energy = Number(data.energy);
