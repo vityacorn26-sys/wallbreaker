@@ -78,8 +78,10 @@ let userState = {
   nickname_free_used: 0
 };
 
-const SEND_DELAY = 1000;
-const MAX_LIVE_TIME = 2500;
+let tapQueue = 0;
+let tapWorkerRunning = false;
+let tapAnimLocked = false;
+let tapFlushTimer = null;
 
 let localEnergyTicker = null;
 let lastServerSyncTs = Date.now();
@@ -1465,6 +1467,7 @@ async function loadUser() {
     }
 
     userState = normalizeUserState(data);
+    tapQueue = 0;
     syncEnergyBase();
 
     await loadWithdrawStatus();
@@ -1848,88 +1851,86 @@ function animateTap() {
 
 async function refreshUserSilently(label = "") {
   try {
-    const currentAPI = window.API || API;
-    if (!currentAPI) return false;
-
-    const fresh = await currentAPI.getUser();
+    const fresh = await API.getUser();
     if (!fresh) return false;
 
     userState = normalizeUserState(fresh);
+
     syncEnergyBase();
     updateUI();
-    // ЛОМАЮЩИЙ КОСТЫЛЬ УДАЛЕН. Фоновый профиль больше не трогает Live Score!
 
+    // ===== LIVE SCORE SYNC (с сервера) =====
+    syncLiveScoreUI(fresh, label || "");
+    
     return true;
+
   } catch (e) {
     console.error("refreshUserSilently error:", e);
     return false;
   }
 }
 
-function getRewardForRank(rankId) {
-  var rewards = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 400 };
-  return rewards[rankId] || 10;
-}
-
-// ====================== TAP SYSTEM v2 (Batch + Reliable) ======================
-
-window.handleTap = () => {
-  const visibleEnergy = getRenderedEnergy ? getRenderedEnergy() : (userState ? userState.energy : 0);
-  if (visibleEnergy <= 0 || visibleEnergy - clicksBuffer <= 0) return;
-
-  const reward = getRewardForRank ? getRewardForRank(userState.rank_id || 1) : 10;
-
-  userState.energy = Math.max(0, visibleEnergy - 1);
-  userState.balance = (userState.balance || 0) + reward;
-  userState.wbc_balance = userState.balance;
-
-  if (typeof syncEnergyBase === 'function') syncEnergyBase();
-  if (typeof updateUI === 'function') updateUI();
-  if (typeof animateTap === 'function') animateTap();
-
-  clicksBuffer++;
-
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(sendPackToServer, 850);
-
-  if (window.tapManager && typeof window.tapManager.addTap === 'function') {
-    window.tapManager.addTap();
-  }
-};
-
-async function sendPackToServer(force = false) {
-  if (clicksBuffer <= 0) return;
-
-  const countToSend = clicksBuffer;
-  const now = Date.now();
-
-  if (!force && now - lastSuccessfulTapTime < 600) return;
+async function processTapQueue() {
+  if (tapWorkerRunning) return;
+  tapWorkerRunning = true;
 
   try {
-    console.log(`[Client TAP] Sending batch: ${countToSend}`);
+    while (tapQueue > 0) {
+      const data = await API.sendTap();
+      tapQueue = Math.max(0, tapQueue - 1);
 
-    const data = await API.sendTap(countToSend);
+      if (data && data.balance !== undefined) {
+        userState = normalizeUserState({
+          ...userState,
+          balance: data.balance,
+          energy: data.energy,
+          rank_id: data.rank_id ?? userState.rank_id,
+          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
+          ton_balance: data.ton_balance ?? userState.ton_balance
+        });
 
-    if (data && (data.success || data.energy !== undefined)) {
-      clicksBuffer = Math.max(0, clicksBuffer - countToSend);
-      lastSuccessfulTapTime = now;
+        syncEnergyBase();
+        updateUI();
 
-      userState.balance = Number(data.balance || data.wbc_balance || userState.balance);
-      userState.wbc_balance = userState.balance;
-      userState.energy = Number(data.energy || userState.energy);
-
-      if (typeof updateUI === 'function') updateUI();
-      if (typeof syncLiveScoreUI === 'function' && data.live_score !== undefined) {
-        syncLiveScoreUI({ live_score: data.live_score });
+        if (data.score !== undefined && data.score !== null) {
+          syncLiveScoreUI(
+            {
+              live_score: Number(data.score || 0),
+              score: { recomputed: Number(data.score || 0) }
+            },
+            "CORE TAP"
+          );
+        } else {
+          const liveScoreData = await API.getUserLiveScore();
+          if (liveScoreData) {
+            syncLiveScoreUI(liveScoreData, "CORE TAP");
+          }
+        }
+      } else {
+        tapQueue = 0;
+        await refreshUserSilently();
       }
-
-      window.dispatchEvent(new CustomEvent('sync_tap_success', { detail: data }));
-      console.log(`[Client TAP] Batch success: ${countToSend} taps`);
     }
   } catch (e) {
-    console.error("[Client TAP] Error:", e);
+    console.error("Tap queue error:", e);
+    tapQueue = 0;
+    await refreshUserSilently();
+  } finally {
+    tapWorkerRunning = false;
   }
 }
+
+window.handleTap = () => {
+  const visibleEnergy = getRenderedEnergy();
+  if ((visibleEnergy - tapQueue) <= 0) return;
+  animateTap();
+  tapQueue += 1;
+  updateUI();
+  if (tapFlushTimer) clearTimeout(tapFlushTimer);
+  tapFlushTimer = setTimeout(() => {
+    processTapQueue();
+  }, 90);
+};
 
 let lastPanelSource = "tabbar";
 
@@ -2925,23 +2926,15 @@ window.startNewContract = async function(layer, amount) {
 };
 
 // Завершение контракта
-
 window.finishContract = async function(contractId) {
   var result = await API.finishContract(contractId);
   if (result && result.success) {
-    // Мгновенное обновление баланса из ответа сервера
-    if (result.balance !== undefined) {
-      userState.balance = Number(result.balance);
-      userState.wbc_balance = Number(result.balance);
-      updateUI();
-    }
-
     var msg = (currentLang === "RU" ? "Результат дешифрации: " : "Decryption result: ") + result.resultType;
     if (result.reward > 0) msg += " (+" + result.reward + " WBC)";
-    safeAlert(msg);
+    alert(msg);
     showProtocol();
   } else {
-    safeAlert(result?.error || "Finish failed");
+    alert((result && result.error) || "Finish failed");
   }
 };
 
@@ -3331,52 +3324,53 @@ window.showAds = async () => {
     // ⏳ Ждём постбэк click
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // === НАЧАЛО РАЗДЕЛИК СИСТЕМЫ РЕКЛАМЫ ===
-    if (window._boostContractId) {
-      // ЛОГИКА А: Буст контракта (БЕЗ начисления монет и БЕЗ сброса CPU)
-      const contractId = window._boostContractId;
-      window._boostContractId = null;
+    const rewardResult = await API.claimAdReward(ymid);
 
-      const currentAPI = window.API || API;
-      const boostResult = await currentAPI.boostContract(contractId, ymid);
+    if (rewardResult?.success) {
+      safeAlert(t().adRewardOk);
 
-      if (boostResult?.success) {
-        // --- ОБНОВЛЕНИЕ LIVE SCORE И АНИМАЦИЯ ---
-        if (boostResult.live_score !== undefined) {
-          // Эта функция обновит число в облаке и запустит анимацию +число
-          syncLiveScoreUI({ live_score: boostResult.live_score }, "DECODER BOOST");
-        }
-
-        safeAlert(currentLang === "RU" ? "🔒 Дешифратор ускорен!" : "🔒 Decryptor boosted!");
-        if (typeof showProtocol === 'function') showProtocol(); 
-      } else {
-        safeAlert(currentLang === "RU" ? "⚠️ Ошибка буста: " + (boostResult?.error || "") : "⚠️ Boost error");
+      const fresh = await API.getUser();
+      if (fresh) {
+        userState = normalizeUserState(fresh);
+        syncEnergyBase();
+        updateUI();
       }
+
+      const liveScoreData = await API.getUserLiveScore();
+      if (liveScoreData) {
+        syncLiveScoreUI(liveScoreData, "ADS REWARD");
+      }
+      // Буст контракта после рекламы
+      if (window._boostContractId) {
+        var contractId = window._boostContractId;
+        window._boostContractId = null;
+        try {
+          var boostResult = await API.boostContract(contractId);
+          if (boostResult && boostResult.success) {
+            showProtocol(); // обновить панель контрактов
+          }
+        } catch (e) {
+          console.error('boost after ad error:', e);
+        }
+      }
+
     } else {
-      // ЛОГИКА Б: ОБЫЧНАЯ РЕКЛАМА (За монеты и CPU)
-      const currentAPI = window.API || API;
-      const rewardResult = await currentAPI.claimAdReward(ymid);
+      console.error('AD REWARD ERROR:', rewardResult);
+      safeAlert('Ошибка начисления награды');
+    }
 
-      if (rewardResult?.success) {
-        safeAlert(t().adRewardOk);
-
-        const fresh = await currentAPI.getUser();
+    // Через 2.5 секунды обновим баланс и энергию (на случай небольшой задержки постбэка)
+    setTimeout(async () => {
+      try {
+        const fresh = await API.getUser();
         if (fresh) {
           userState = normalizeUserState(fresh);
           syncEnergyBase();
           updateUI();
         }
+      } catch (_) {}
+    }, 2500);
 
-        const liveScoreData = await currentAPI.getUserLiveScore();
-        if (liveScoreData) {
-          syncLiveScoreUI(liveScoreData, "ADS REWARD");
-        }
-      } else {
-        console.error('AD REWARD ERROR:', rewardResult);
-        safeAlert(currentLang === "RU" ? "⚠️ Ошибка начисления награды" : "⚠️ Reward delivery error");
-      }
-    }
-    // === КОНЕЦ РАЗДЕЛИК СИСТЕМЫ РЕКЛАМЫ ===
   } catch (e) {
     console.error("showAds error:", e);
     const adErrText = parseAdErrorMessage(e);
@@ -3712,75 +3706,3 @@ function initMatrixRain() {
 
   setInterval(draw, 40);
 }
-
-window.addEventListener('sync_tap_success', (event) => {
-  const serverData = event.detail;
-  if (!serverData) return;
-
-  // Обновляем баланс и энергию с сервера
-  userState.balance = Number(serverData.balance ?? userState.balance);
-  userState.wbc_balance = userState.balance;
-  userState.energy = Number(serverData.energy ?? userState.energy);
-  if (serverData.rank_id) userState.rank_id = serverData.rank_id;
-  if (serverData.ton_balance !== undefined) userState.ton_balance = serverData.ton_balance;
-
-  syncEnergyBase();
-  updateUI();
-
-  // Live Score
-  if (serverData.live_score !== undefined && serverData.live_score !== null) {
-    const nextScore = Number(serverData.live_score);
-    const oldScore = Number(localStorage.getItem('wb_last_live_score') || lastLiveScore || 0);
-    const delta = nextScore - oldScore;
-
-    if (delta > 0 && window.LiveScoreAnimator) {
-      window.LiveScoreAnimator.renderLiveScoreDelta(delta, "CORE TAP");
-    }
-
-    lastLiveScore = nextScore;
-    localStorage.setItem('wb_last_live_score', String(nextScore));
-
-    if (typeof syncLiveScoreUI === 'function') {
-      syncLiveScoreUI({ live_score: nextScore }, "CORE TAP");
-    }
-  }
-});
-// TAP BATCH FINAL
-let clicksBuffer = 0;
-let debounceTimeout = null;
-let lastSuccessfulTapTime = 0;
-
-window.handleTap = () => {
-  const energy = userState?.energy || 0;
-  if (energy - clicksBuffer <= 0) return;
-
-  userState.energy = Math.max(0, energy - 1);
-  userState.balance = (userState.balance || 0) + 10;
-  userState.wbc_balance = userState.balance;
-
-  if (typeof updateUI === 'function') updateUI();
-  if (typeof animateTap === 'function') animateTap();
-
-  clicksBuffer++;
-
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => sendPackToServer(false), 800);
-};
-
-async function sendPackToServer(force = false) {
-  if (clicksBuffer <= 0) return;
-  const count = clicksBuffer;
-  try {
-    const res = await API.sendTap(count);
-    if (res?.energy !== undefined) {
-      clicksBuffer = 0;
-      userState.energy = res.energy;
-      userState.balance = res.balance || res.wbc_balance || userState.balance;
-      if (typeof updateUI === 'function') updateUI();
-    }
-  } catch(e) {}
-}
-
-window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && clicksBuffer > 0) sendPackToServer(true);
-});

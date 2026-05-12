@@ -17,33 +17,42 @@ const API = {
     }
   },
 
-async post(endpoint, extraBody = {}) {
-    const initData = window.Telegram?.WebApp?.initData || '';
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
-    const telegramId = tgUser?.id ? String(tgUser.id) : '';
-    const baseUrl = 'https://wbapi.corterbs.dpdns.org'; // Жёсткий адрес
+  async post(endpoint, extraBody = {}) {
+    const initData = this.getInitData();
+    const tgUser = this.getTelegramUser();
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const telegramId = tgUser?.id ? String(tgUser.id) : '';
+    const username = tgUser?.username || '';
+
+    const response = await fetch(`${this.BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ initData, telegramId, username: tgUser?.username || '', ...extraBody })
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        initData,
+        telegramId,
+        username,
+        ...extraBody
+      })
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
-  },
-
-  async sendTap(count = 1) {
+    let data = null;
     try {
-      // Используем API.post вместо this.post, чтобы не терять контекст
-      return await API.post('/api/tap', { count });
+      data = await response.json();
     } catch (e) {
-      console.error('API Error (sendTap):', e);
-      return null;
+      data = null;
     }
+
+    if (!response.ok) {
+      const err = new Error(data?.error || `Request failed: ${endpoint}`);
+      err.status = response.status;
+      err.payload = data;
+      throw err;
+    }
+
+    return data;
   },
 
   async getUser() {
@@ -64,9 +73,9 @@ async post(endpoint, extraBody = {}) {
     }
   },
 
-  async sendTap(count = 1) {
+  async sendTap() {
     try {
-      return await this.post('/api/tap', { count });
+      return await this.post('/api/tap');
     } catch (e) {
       console.error('API Error (sendTap):', e);
       return null;
@@ -369,9 +378,10 @@ async post(endpoint, extraBody = {}) {
       return { success: false, error: e?.payload?.error || e?.message || 'contract_finish_failed' };
     }
   },
-  async boostContract(contractId, ymid) {
+
+  async boostContract(contractId) {
     try {
-      return await this.post('/api/contract/boost', { contractId, ymid });
+      return await this.post('/api/contract/boost', { contractId });
     } catch (e) {
       console.error('API Error (boostContract):', e);
       return { success: false, error: e?.payload?.error || e?.message || 'contract_boost_failed' };
