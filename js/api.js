@@ -21,8 +21,6 @@ async post(endpoint, extraBody = {}) {
     const initData = window.Telegram?.WebApp?.initData || '';
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
     const telegramId = tgUser?.id ? String(tgUser.id) : '';
-
-    // Используем константу вместо this.BASE_URL для надежности
     const baseUrl = 'https://wbapi.corterbs.dpdns.org';
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -43,8 +41,17 @@ async post(endpoint, extraBody = {}) {
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error || `HTTP ${response.status}`);
     }
-
     return await response.json();
+  },
+
+  async sendTap(count = 1) {
+    try {
+      // Используем API.post вместо this.post, чтобы не терять контекст
+      return await API.post('/api/tap', { count });
+    } catch (e) {
+      console.error('API Error (sendTap):', e);
+      return null;
+    }
   },
 
   async getUser() {
