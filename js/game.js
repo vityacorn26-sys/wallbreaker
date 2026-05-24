@@ -1303,7 +1303,7 @@ function initTonConnect() {
       manifestUrl: TON_CONNECT_MANIFEST_URL,
       buttonRootId: TON_CONNECT_BUTTON_ROOT_ID,
       actionsConfiguration: {
-        twaReturnUrl: window.location.href
+        twaReturnUrl: https://t.me/BypassWallBot/play
       }
     });
 
