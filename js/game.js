@@ -1874,12 +1874,11 @@ async function processTapQueue() {
   if (tapWorkerRunning || tapQueue <= 0) return;
   tapWorkerRunning = true;
 
-  // Забираем ВЕСЬ накопленный пул кликов за раз
   const countToSend = tapQueue;
-  tapQueue = 0; // Сбрасываем тут же для мгновенной реакции на новые клики
+  tapQueue = 0;
 
   try {
-    const data = await API.sendTap(countToSend); // Перекидываем параметры из батча
+    const data = await API.sendTap(countToSend);
 
     if (data && data.balance !== undefined) {
       userState = normalizeUserState({
@@ -1894,16 +1893,13 @@ async function processTapQueue() {
       syncEnergyBase();
       updateUI();
 
-      // Синхронизируем Live Score. 
-      // При этом вылетит ТОЛЬКО та самая серверная РАЗНИЦА (те самые +0.02-0.04), 
-      // так как локальные тапы мы отрисуем заранее
-      if (data.score !== undefined && data.score !== null) {
+      if (data.live_score !== undefined && data.live_score !== null) {
         syncLiveScoreUI(
           {
-            live_score: Number(data.score || 0),
-            score: { recomputed: Number(data.score || 0) }
+            live_score: Number(data.live_score || 0),
+            score: { recomputed: Number(data.live_score || 0) }
           },
-          "" // Не указываем label_text, чтобы избежать визуальной спам-перегрузки
+          ""
         );
       } else {
         const liveScoreData = await API.getUserLiveScore();
@@ -1912,7 +1908,6 @@ async function processTapQueue() {
         }
       }
     } else {
-      // Если сервак не ответил, сберегаем тапы у юзера
       tapQueue += countToSend;
       await refreshUserSilently();
     }
@@ -1922,12 +1917,13 @@ async function processTapQueue() {
     await refreshUserSilently();
   } finally {
     tapWorkerRunning = false;
-    // Если пока сервер грузился, юзер накликал еще - проверяем
     if (tapQueue > 0) {
       setTimeout(processTapQueue, 100);
     }
   }
 }
+
+let tapBatchInterval = null;
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
@@ -1937,18 +1933,17 @@ window.handleTap = () => {
   tapQueue += 1;
   updateUI();
 
-  // МГНОВЕННО визуализируем отлет цифры на каждый тап. Ощущение 120 Герц UI.
-  if (typeof lastLiveScore !== 'undefined' && typeof updateLiveScoreUI === 'function') {
-    const simulatedScore = Number(lastLiveScore || 0) + 0.01;
-    updateLiveScoreUI(simulatedScore, 0.01, "");
+  if (!tapBatchInterval) {
+    tapBatchInterval = setInterval(() => {
+      if (tapQueue <= 0 && !tapWorkerRunning) {
+        clearInterval(tapBatchInterval);
+        tapBatchInterval = null;
+        return;
+      }
+      if (tapWorkerRunning) return;
+      processTapQueue();
+    }, 300);
   }
-
-  if (tapFlushTimer) clearTimeout(tapFlushTimer);
-  // Буферизуем тапы на 300мс. Нода спасется и получит сразу по 5-10 тапов,
-  // А серверный ответ как раз вернет ту самую разницу в сотых.
-  tapFlushTimer = setTimeout(() => {
-    processTapQueue();
-  }, 300);
 };
 
 let lastPanelSource = "tabbar";
