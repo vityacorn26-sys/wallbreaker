@@ -73,9 +73,9 @@ const API = {
     }
   },
 
-  async sendTap() {
+async sendTap(count = 1) {
     try {
-      return await this.post('/api/tap');
+      return await this.post('/api/tap', { count });
     } catch (e) {
       console.error('API Error (sendTap):', e);
       return null;

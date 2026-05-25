@@ -1861,7 +1861,7 @@ async function refreshUserSilently(label = "") {
 
     // ===== LIVE SCORE SYNC (с сервера) =====
     syncLiveScoreUI(fresh, label || "");
-    
+
     return true;
 
   } catch (e) {
@@ -1871,65 +1871,84 @@ async function refreshUserSilently(label = "") {
 }
 
 async function processTapQueue() {
-  if (tapWorkerRunning) return;
+  if (tapWorkerRunning || tapQueue <= 0) return;
   tapWorkerRunning = true;
 
+  // Забираем ВЕСЬ накопленный пул кликов за раз
+  const countToSend = tapQueue;
+  tapQueue = 0; // Сбрасываем тут же для мгновенной реакции на новые клики
+
   try {
-    while (tapQueue > 0) {
-      const data = await API.sendTap();
-      tapQueue = Math.max(0, tapQueue - 1);
+    const data = await API.sendTap(countToSend); // Перекидываем параметры из батча
 
-      if (data && data.balance !== undefined) {
-        userState = normalizeUserState({
-          ...userState,
-          balance: data.balance,
-          energy: data.energy,
-          rank_id: data.rank_id ?? userState.rank_id,
-          rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
-          ton_balance: data.ton_balance ?? userState.ton_balance
-        });
+    if (data && data.balance !== undefined) {
+      userState = normalizeUserState({
+        ...userState,
+        balance: data.balance,
+        energy: data.energy,
+        rank_id: data.rank_id ?? userState.rank_id,
+        rank_expires_at: data.rank_expires_at ?? userState.rank_expires_at,
+        ton_balance: data.ton_balance ?? userState.ton_balance
+      });
 
-        syncEnergyBase();
-        updateUI();
+      syncEnergyBase();
+      updateUI();
 
-        if (data.score !== undefined && data.score !== null) {
-          syncLiveScoreUI(
-            {
-              live_score: Number(data.score || 0),
-              score: { recomputed: Number(data.score || 0) }
-            },
-            "CORE TAP"
-          );
-        } else {
-          const liveScoreData = await API.getUserLiveScore();
-          if (liveScoreData) {
-            syncLiveScoreUI(liveScoreData, "CORE TAP");
-          }
-        }
+      // Синхронизируем Live Score. 
+      // При этом вылетит ТОЛЬКО та самая серверная РАЗНИЦА (те самые +0.02-0.04), 
+      // так как локальные тапы мы отрисуем заранее
+      if (data.score !== undefined && data.score !== null) {
+        syncLiveScoreUI(
+          {
+            live_score: Number(data.score || 0),
+            score: { recomputed: Number(data.score || 0) }
+          },
+          "" // Не указываем label_text, чтобы избежать визуальной спам-перегрузки
+        );
       } else {
-        tapQueue = 0;
-        await refreshUserSilently();
+        const liveScoreData = await API.getUserLiveScore();
+        if (liveScoreData) {
+          syncLiveScoreUI(liveScoreData, "");
+        }
       }
+    } else {
+      // Если сервак не ответил, сберегаем тапы у юзера
+      tapQueue += countToSend;
+      await refreshUserSilently();
     }
   } catch (e) {
     console.error("Tap queue error:", e);
-    tapQueue = 0;
+    tapQueue += countToSend;
     await refreshUserSilently();
   } finally {
     tapWorkerRunning = false;
+    // Если пока сервер грузился, юзер накликал еще - проверяем
+    if (tapQueue > 0) {
+      setTimeout(processTapQueue, 100);
+    }
   }
 }
 
 window.handleTap = () => {
   const visibleEnergy = getRenderedEnergy();
   if ((visibleEnergy - tapQueue) <= 0) return;
+
   animateTap();
   tapQueue += 1;
   updateUI();
+
+  // МГНОВЕННО визуализируем отлет цифры на каждый тап. Ощущение 120 Герц UI.
+  if (typeof lastLiveScore !== 'undefined' && typeof updateLiveScoreUI === 'function') {
+    const simulatedScore = Number(lastLiveScore || 0) + 0.01;
+    updateLiveScoreUI(simulatedScore, 0.01, "");
+  }
+
   if (tapFlushTimer) clearTimeout(tapFlushTimer);
+  // Буферизуем тапы на 300мс. Нода спасется и получит сразу по 5-10 тапов,
+  // А серверный ответ как раз вернет ту самую разницу в сотых.
   tapFlushTimer = setTimeout(() => {
     processTapQueue();
-  }, 90);
+  }, 300);
 };
 
 let lastPanelSource = "tabbar";
