@@ -73,11 +73,12 @@ const API = {
     }
   },
 
-async sendTap(count = 1) {
+async sendTap(countToSend) {
     try {
-      return await this.post('/api/tap', { count });
+      const response = await this.post('/api/tap', { count: countToSend });
+      return response;
     } catch (e) {
-      console.error('API Error (sendTap):', e);
+      console.error('API.sendTap error:', e);
       return null;
     }
   },
