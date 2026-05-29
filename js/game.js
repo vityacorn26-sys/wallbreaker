@@ -1827,10 +1827,7 @@ function startLocalEnergyTicker() {
 
     if (renderedEnergy !== Number(userState.energy || 0)) {
       userState.energy = renderedEnergy;
-      updateUI();
-    } else {
-      renderMarketPanel();
-      updateAccountPanel();
+      requestAnimationFrame(updateUI);
     }
   }, 1000);
 }
