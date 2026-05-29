@@ -1904,12 +1904,10 @@ async function processTapQueue() {
       }
     } else {
       tapQueue += countToSend;
-      await refreshUserSilently();
     }
   } catch (e) {
     console.error("Tap queue error:", e);
     tapQueue += countToSend;
-    await refreshUserSilently();
   } finally {
     tapWorkerRunning = false;
     if (tapQueue > 0) {
