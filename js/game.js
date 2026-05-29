@@ -1901,11 +1901,6 @@ async function processTapQueue() {
           },
           ""
         );
-      } else {
-        const liveScoreData = await API.getUserLiveScore();
-        if (liveScoreData) {
-          syncLiveScoreUI(liveScoreData, "");
-        }
       }
     } else {
       tapQueue += countToSend;
