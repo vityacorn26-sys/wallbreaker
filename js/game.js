@@ -3579,6 +3579,17 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("TON Connect openModal error:", e);
       }
 
+      const connectedAddress = await waitForTonWalletConnection(25000);
+      if (!connectedAddress) {
+        safeAlert(t().tonWalletConnectFailed);
+        return;
+      }
+
+      updateAccountPanel();
+    });
+  }
+
+
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
     connectWalletBtn.addEventListener("click", async () => {
@@ -3600,17 +3611,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateAccountPanel();
     });
   }
-
-      const connectedAddress = await waitForTonWalletConnection(25000);
-      if (!connectedAddress) {
-        safeAlert(t().tonWalletConnectFailed);
-        return;
-      }
-
-      updateAccountPanel();
-    });
-  }
-
   const promoCodeApplyBtn = document.getElementById("promo-code-apply-btn");
   if (promoCodeApplyBtn) {
     promoCodeApplyBtn.addEventListener("click", handlePromoApply);
