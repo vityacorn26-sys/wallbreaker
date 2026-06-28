@@ -388,5 +388,24 @@ async sendTap(countToSend) {
       return { success: false, error: e?.payload?.error || e?.message || 'contract_boost_failed' };
     }
   },
+
+  // ===== WALLET =====
+  async bindWallet(walletAddress) {
+    try {
+      return await this.post('/api/wallet/bind', { wallet_address: walletAddress });
+    } catch (e) {
+      console.error('API Error (bindWallet):', e);
+      return { success: false, error: e?.payload?.error || e?.message || 'wallet_bind_failed' };
+    }
+  },
+
+  async getWallet() {
+    try {
+      return await this.post('/api/wallet/get');
+    } catch (e) {
+      console.error('API Error (getWallet):', e);
+      return { success: false, wallet: null };
+    }
+  },
 };
 window.API = API;

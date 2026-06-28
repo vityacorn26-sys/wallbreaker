@@ -3579,6 +3579,28 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("TON Connect openModal error:", e);
       }
 
+  const connectWalletBtn = document.getElementById("connect-wallet-btn");
+  if (connectWalletBtn) {
+    connectWalletBtn.addEventListener("click", async () => {
+      const ui = initTonConnect();
+      if (!ui) {
+        safeAlert(t().tonWalletUnavailable);
+        return;
+      }
+      try {
+        await ui.openModal();
+      } catch (e) {
+        console.error("TON Connect openModal error:", e);
+      }
+      const connectedAddress = await waitForTonWalletConnection(25000);
+      if (!connectedAddress) {
+        safeAlert(t().tonWalletConnectFailed);
+        return;
+      }
+      updateAccountPanel();
+    });
+  }
+
       const connectedAddress = await waitForTonWalletConnection(25000);
       if (!connectedAddress) {
         safeAlert(t().tonWalletConnectFailed);
