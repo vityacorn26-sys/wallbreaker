@@ -1304,7 +1304,7 @@ function initTonConnect() {
         tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
       actionsConfiguration: {
-        twaReturnUrl: window.location.href
+        twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/", returnStrategy: "back"
       }
     });
 
