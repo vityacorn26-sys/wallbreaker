@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
 const Database = require('better-sqlite3');
@@ -60,8 +61,8 @@ const ADS_HOUR_LIMIT = 15;
 const ADS_DAY_LIMIT = 48;
 
 const NICKNAME_RENAME_PRICE_WBC = 250000;
-const NICKNAME_RENAME_PRICE_STARS = 50;
-const NICKNAME_STARS_ENABLED = true;
+const NICKNAME_RENAME_PRICE_STARS = 20;
+const NICKNAME_STARS_ENABLED = false;
 
 if (!BOT_TOKEN) {
   console.error('❌ BOT_TOKEN is not set');
@@ -456,16 +457,16 @@ function regenEnergy(user) {
 
 const NICK_FIRST_PARTS = `
 Alex Adrian Aiden Arin Axel Blaze Cairo Dante Devin Elias Felix Gage Hugo Ivar Jax Kai Leon Luca Milan Nico Orion Pax Quentin Rafael Roman Theo Viktor Zane
-Nexus Cipher Phantom Vertex Quantum Syn Flux Byte Raze Blitz Ripper Slayer Venom Wraith Storm Titan Vortex Surge Pulse Echo Void Glitch Reaper Specter Hacker
 Aria Astra Ayla Bella Cora Elara Freya Iris Kaia Kara Luna Lyra Maia Mira Nadia Nika Nova Rhea Talia Vera Yuna Zara Selene Skye Nyra Vika Kira
-Morpho Serene Sable Aster Vex Pixel Lux Neon Siren Vesper Vortex Veritas Valkyrie Vida Vena Venus Vela Vale Vox Violet Vixen Void Vigil Viper Vapor
+Cipher Nexus Zero Nyx Raven Ghost Vex Neo Flux Hexa Syn Volt Onyx Delta Matrix Shadow Glitch Pixel Ciphera Zenith Proxy Vector Kernel Static
+Byte Echo Quantum Xenon NovaX Nitro Pulse Cyber Axion Rift Spectra Omega Logic Phantom Titan Mirage Cosmo Draco Zenithra Helix Inferno
 `.trim().split(/\s+/);
 
 const NICK_LAST_PARTS = `
-Mercer Novak Volkov Voss Drake Frost Cross Vale Stone Mercer Thorn Vega Orion Blackwood Sterling Ward Kane Ryker Sable Arden Crow Fox Hale Knox Lynch
-Morrow North Quinn Reeve Slade Stark Vega Vance Wolfe York Zorin Ashford Calder Dorian Falcon Grayson Hayes Irons Jett Kestrel Locke Maddox Nash Pryce
-Chrome Matrix Sentinel Vector Titan Forge Spec Velocity Vanish Volt Vigil Vault Venture Vice Valiant Vex Vigor Virtue Vortex Vesper Void Viper Vigor Vane Valor
-Nexus Code Cipher Flux Zone Protocol Daemon Script Kernel Logic Bytes Bits Chip Cache Cycle Engine Flash Grid Hash Heap Link Node Pixel Query Regex Route
+Mercer Novak Volkov Voss Drake Frost Cross Vale Stone Thorn Vega Orion Blackwood Sterling Ward Kane Ryker Sable Arden Crow Fox Hale Knox Lynch
+Morrow North Quinn Reeve Slade Stark Vance Wolfe York Zorin Ashford Calder Dorian Falcon Grayson Hayes Irons Jett Kestrel Locke Maddox Nash Pryce
+Darknet Voidrunner Cyberflux Hexcore Nightwire Steelbyte Cryptic Neonshade Datastream Zeroflux BlackICE Ghostlink Stormbyte Chromeveil Neurodex
+Shadowmesh Ironpulse Riftwalker Nullbyte Gridlock Deeptrace Hexforge Synapse Vectorium Cybernova Blackcipher Fluxgate Overclock Razorwire
 `.trim().split(/\s+/);
 
 function generateRefCode() {
@@ -624,6 +625,16 @@ function getOrCreateUser(telegramUser) {
   const generatedNickname = generateUniqueAutoNickname(telegramId);
 
   if (!user) {
+//    console.log(
+//      '[NEW_USER_CREATE_START]',
+//      JSON.stringify({
+//        telegramId,
+//        username: telegramUser.username || '',
+//        beforeUsersCount: db.prepare('SELECT COUNT(*) as c FROM users').get().c,
+//        generatedNickname,
+//        generatedRefCode
+//      })
+//    );
     db.prepare(`
       INSERT INTO users (
         telegramId,
@@ -665,7 +676,7 @@ function getOrCreateUser(telegramUser) {
       0,
       0,
       0,
-      MAX_ENERGY,
+      100,
       0,
       now,
       0,
@@ -681,7 +692,22 @@ function getOrCreateUser(telegramUser) {
       now
     );
 
+//    console.log('[NEW_USER_CREATED]', {
+//      telegramId,
+//      afterUsersCount: db.prepare('SELECT COUNT(*) as c FROM users').get().c,
+//      ts: Date.now()
+//    });
+
     user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
+//    console.log(
+//      '[NEW_USER_CREATE_DONE]',
+//      JSON.stringify({
+//        telegramId,
+//        afterUsersCount: db.prepare('SELECT COUNT(*) as c FROM users').get().c,
+//        created: !!user,
+//        nickname: user?.public_nickname || ''
+//      })
+//    );
   } else {
     db.prepare(`
       UPDATE users
@@ -876,9 +902,8 @@ function ensureRankExpiredReset(user) {
     SET rank = 1,
         rank_id = 1,
         rank_expires_at = 0,
-        updatedAt = ?
     WHERE telegramId = ?
-  `).run(now, user.telegramId);
+  `).run(user.telegramId);
 
   return {
     ...user,
@@ -888,7 +913,7 @@ function ensureRankExpiredReset(user) {
   };
 }
 
-app.use('/api', globalApiLimiter);
+//app.use('/api', globalApiLimiter);
 
 app.get('/api/monetag/postback', (req, res) => {
   try {
@@ -995,8 +1020,17 @@ app.get('/api/monetag/postback', (req, res) => {
 
 
 // ===== USER =====
-app.post('/api/user', userLimiter, requireTelegramAuth, (req, res) => {
+app.post('/api/user', requireTelegramAuth, (req, res) => {
+
   const telegramUser = req.telegramUser;
+//  console.log(
+//  '[API_USER]',
+//  JSON.stringify({
+//    telegramId: String(telegramUser?.id || ''),
+//    username: telegramUser?.username || '',
+//    usersCount: db.prepare('SELECT COUNT(*) as c FROM users').get().c
+//  })
+//);
   let user = getOrCreateUser(telegramUser);
 
   const ref =
@@ -1008,10 +1042,20 @@ app.post('/api/user', userLimiter, requireTelegramAuth, (req, res) => {
   if (ref) {
     try {
       const beforeReferrerId = String(user.referrer_id || '').trim();
+//      console.log('[BIND_REF_START]', {
+//        telegramId: user.telegramId,
+//        ref: ref,
+//        beforeReferrerId
+//      });
 
       bindReferrerIfPossible(db, String(user.telegramId), String(ref));
 
       user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(String(user.telegramId));
+      console.log('[BIND_REF_AFTER]', {
+        telegramId: user.telegramId,
+        ref: ref,
+        afterReferrerId: String(user?.referrer_id || '').trim()
+      });
 
       const afterReferrerId = String(user?.referrer_id || '').trim();
 
@@ -1037,11 +1081,26 @@ app.post('/api/user', userLimiter, requireTelegramAuth, (req, res) => {
           console.error('round refs update error:', e);
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      console.error('[BIND_REF_ERROR]', {
+        telegramId: user?.telegramId,
+        ref,
+        error: e?.message || String(e)
+      });
+    }
   }
   user = regenEnergy(user);
   user = refreshAdCounters(user);
   user = ensureRankExpiredReset(expireRankIfNeeded(db, user).user);
+
+  const now = Date.now();
+
+  db.prepare(`
+    UPDATE users
+    SET lastTap = ?,
+        updatedAt = ?
+    WHERE telegramId = ?
+  `).run(now, now, user.telegramId);
 
   db.prepare(`
     UPDATE users
@@ -1794,97 +1853,99 @@ app.post('/api/withdraw/status', requireTelegramAuth, (req, res) => {
     request: row || null
   });
 });
-// ===== TAP =====
+// ===== TAP (BATCH SYSTEM) =====
 app.post('/api/tap', tapLimiter, requireTelegramAuth, (req, res) => {
-  const telegramId = req.telegramUser.id;
-  let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
-
-  if (!user) {
-    return res.status(400).json({ error: 'No user' });
-  }
-
-  if (Date.now() - Number(user.lastTap || 0) < TAP_DELAY) {
-    return res.status(429).json({ error: 'Too fast' });
-  }
-
-  user = regenEnergy(user);
-  user = ensureRankExpiredReset(expireRankIfNeeded(db, user).user);
-
-  if (Number(user.energy || 0) <= 0) {
-    db.prepare(`
-      UPDATE users
-      SET energy = ?,
-          lastEnergyUpdate = ?,
-          updatedAt = ?
-      WHERE telegramId = ?
-    `).run(
-      user.energy,
-      user.lastEnergyUpdate,
-      Date.now(),
-      telegramId
-    );
-
-    return res.status(400).json({ error: 'No energy' });
-  }
-
-  const reward = getRewardForRank(user.rank_id);
-  const newBalance = Number(user.wbc_balance || 0) + reward;
-  const newEnergy = Number(user.energy || 0) - 1;
-  const now = Date.now();
-
-  db.prepare(`
-    UPDATE users
-    SET balance = ?,
-        wbc_balance = ?,
-        energy = ?,
-        lastTap = ?,
-        lastEnergyUpdate = ?,
-        updatedAt = ?,
-        taps_total = COALESCE(taps_total, 0) + 1
-    WHERE telegramId = ?
-  `).run(
-    newBalance,
-    newBalance,
-    newEnergy,
-    now,
-    user.lastEnergyUpdate,
-    now,
-    telegramId
-  );
-
-  // round taps update
   try {
-    const drawId = ensureActiveDrawId(db);
-    const stats = ensureDrawUserStats(db, drawId, telegramId);
-    if (stats) {
+    const telegramId = String(req.telegramUser.id);
+
+    // Вытягиваем count из тела (максимум, например, 50-100 за один пакет, спасает от залипаний и накруток)
+    const count = Math.min(Math.max(parseInt(req.body?.count) || 1, 1), 60);
+
+    let user = db.prepare('SELECT * FROM users WHERE telegramId = ?').get(telegramId);
+    //console.log(
+      //'[USER_LOOKUP]',
+      //{
+        //telegramId,
+        //exists: !!user,
+        //ts: Date.now()
+      //}
+    //);
+    if (!user) return res.status(400).json({ error: 'No user' });
+
+    // Убрали жесткий TAP_DELAY перед выполнением батчинга 
+    // Буфер фронта (850мс) сам регулирует задержку.
+    const now = Date.now();
+
+    user = regenEnergy(user);
+    user = ensureRankExpiredReset(expireRankIfNeeded(db, user).user);
+
+    const availableEnergy = Number(user.energy || 0);
+    const tapsToApply = Math.min(count, availableEnergy);
+
+    if (tapsToApply <= 0) {
       db.prepare(`
-        UPDATE draw_user_stats
-        SET taps_round = COALESCE(taps_round, 0) + 1,
-            updatedAt = ?
-        WHERE draw_id = ? AND telegramId = ?
-      `).run(Date.now(), drawId, telegramId);
+        UPDATE users SET energy=?, lastEnergyUpdate=?, updatedAt=? WHERE telegramId=?
+      `).run(user.energy, user.lastEnergyUpdate, now, telegramId);
+      return res.status(400).json({ error: 'no_energy' });
     }
-  } catch (e) {
-    console.error('round taps update error:', e);
+
+    const rewardPerTap = getRewardForRank(user.rank_id);
+    const totalReward = tapsToApply * rewardPerTap;
+
+    const newBalance = Number(user.wbc_balance || 0) + totalReward;
+    const newEnergy = availableEnergy - tapsToApply;
+
+    // Атомарно обновляем все зависящие таблицы в одной транзакции
+    db.transaction(() => {
+      db.prepare(`
+        UPDATE users
+        SET balance = ?,
+            wbc_balance = ?,
+            energy = ?,
+            lastTap = ?,
+            lastEnergyUpdate = ?,
+            updatedAt = ?,
+            taps_total = COALESCE(taps_total, 0) + ?
+        WHERE telegramId = ?
+      `).run(newBalance, newBalance, newEnergy, now, user.lastEnergyUpdate, now, tapsToApply, telegramId);
+
+      const drawId = ensureActiveDrawId(db);
+      if (drawId) {
+        ensureDrawUserStats(db, drawId, telegramId);
+        db.prepare(`
+          UPDATE draw_user_stats
+          SET taps_round = COALESCE(taps_round, 0) + ?,
+              updatedAt = ?
+          WHERE draw_id = ? AND telegramId = ?
+        `).run(tapsToApply, now, drawId, telegramId);
+      }
+    })();
+
+    // Формула получит новые данные из БД автоматически и перечитает live_score
+    const newLiveScore = recalcDrawScore(db, telegramId);
+
+    return res.json({
+      balance: newBalance,
+      wbc_balance: newBalance,
+      ton_balance: Number(user.ton_balance || 0),
+      energy: newEnergy,
+      rank_id: Number(user.rank_id || 1),
+      rank_expires_at: Number(user.rank_expires_at || 0),
+      reward: totalReward,
+      applied_taps: tapsToApply,
+      live_score: newLiveScore
+    });
+
+  } catch (err) {
+    console.error('[TAP BATCH ERROR]', err);
+    return res.status(500).json({ error: 'internal' });
   }
-
-  recalcDrawScore(db, telegramId);
-
-  return res.json({
-    balance: newBalance,
-    wbc_balance: newBalance,
-    ton_balance: Number(user.ton_balance || 0),
-    energy: newEnergy,
-    rank_id: Number(user.rank_id || 1),
-    rank_expires_at: Number(user.rank_expires_at || 0),
-    reward
-  });
 });
-
+// ===== Contract Start
 app.post('/api/contract/start', requireTelegramAuth, (req, res) => {
   try {
     const { layer, amount } = req.body;
-    const telegramId = String(req.user.telegramId);
+    const telegramId = String(req.telegramUser.id);
 
     if (![1,2,3].includes(layer)) {
       return res.status(400).json({ error: 'invalid_layer' });
@@ -1894,8 +1955,8 @@ app.post('/api/contract/start', requireTelegramAuth, (req, res) => {
 
     const layerConfig = {
       1: { min: 20000, max: 40000, duration: 16 },
-      2: { min: 50000, max: 150000, duration: 28 },
-      3: { min: 160000, max: 300000, duration: 42 }
+      2: { min: 50000, max: 150000, duration: 26 },
+      3: { min: 160000, max: 300000, duration: 36 }
     };
 
     const cfg = layerConfig[layer];
@@ -1947,7 +2008,7 @@ app.post('/api/contract/start', requireTelegramAuth, (req, res) => {
 
 app.post('/api/contract/status', requireTelegramAuth, (req, res) => {
   try {
-    const telegramId = String(req.user.telegramId);
+    const telegramId = String(req.telegramUser.id);
 
     const now = Date.now();
 
@@ -1975,93 +2036,121 @@ app.post('/api/contract/status', requireTelegramAuth, (req, res) => {
   }
 });
 
+
+// Ускорение контракта рекламой
+app.post('/api/contract/boost', requireTelegramAuth, (req, res) => {
+  try {
+    const { contractId } = req.body;
+    const telegramId = String(req.telegramUser.id);
+    const now = Date.now();
+
+    const contract = db.prepare(`SELECT * FROM contracts WHERE id=? AND telegramId=?`).get(contractId, telegramId);
+    if (!contract) return res.status(404).json({ error: 'not_found' });
+    if (contract.status !== 'active') return res.status(400).json({ error: 'not_active' });
+
+    // Минимальное время для слоя (в часах)
+    const minHours = {1:2, 2:4, 3:6};
+    const minMs = (minHours[contract.layer] || 2) * 3600 * 1000;
+    // Сколько осталось до конца
+    const remaining = Math.max(0, contract.endsAt - now);
+
+    if (remaining > minMs) {
+      // Ускоряем на 1 час
+      const newEndsAt = contract.endsAt - 3600 * 1000;
+      db.prepare(`UPDATE contracts SET endsAt = ?, lastAdUsedAt = ? WHERE id=?`).run(newEndsAt, now, contractId);
+      return res.json({ success: true, boosted: 'time', endsAt: newEndsAt });
+    } else {
+      // Лимит достигнут – даём бонус к шансу прибыли (+2% к win1, но не к ключу)
+      const currentBoost = Number(contract.adBoost || 0);
+      db.prepare(`UPDATE contracts SET adBoost = COALESCE(adBoost,0) + 2, lastAdUsedAt = ? WHERE id=?`).run(now, contractId);
+      return res.json({ success: true, boosted: 'profit_chance', adBoost: currentBoost + 2 });
+    }
+  } catch (e) {
+    console.error('contract boost error', e);
+    return res.status(500).json({ error: 'contract_boost_failed' });
+  }
+});
+
 app.post('/api/contract/finish', requireTelegramAuth, (req, res) => {
   try {
     const { contractId } = req.body;
-    const telegramId = String(req.user.telegramId);
+    const telegramId = String(req.telegramUser.id);
     const now = Date.now();
 
-    const contract = db.prepare(`
-      SELECT * FROM contracts
-      WHERE id=? AND telegramId=?
-    `).get(contractId, telegramId);
+    const contract = db.prepare(`SELECT * FROM contracts WHERE id=? AND telegramId=?`).get(contractId, telegramId);
+    if (!contract) return res.status(404).json({ error: 'not_found' });
+    if (contract.status !== 'active') return res.status(400).json({ error: 'already_finished' });
+    if (now < contract.endsAt) return res.status(400).json({ error: 'not_ready' });
 
-    if (!contract) {
-      return res.status(404).json({ error: 'not_found' });
-    }
+    const user = db.prepare(`SELECT * FROM users WHERE telegramId = ?`).get(telegramId);
+    const fragments = Number(user?.key_fragments || 0);
+    const rankId = Number(user?.rank_id || 1);
 
-    if (contract.status !== 'active') {
-      return res.status(400).json({ error: 'already_finished' });
-    }
+    // Бонус от ранга к шансу фрагмента и ключа
+    const rankBonus = {1:0, 2:0.005, 3:0.01, 4:0.015, 5:0.02}[rankId] || 0;
+    // Штраф за каждый полученный фрагмент
+    const penalty = fragments * 0.003;
 
-    if (now < contract.endsAt) {
-      return res.status(400).json({ error: 'not_ready' });
-    }
-
-    // ===== ШАНСЫ =====
-    const roll = Math.random() * 100;
-
+    const amount = Number(contract.amount);
     let resultType = 'zero';
     let reward = 0;
 
-    if (contract.layer === 1) {
-      if (roll < 14) {
-        resultType = 'loss';
-        reward = Math.floor(contract.amount * 0.8);
-      } else if (roll < 44) {
-        resultType = 'zero';
-        reward = contract.amount;
-      } else if (roll < 84) {
-        resultType = 'win20';
-        reward = Math.floor(contract.amount * 1.2);
-      } else if (roll < 99) {
-        resultType = 'win40';
-        reward = Math.floor(contract.amount * 1.4);
-      } else if (roll < 99.99) {
-        resultType = 'fragment';
+    const adBoost = Number(contract.adBoost || 0);
+    function applyChances(layer, boost) {
+      let chLoss, chZero, chWin1, chWin2, chFrag, chKey;
+      if (layer === 1) {
+        chLoss = 14.5; chZero = 30.5; chWin1 = 40; chWin2 = 15; chFrag = 0.01; chKey = 0.0005;
+      } else if (layer === 2) {
+        chLoss = 30; chZero = 51; chWin1 = 10; chWin2 = 5; chFrag = 4; chKey = 0.01;
+      } else if (layer === 3) {
+        chLoss = 25; chZero = 50; chWin1 = 12; chWin2 = 7; chFrag = 5; chKey = 0.01;
       } else {
-        resultType = 'key';
+        return { result: 'zero', reward: amount };
       }
+      // Применяем бонус и штраф к фрагменту и ключу, компенсируя через zero
+      const modFrag = Math.max(0, chFrag + rankBonus - penalty);
+      const modKey = Math.max(0, chKey + rankBonus * 0.1 - penalty * 0.1);
+      // Применяем adBoost к win1 и компенсируем через zero
+      const modWin1 = Math.min(100, chWin1 + boost);
+      const diff = (modFrag - chFrag) + (modKey - chKey) + (modWin1 - chWin1);
+      const modZero = Math.max(0, chZero - diff);
+      const roll = Math.random() * 100;
+      let sum = 0;
+      const tiers = [
+        { type: 'loss',    chance: chLoss,   reward: Math.floor(amount * 0.8) },
+        { type: 'zero',    chance: modZero,  reward: amount },
+        { type: 'win1',    chance: modWin1,  reward: Math.floor(amount * 1.2) },
+        { type: 'win2',    chance: chWin2,   reward: Math.floor(amount * 1.4) },
+        { type: 'fragment',chance: modFrag,  reward: 0 },
+        { type: 'key',     chance: modKey,   reward: 0 }
+      ];
+      for (const t of tiers) {
+        sum += t.chance;
+        if (roll < sum) {
+          return { result: t.type, reward: t.reward };
+        }
+      }
+      return { result: 'zero', reward: amount };
     }
+    const outcome = applyChances(contract.layer, adBoost);
+    resultType = outcome.result;
+    reward = outcome.reward;
 
-    // L2 и L3 добавим дальше (не мешаем сейчас — проверим L1)
-
-    // ===== ВЫПЛАТА =====
+    // Выплата
     if (resultType === 'fragment') {
-      db.prepare(`
-        UPDATE users
-        SET key_fragments = COALESCE(key_fragments,0) + 1
-        WHERE telegramId=?
-      `).run(telegramId);
+      // Возвращаем монеты при выпадении фрагмента
+      db.prepare(`UPDATE users SET key_fragments = COALESCE(key_fragments,0) + 1, wbc_balance = wbc_balance + ?, balance = balance + ? WHERE telegramId=?`).run(amount, amount, telegramId);
+      reward = amount;
     } else if (resultType === 'key') {
-      db.prepare(`
-        UPDATE users
-        SET zero_day_keys_balance = COALESCE(zero_day_keys_balance,0) + 1
-        WHERE telegramId=?
-      `).run(telegramId);
+      // Возвращаем монеты при выпадении ключа
+      db.prepare(`UPDATE users SET zero_day_keys_balance = COALESCE(zero_day_keys_balance,0) + 1, wbc_balance = wbc_balance + ?, balance = balance + ? WHERE telegramId=?`).run(amount, amount, telegramId);
+      reward = amount;
     } else {
-      db.prepare(`
-        UPDATE users
-        SET wbc_balance = wbc_balance + ?,
-            balance = balance + ?
-        WHERE telegramId=?
-      `).run(reward, reward, telegramId);
+      db.prepare(`UPDATE users SET wbc_balance = wbc_balance + ?, balance = balance + ? WHERE telegramId=?`).run(reward, reward, telegramId);
     }
+    db.prepare(`UPDATE contracts SET status='finished', reward=?, result_type=? WHERE id=?`).run(reward, resultType, contractId);
 
-    db.prepare(`
-      UPDATE contracts
-      SET status='finished',
-          reward=?,
-          result_type=?
-      WHERE id=?
-    `).run(reward, resultType, contractId);
-
-    return res.json({
-      success: true,
-      resultType,
-      reward
-    });
-
+    return res.json({ success: true, resultType, reward });
   } catch (e) {
     console.error('contract finish error', e);
     return res.status(500).json({ error: 'contract_finish_failed' });
@@ -2669,6 +2758,53 @@ function activateRankFromExternalTonPayment(db, telegramId, rankId) {
   `).get(String(telegramId));
 }
 
+// ===== WALLET BIND & GET =====
+app.post('/api/wallet/bind', requireTelegramAuth, (req, res) => {
+  try {
+    const telegramUser = req.telegramUser;
+    const walletAddress = String(req.body?.wallet_address || '').trim();
+    
+    // Валидация адреса TON (должен начинаться с UQ или EQ и быть длиной 48-53 символов)
+    const isValidWallet = walletAddress && (((walletAddress.startsWith('UQ') || walletAddress.startsWith('EQ')) && walletAddress.length >= 48 && walletAddress.length <= 53) || (walletAddress.match(/^0:[a-f0-9]{64}$/i) && walletAddress.length === 66));
+    if (!isValidWallet) {
+    }
+
+    let user = getOrCreateUser(telegramUser);
+    
+    db.prepare(`
+      UPDATE users
+      SET ton_wallet = ?, updatedAt = ?
+      WHERE telegramId = ?
+    `).run(walletAddress, Date.now(), String(user.telegramId));
+
+    return res.json({
+      success: true,
+      wallet: walletAddress
+    });
+  } catch (e) {
+    console.error('wallet bind error:', e);
+    return res.status(500).json({ success: false, error: 'server_error' });
+  }
+});
+
+app.post('/api/wallet/get', requireTelegramAuth, (req, res) => {
+  try {
+    const telegramUser = req.telegramUser;
+    const user = db.prepare(`
+      SELECT ton_wallet FROM users WHERE telegramId = ? LIMIT 1
+    `).get(String(telegramUser.id));
+
+    return res.json({
+      success: true,
+      wallet: user?.ton_wallet || null
+    });
+  } catch (e) {
+    console.error('wallet get error:', e);
+    return res.status(500).json({ success: false, error: 'server_error' });
+  }
+});
+// ===== END WALLET ENDPOINTS =====
+
 // ===== RANK BUY TON CONFIRM =====
 app.post('/api/rank/buy-ton/confirm', requireTelegramAuth, async (req, res) => {
   try {
@@ -2804,18 +2940,26 @@ app.post('/api/rank/buy-ton/confirm', requireTelegramAuth, async (req, res) => {
     const chainTxHash = readTxHash(verifiedTx) || parsedProof.normalizedHash;
 
     const existingTx = db.prepare(`
-      SELECT id, payload
-      FROM ton_rank_payments
-      WHERE tx_hash = ?
-      LIMIT 1
-    `).get(chainTxHash);
+          SELECT id, payload, status
+          FROM ton_rank_payments
+          WHERE tx_hash = ?
+          LIMIT 1
+        `).get(chainTxHash);
 
-    if (existingTx && String(existingTx.payload) !== payload) {
-      return res.status(400).json({
-        success: false,
-        error: 'tx_hash_already_used'
-      });
-    }
+        if (existingTx) {
+          if (String(existingTx.payload) !== payload) {
+            return res.status(400).json({
+              success: false,
+              error: 'tx_hash_already_used'
+            });
+          }
+          if (existingTx.status === 'confirmed') {
+            return res.status(400).json({
+              success: false,
+              error: 'tx_already_confirmed'
+            });
+          }
+        }
 
     db.prepare(`
       UPDATE ton_rank_payments
@@ -2823,7 +2967,6 @@ app.post('/api/rank/buy-ton/confirm', requireTelegramAuth, async (req, res) => {
       WHERE payload = ?
     `).run(chainTxHash, Date.now(), payload);
 
-    
     // ===== ADD TON DONATION TO USER STATS =====
     try {
       const amountTon = Number(payment.amount_ton || 0);
@@ -2895,6 +3038,44 @@ app.get('/api/stats', (req, res) => {
     totalUsers: total,
     onlineUsers: online
   });
+});
+
+// ===== LEADERBOARD =====
+app.get('/api/leaderboard', (req, res) => {
+  try {
+    const drawId = ensureActiveDrawId(db);
+    if (!drawId) return res.json([]);
+
+    // Берём топ-100 по draw_score_cached (уже имеющемуся), затем пересчитаем для актуальности
+    const candidates = db.prepare(`
+      SELECT telegramId, draw_score_cached, public_nickname, lastTap
+      FROM users
+      WHERE draw_score_cached > 0
+      ORDER BY draw_score_cached DESC
+      LIMIT 100
+    `).all();
+
+    const results = [];
+    for (const row of candidates) {
+      const score = row.draw_score_cached || 0;
+      const entry = db.prepare(`SELECT entries FROM draw_entries WHERE draw_id = ? AND telegramId = ?`).get(drawId, row.telegramId);
+      results.push({
+        public_nickname: row.public_nickname || 'User',
+        live_score: score,
+        last_tap_time: row.lastTap || 0,
+        entries: entry?.entries || 0
+      });
+    }
+
+    // Сортируем по убыванию live_score и берём топ-5
+    results.sort((a, b) => b.live_score - a.live_score);
+    const top5 = results.slice(0, 5);
+
+    return res.json(top5);
+  } catch (e) {
+    console.error('leaderboard error:', e);
+    return res.status(500).json([]);
+  }
 });
 
 app.get('/api/admin/overview', (req, res) => {
@@ -4044,26 +4225,6 @@ CREATE TABLE IF NOT EXISTS draw_entries (
 )
 `).run();
 
-// draw_user_stats - CRITICAL: Missing table that caused profile auth to fail
-db.prepare(`
-CREATE TABLE IF NOT EXISTS draw_user_stats (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  draw_id INTEGER NOT NULL,
-  telegramId TEXT NOT NULL,
-  taps_round INTEGER DEFAULT 0,
-  ads_round INTEGER DEFAULT 0,
-  refs_round INTEGER DEFAULT 0,
-  donation_ton_round REAL DEFAULT 0,
-  stars_round INTEGER DEFAULT 0,
-  entries INTEGER DEFAULT 0,
-  eligible INTEGER DEFAULT 0,
-  score_cached REAL DEFAULT 0,
-  createdAt INTEGER,
-  updatedAt INTEGER,
-  UNIQUE(draw_id, telegramId)
-)
-`).run();
-
 // ref_activations
 db.prepare(`
 CREATE TABLE IF NOT EXISTS ref_activations (
@@ -4146,20 +4307,16 @@ function ensureDrawUserStats(db, drawId, telegramId) {
 function recalcDrawScore(db, telegramId) {
   const tgId = String(telegramId || '').trim();
   if (!tgId) return 0;
-
   const drawId = ensureActiveDrawId(db);
   if (!drawId) return 0;
-
   const stats = ensureDrawUserStats(db, drawId, tgId);
   if (!stats) return 0;
-
   const entryRow = db.prepare(`
     SELECT entries
     FROM draw_entries
     WHERE draw_id = ? AND telegramId = ?
     LIMIT 1
   `).get(drawId, tgId);
-
   const drawEntries = Number(entryRow?.entries || 0);
   const eligible = drawEntries > 0 ? 1 : 0;
 
@@ -4169,43 +4326,31 @@ function recalcDrawScore(db, telegramId) {
     return 1 - Math.exp(-value / scale);
   }
 
-  let score = 0;
+  const BASE = 100;
+  // Ключевой множитель: 0 для 0 или 1 ключа, 1.0 при >=2 ключей
+  let keyProgress = 0;
+  if (drawEntries >= 2) keyProgress = 1.00;
+  const K = 1 + 2.0 * keyProgress;
 
-  if (eligible) {
-    const BASE = 100;
+  const R = 1 + 1.6 * norm(stats.refs_round, 3);
+  const T = 1 + 1.5 * norm(stats.donation_ton_round, 1.5);
+  const S = 1 + 1.25 * norm(stats.stars_round, 1000);
+  const A = 1 + 1.2 * norm(stats.ads_round, 20);
+  const P = 1 + 1.1 * norm(stats.taps_round, 5000);
 
-    let keyProgress = 0;
-    if (drawEntries === 1) keyProgress = 0.60;
-    else if (drawEntries >= 2) keyProgress = 1.00;
-
-    const K = 1 + 2.0 * keyProgress;
-    const R = 1 + 1.6 * norm(stats.refs_round, 3);
-    const T = 1 + 1.5 * norm(stats.donation_ton_round, 1.5);
-    const S = 1 + 1.25 * norm(stats.stars_round, 1000);
-    const A = 1 + 1.2 * norm(stats.ads_round, 20);
-    const P = 1 + 1.1 * norm(stats.taps_round, 5000);
-
-    score = BASE * K * R * T * S * A * P;
-  }
-
+  let score = BASE * K * R * T * S * A * P;
   score = Math.round(Number(score) * 1000) / 1000;
   const now = Date.now();
 
-  db.prepare(`
-    UPDATE draw_user_stats
-    SET entries = ?,
-        eligible = ?,
-        score_cached = ?,
-        updatedAt = ?
-    WHERE draw_id = ? AND telegramId = ?
-  `).run(drawEntries, eligible, score, now, drawId, tgId);
+db.prepare("UPDATE draw_user_stats SET entries = ?, eligible = ?, score_cached = ?, updatedAt = ? WHERE draw_id = ? AND telegramId = ?").run(drawEntries, eligible, score, now, drawId, tgId);
 
-  db.prepare(`
-    UPDATE users
-    SET draw_score_cached = ?,
-        updatedAt = ?
-    WHERE telegramId = ?
-  `).run(score, now, tgId);
+  try {
+    if (tgId && tgId !== "undefined" && tgId !== "null") {
+      db.prepare("UPDATE users SET draw_score_cached = ?, updatedAt = ? WHERE telegramId = ?").run(score, now, tgId);
+    }
+  } catch (e) {
+    console.error("CRITICAL: Failed to update draw_score_cached for", tgId, e.message);
+  }
 
   return score;
 }
@@ -4425,8 +4570,16 @@ app.post('/api/user/live-score', (req, res) => {
 
     const drawId = ensureActiveDrawId(db);
 
+    // ВАЖНО: берём ТОЛЬКО кеш, без recompute multipliers
+    const user = db.prepare(`
+      SELECT draw_score_cached, telegramId
+      FROM users
+      WHERE telegramId = ?
+      LIMIT 1
+    `).get(telegramId);
+
     const stats = db.prepare(`
-      SELECT taps_round, ads_round, refs_round, donation_ton_round, stars_round, entries, eligible
+      SELECT taps_round, ads_round, refs_round, stars_round
       FROM draw_user_stats
       WHERE draw_id = ? AND telegramId = ?
       LIMIT 1
@@ -4434,40 +4587,8 @@ app.post('/api/user/live-score', (req, res) => {
       taps_round: 0,
       ads_round: 0,
       refs_round: 0,
-      donation_ton_round: 0,
-      stars_round: 0,
-      entries: 0,
-      eligible: 0
+      stars_round: 0
     };
-
-    const drawEntries = Number(stats.entries || 0);
-    const eligible = drawEntries > 0 ? 1 : 0;
-
-    function norm(x, s) {
-      const value = Math.max(0, Number(x || 0));
-      const scale = Math.max(0.000001, Number(s || 1));
-      return 1 - Math.exp(-value / scale);
-    }
-
-    let recomputedScore = 0;
-    if (eligible) {
-      const BASE = 100;
-
-      let keyProgress = 0;
-      if (drawEntries === 1) keyProgress = 0.60;
-      else if (drawEntries >= 2) keyProgress = 1.00;
-
-      const K = 1 + 2.0 * keyProgress;
-      const R = 1 + 1.6 * norm(stats.refs_round, 3);
-      const T = 1 + 1.5 * norm(stats.donation_ton_round, 1.5);
-      const S = 1 + 1.25 * norm(stats.stars_round, 1000);
-      const A = 1 + 1.2 * norm(stats.ads_round, 20);
-      const P = 1 + 1.1 * norm(stats.taps_round, 5000);
-
-      recomputedScore = BASE * K * R * T * S * A * P;
-    }
-
-    recomputedScore = Math.round(Number(recomputedScore) * 1000) / 1000;
 
     // лёгкая delta (без пересчёта формулы)
     const lastDelta = Number(
@@ -4477,10 +4598,7 @@ app.post('/api/user/live-score', (req, res) => {
 
     res.json({
       success: true,
-      live_score: recomputedScore,
-      score: {
-        recomputed: recomputedScore
-      },
+      live_score: Number(user?.draw_score_cached || 0),
       delta: Number(lastDelta),
       activity: {
         taps: stats.taps_round,
@@ -4560,36 +4678,6 @@ app.post('/api/draw/start', (req, res) => {
 
 // ===== DRAW CONTROL END =====
 
-// ===== LEADERBOARD =====
-app.get('/api/leaderboard', (req, res) => {
-  try {
-    const rows = db.prepare(`
-      SELECT
-        telegramId,
-        username,
-        first_name,
-        last_name,
-        public_nickname,
-        draw_score_cached as live_score,
-        rank_id,
-        zero_day_keys_balance,
-        wbc_balance,
-        donation_ton_total,
-        ads_total
-      FROM users
-      WHERE TRIM(COALESCE(public_nickname, '')) != ''
-        AND draw_score_cached > 0
-      ORDER BY draw_score_cached DESC, zero_day_keys_balance DESC, ads_total DESC
-      LIMIT 100
-    `).all();
-
-    return res.json(rows || []);
-  } catch (e) {
-    console.error('leaderboard error:', e);
-    return res.status(500).json({error: 'leaderboard_failed'});
-  }
-});
-
 app.get('/health', (req, res) => {
   return res.json({ ok: true });
 });
@@ -4600,6 +4688,20 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log('🚀 WallBreaker backend OK');
 });
 
+async function setWebhook() {
+    const url = 'https://wbapi.corterbs.dpdns.org/telegram/webhook';
+    try {
+        await telegramBotApi('setWebhook', {
+            url: url,
+            allowed_updates: ['message', 'callback_query']
+        });
+        console.log('✅  Webhook set to:', url);
+    } catch (error) {
+        console.error('❌  Webhook error:', error.message);
+    }
+}
+
+setWebhook();
 // ====== STARS R3 CREATE ======
 async function telegramBotApi(method, payload) {
   const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
@@ -4700,35 +4802,6 @@ app.post('/telegram/webhook', async (req, res) => {
       const telegramId = String(update.message.from?.id || '');
       const now = Date.now();
 
-      // Handle nickname stars payments
-      if (payload.startsWith('wb_nick_')) {
-        db.prepare(`
-          INSERT OR IGNORE INTO star_nickname_payments (
-            telegramId,
-            amount_xtr,
-            invoice_payload,
-            telegram_payment_charge_id,
-            provider_payment_charge_id,
-            status,
-            createdAt,
-            updatedAt,
-            paidAt
-          ) VALUES (?, ?, ?, ?, ?, 'paid', ?, ?, ?)
-        `).run(
-          telegramId,
-          Number(sp.total_amount || 0),
-          payload,
-          sp.telegram_payment_charge_id || null,
-          sp.provider_payment_charge_id || null,
-          now,
-          now,
-          now
-        );
-
-        return res.json({ ok: true });
-      }
-
-      // Handle rank stars payments
       db.prepare(`
         INSERT OR IGNORE INTO star_rank_payments (
           telegramId,
@@ -4760,32 +4833,32 @@ app.post('/telegram/webhook', async (req, res) => {
 
       if (user) {
 
-        // ===== ADD STARS TO USER STATS =====
+// ===== ADD STARS TO USER STATS =====
         try {
-          const starsAmount = Number(sp.total_amount || 0);
+          const starsSpent = Number(sp.total_amount || 0);
 
           db.prepare(`
             UPDATE users
             SET star_spent_total = COALESCE(star_spent_total, 0) + ?
             WHERE telegramId = ?
-          `).run(starsAmount, telegramId);
+          `).run(starsSpent, String(telegramId));
 
           const drawId = ensureActiveDrawId(db);
-          const stats = ensureDrawUserStats(db, drawId, telegramId);
+          const stats = ensureDrawUserStats(db, drawId, String(telegramId));
           if (stats) {
             db.prepare(`
               UPDATE draw_user_stats
               SET stars_round = COALESCE(stars_round, 0) + ?,
                   updatedAt = ?
               WHERE draw_id = ? AND telegramId = ?
-            `).run(starsAmount, Date.now(), drawId, telegramId);
+            `).run(starsSpent, Date.now(), drawId, String(telegramId));
           }
         } catch (e) {
-          console.error('star_spent_total update error:', e);
+          console.error('[STARS BUG] Update error:', e);
         }
 
         purchaseRank(db, user, 3, 'XTR');
-        recalcDrawScore(db, telegramId);
+        recalcDrawScore(db, String(telegramId));
       }
 
       return res.json({ ok: true });
@@ -4798,190 +4871,6 @@ app.post('/telegram/webhook', async (req, res) => {
   }
 });
 // ====== END STARS WEBHOOK ======
-
-
-// ===== NICKNAME STARS PAYMENTS =====
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS star_nickname_payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegramId TEXT NOT NULL,
-    amount_xtr INTEGER NOT NULL,
-    invoice_payload TEXT NOT NULL UNIQUE,
-    telegram_payment_charge_id TEXT,
-    provider_payment_charge_id TEXT,
-    status TEXT NOT NULL DEFAULT 'created',
-    new_nickname TEXT,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL,
-    paidAt INTEGER
-  )
-`);
-
-app.post('/api/nickname/buy-stars/create', requireTelegramAuth, async (req, res) => {
-  try {
-    const telegramUser = req.telegramUser;
-    const amount = 50;
-    const payload = `wb_nick_${telegramUser.id}_${Date.now()}`;
-
-    const invoiceLink = await telegramBotApi('createInvoiceLink', {
-      title: 'WallBreaker Nickname Change',
-      description: 'Change your public nickname',
-      payload,
-      currency: 'XTR',
-      prices: [
-        {
-          label: 'Nickname Change',
-          amount: amount
-        }
-      ]
-    });
-
-    return res.json({
-      success: true,
-      invoice_link: invoiceLink,
-      payload
-    });
-
-  } catch (e) {
-    console.error('nickname stars create error:', e);
-    return res.status(500).json({
-      success: false,
-      error: 'stars_create_failed'
-    });
-  }
-});
-
-app.post('/api/nickname/buy-stars/status', requireTelegramAuth, (req, res) => {
-  try {
-    const telegramUser = req.telegramUser;
-    const payload = String(req.body?.payload || '').trim();
-
-    if (!payload) {
-      return res.status(400).json({
-        success: false,
-        error: 'missing_payload'
-      });
-    }
-
-    const payment = db.prepare(`
-      SELECT *
-      FROM star_nickname_payments
-      WHERE invoice_payload = ? AND telegramId = ?
-      LIMIT 1
-    `).get(payload, String(telegramUser.id));
-
-    if (!payment) {
-      return res.status(404).json({
-        success: false,
-        error: 'payment_not_found'
-      });
-    }
-
-    return res.json({
-      success: true,
-      payment: {
-        status: String(payment.status || 'created'),
-        payload: payment.invoice_payload,
-        createdAt: Number(payment.createdAt || 0)
-      }
-    });
-  } catch (e) {
-    console.error('nickname stars status error:', e);
-    return res.status(500).json({
-      success: false,
-      error: 'stars_status_failed'
-    });
-  }
-});
-
-app.post('/api/nickname/buy-stars/confirm', requireTelegramAuth, (req, res) => {
-  try {
-    const telegramUser = req.telegramUser;
-    const payload = String(req.body?.payload || '').trim();
-    const newNickname = String(req.body?.nickname || '').trim();
-
-    if (!payload || !newNickname) {
-      return res.status(400).json({
-        success: false,
-        error: 'missing_fields'
-      });
-    }
-
-    const payment = db.prepare(`
-      SELECT *
-      FROM star_nickname_payments
-      WHERE invoice_payload = ? AND telegramId = ?
-      LIMIT 1
-    `).get(payload, String(telegramUser.id));
-
-    if (!payment) {
-      return res.status(404).json({
-        success: false,
-        error: 'payment_not_found'
-      });
-    }
-
-    if (String(payment.status || '') !== 'paid') {
-      return res.status(400).json({
-        success: false,
-        error: 'payment_not_paid'
-      });
-    }
-
-    let user = getOrCreateUser(telegramUser);
-    user = ensureUserNickname(user);
-
-    if (!isNicknameValid(newNickname)) {
-      return res.status(400).json({
-        success: false,
-        error: 'nickname_invalid'
-      });
-    }
-
-    if (nicknameExists(newNickname, String(telegramUser.id))) {
-      return res.status(400).json({
-        success: false,
-        error: 'nickname_taken'
-      });
-    }
-
-    const now = Date.now();
-
-    db.prepare(`
-      UPDATE star_nickname_payments
-      SET status = ?, new_nickname = ?, updatedAt = ?
-      WHERE invoice_payload = ?
-    `).run('confirmed', newNickname, now, payload);
-
-    db.prepare(`
-      UPDATE users
-      SET public_nickname = ?,
-          nickname_manual = 1,
-          nickname_free_used = 1,
-          nickname_updatedAt = ?,
-          updatedAt = ?
-      WHERE telegramId = ?
-    `).run(newNickname, now, now, String(telegramUser.id));
-
-    return res.json({
-      success: true,
-      public_nickname: newNickname,
-      nickname_manual: 1,
-      nickname_free_used: 1,
-      mode: 'stars',
-      price_stars: 50
-    });
-  } catch (e) {
-    console.error('nickname stars confirm error:', e);
-    return res.status(500).json({
-      success: false,
-      error: 'nickname_confirm_failed'
-    });
-  }
-});
-// ===== END NICKNAME STARS PAYMENTS =====
-
-
 // ===== DRAW FINISH =====
 db.prepare(`
 CREATE TABLE IF NOT EXISTS draw_winners (
