@@ -1288,40 +1288,37 @@ function ensureTonConnectMount() {
   return mount;
 }
 
-function initTonConnect() {
-  if (tonConnectUI) return tonConnectUI;
-
+async function initTonConnect() {
+  if (window.tonConnectUI) return window.tonConnectUI;
   if (!window.TON_CONNECT_UI || !window.TON_CONNECT_UI.TonConnectUI) {
-    console.error("TON Connect global is missing");
-    return null;
+    await new Promise(r => setTimeout(r, 200));
+    if (!window.TON_CONNECT_UI || !window.TON_CONNECT_UI.TonConnectUI) {
+      console.error("TON Connect SDK not loaded");
+      return null;
+    }
   }
-
   ensureTonConnectMount();
-
   try {
-        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+    window.tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
       buttonRootId: TON_CONNECT_BUTTON_ROOT_ID,
       actionsConfiguration: {
-        twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/", returnStrategy: "back"
+        twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/",
+        returnStrategy: "back"
       }
     });
-
-    tonConnectUI.uiOptions = {
+    window.tonConnectUI.uiOptions = {
       language: currentLang === "RU" ? "ru" : "en"
     };
-
     if (typeof tonStatusUnsubscribe === "function") {
       tonStatusUnsubscribe();
     }
-
-    tonStatusUnsubscribe = tonConnectUI.onStatusChange((wallet) => {
+    tonStatusUnsubscribe = window.tonConnectUI.onStatusChange((wallet) => {
       tonWalletState = wallet || null;
       updateAccountPanel();
     });
-
-    tonWalletState = tonConnectUI.wallet || tonConnectUI.account || null;
-    return tonConnectUI;
+    tonWalletState = window.tonConnectUI.wallet || window.tonConnectUI.account || null;
+    return window.tonConnectUI;
   } catch (e) {
     console.error("TON Connect init error:", e);
     return null;
@@ -1338,7 +1335,7 @@ function getTonWalletAddress() {
 }
 
 async function disconnectTonWallet() {
-  const ui = initTonConnect();
+  const ui = await initTonConnect();
   if (!ui) return false;
 
   try {
@@ -1357,7 +1354,7 @@ async function disconnectTonWallet() {
 async function reconnectTonWallet() {
   await disconnectTonWallet();
 
-  const ui = initTonConnect();
+  const ui = await initTonConnect();
   if (!ui) {
     safeAlert(t().tonWalletUnavailable);
     return false;
@@ -1423,7 +1420,7 @@ async function waitForTonWalletConnection(timeoutMs = 60000) {
 }
 
 async function ensureTonWalletConnected() {
-  const ui = initTonConnect();
+  const ui = await initTonConnect();
   if (!ui) {
     safeAlert(t().tonWalletUnavailable);
     return false;
@@ -1668,7 +1665,7 @@ async function buyRankForTon(rankId) {
       return;
     }
 
-    const ui = initTonConnect();
+    const ui = await initTonConnect();
     if (!ui) {
       safeAlert(t().tonWalletInitFail);
       return;
@@ -3570,7 +3567,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", async () => {
-      const ui = initTonConnect();
+      const ui = await initTonConnect();
       if (!ui) {
         safeAlert(t().tonWalletUnavailable);
         return;
@@ -3618,7 +3615,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
     connectWalletBtn.addEventListener("click", async () => {
-      const ui = initTonConnect();
+      const ui = await initTonConnect();
       if (!ui) {
         safeAlert(t().tonWalletUnavailable);
         return;
