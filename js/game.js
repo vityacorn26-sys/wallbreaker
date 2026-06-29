@@ -3614,25 +3614,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
 connectWalletBtn.addEventListener("click", async () => {
-      const ui = await initTonConnect();
-      if (!ui) {
-        return;
-      }
-      try {
-        await ui.openModal();
-      } catch (e) {
-      }
-      const connectedAddress = await waitForTonWalletConnection(25000);
-      if (!connectedAddress) {
+      const connected = await ensureTonWalletConnected();
+      if (!connected) {
         safeAlert(t().tonWalletConnectFailed);
         return;
       }
-      try {
-        await API.bindWallet(connectedAddress);
-      } catch (e) {
-        console.error("Failed to bind wallet:", e);
+      const address = getTonWalletAddress();
+      if (address) {
+        try {
+          await API.bindWallet(address);
+        } catch (e) {
+          console.error("Failed to bind wallet:", e);
+        }
+        updateAccountPanel();
       }
-      updateAccountPanel();
     });
   }
 
