@@ -1109,11 +1109,13 @@ function updateAccountPanel() {
   const sessionWallet = userState.lastWithdraw?.wallet || "";
   const connectedTonWalletFull = getTonWalletAddress();
   const manualWallet = getManualWithdrawWallet();
-  const preferredWithdrawWallet = enteredWallet || manualWallet || connectedTonWalletFull || sessionWallet || "";
+  const preferredWithdrawWallet = enteredWallet || manualWallet || connectedTonWalletFull || "";
 
   if (walletStatus) {
     if (connectedTonWalletFull) {
       walletStatus.textContent = formatWallet(connectedTonWalletFull);
+    } else if (userState.ton_wallet) {
+      walletStatus.textContent = formatWallet(userState.ton_wallet);
     } else {
       walletStatus.textContent = t().notConnected;
     }
@@ -1363,7 +1365,7 @@ async function reconnectTonWallet() {
   }
 
   try {
-    await ui.openModal();
+    await ui.openWalletsModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
@@ -1433,7 +1435,7 @@ async function ensureTonWalletConnected() {
   }
 
   try {
-    await ui.openModal();
+    await ui.openWalletsModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
@@ -1470,6 +1472,7 @@ async function loadUser() {
     syncEnergyBase();
 
     await loadWithdrawStatus();
+    await loadSavedWallet();
     await refreshDrawStatusGlobal();
 
     // ===== INIT LIVE SCORE (robust) =====
@@ -1508,6 +1511,21 @@ async function loadWithdrawStatus() {
     updateAccountPanel();
   } catch (e) {
     console.error("loadWithdrawStatus error:", e);
+  }
+}
+
+
+async function loadSavedWallet() {
+  try {
+    const result = await API.getWallet();
+    if (result?.success && result.wallet) {
+      userState.ton_wallet = result.wallet;
+    } else {
+      userState.ton_wallet = null;
+    }
+    updateAccountPanel();
+  } catch (e) {
+    console.error("loadSavedWallet error:", e);
   }
 }
 
@@ -3573,7 +3591,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise((resolve) => setTimeout(resolve, 120));
 
       try {
-        await ui.openModal();
+        await ui.openWalletsModal();
       } catch (e) {
         console.error("TON Connect openModal error:", e);
       }
@@ -3582,6 +3600,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!connectedAddress) {
         safeAlert(t().tonWalletConnectFailed);
         return;
+      }
+
+      try {
+        await API.bindWallet(connectedAddress);
+      } catch (e) {
+        console.error("Failed to bind wallet:", e);
+      }
+
+      // Очистить старый адрес из lastWithdraw
+      if (userState.lastWithdraw) {
+        userState.lastWithdraw.wallet = "";
       }
 
       updateAccountPanel();
@@ -3596,7 +3625,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       try {
-        await ui.openModal();
+        await ui.openWalletsModal();
       } catch (e) {
         console.error("TON Connect openModal error:", e);
       }
@@ -3605,6 +3634,12 @@ document.addEventListener("DOMContentLoaded", () => {
         safeAlert(t().tonWalletConnectFailed);
         return;
       }
+      try {
+        await API.bindWallet(connectedAddress);
+      } catch (e) {
+        console.error("Failed to bind wallet:", e);
+      }
+
       updateAccountPanel();
     });
   }
