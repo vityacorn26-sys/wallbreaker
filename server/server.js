@@ -2767,7 +2767,9 @@ app.post('/api/wallet/bind', requireTelegramAuth, (req, res) => {
     // Валидация адреса TON (должен начинаться с UQ или EQ и быть длиной 48-53 символов)
     const isValidWallet = walletAddress && (((walletAddress.startsWith('UQ') || walletAddress.startsWith('EQ')) && walletAddress.length >= 48 && walletAddress.length <= 53) || (walletAddress.match(/^0:[a-f0-9]{64}$/i) && walletAddress.length === 66));
     if (!isValidWallet) {
+      return res.status(400).json({ success: false, error: "invalid_wallet_address" });
     }
+    
 
     let user = getOrCreateUser(telegramUser);
     
