@@ -1360,7 +1360,7 @@ async function reconnectTonWallet() {
   }
 
   try {
-    await ui.openWalletsModal();
+    await ui.openModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
@@ -1430,7 +1430,7 @@ async function ensureTonWalletConnected() {
   }
 
   try {
-    await ui.openWalletsModal();
+    await ui.openModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
@@ -3586,7 +3586,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise((resolve) => setTimeout(resolve, 120));
 
       try {
-        await ui.openWalletsModal();
+        await ui.openModal();
       } catch (e) {
         console.error("TON Connect openModal error:", e);
       }
@@ -3614,18 +3614,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
 connectWalletBtn.addEventListener("click", async () => {
-      safeAlert("Debug: кнопка нажата");
       const ui = await initTonConnect();
       if (!ui) {
-        safeAlert("Debug: ui is null");
         return;
       }
-      safeAlert("Debug: ui создан, открываем модалку");
       try {
-        await ui.openWalletsModal();
-        safeAlert("Debug: модалка открыта");
+        await ui.openModal();
       } catch (e) {
-        safeAlert("Debug: ошибка " + e.message);
       }
       const connectedAddress = await waitForTonWalletConnection(25000);
       if (!connectedAddress) {
