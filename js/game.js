@@ -3613,16 +3613,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
-    connectWalletBtn.addEventListener("click", async () => {
+connectWalletBtn.addEventListener("click", async () => {
+      safeAlert("Debug: кнопка нажата");
       const ui = await initTonConnect();
       if (!ui) {
-        safeAlert(t().tonWalletUnavailable);
+        safeAlert("Debug: ui is null");
         return;
       }
+      safeAlert("Debug: ui создан, открываем модалку");
       try {
         await ui.openWalletsModal();
+        safeAlert("Debug: модалка открыта");
       } catch (e) {
-        console.error("TON Connect openModal error:", e);
+        safeAlert("Debug: ошибка " + e.message);
       }
       const connectedAddress = await waitForTonWalletConnection(25000);
       if (!connectedAddress) {
@@ -3634,7 +3637,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (e) {
         console.error("Failed to bind wallet:", e);
       }
-
       updateAccountPanel();
     });
   }
