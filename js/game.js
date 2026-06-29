@@ -1263,7 +1263,7 @@ function setLang(lang) {
   saveLang(currentLang);
 
   if (tonConnectUI) {
-    tonConnectUI.uiOptions = {
+    window.tonConnectUI.uiOptions = {
       language: currentLang === "RU" ? "ru" : "en"
     };
   }
@@ -1301,7 +1301,6 @@ async function initTonConnect() {
   try {
     window.tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
-      buttonRootId: TON_CONNECT_BUTTON_ROOT_ID,
       actionsConfiguration: {
         twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/",
         returnStrategy: "back"
@@ -1406,7 +1405,7 @@ async function waitForTonWalletConnection(timeoutMs = 60000) {
       resolve("");
     }, timeoutMs);
 
-    const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+    const unsubscribe = window.tonConnectUI.onStatusChange((wallet) => {
       const address = wallet?.account?.address || "";
       if (!address || finished) return;
 
