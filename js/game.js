@@ -1284,8 +1284,6 @@ function ensureTonConnectMount() {
   mount.style.top = "-9999px";
   mount.style.width = "1px";
   mount.style.height = "1px";
-  mount.style.opacity = "0";
-  mount.style.pointerEvents = "none";
   document.body.appendChild(mount);
   return mount;
 }
@@ -1303,6 +1301,7 @@ function initTonConnect() {
   try {
         tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
+      buttonRootId: TON_CONNECT_BUTTON_ROOT_ID,
       actionsConfiguration: {
         twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/", returnStrategy: "back"
       }
