@@ -2496,7 +2496,9 @@ function getTaskDisplayName(taskKey) {
       ads_20_daily: "20 РЕКЛАМ / ДЕНЬ",
       login_streak_daily: "ЕЖЕДНЕВНЫЙ ВХОД",
       ref_valid_1: "1 АКТИВНЫЙ РЕФЕРАЛ",
-      ref_valid_5: "5 АКТИВНЫХ РЕФЕРАЛОВ"
+      ref_valid_5: "5 АКТИВНЫХ РЕФЕРАЛОВ",
+      subscribe_tg_group: "ПОДПИСКА НА ГРУППУ",
+      subscribe_youtube: "ПОДПИСКА НА YOUTUBE"
     };
     return map[key] || key;
   }
@@ -2507,7 +2509,9 @@ function getTaskDisplayName(taskKey) {
     ads_20_daily: "20 ADS / DAY",
     login_streak_daily: "DAILY LOGIN",
     ref_valid_1: "1 ACTIVE REFERRAL",
-    ref_valid_5: "5 ACTIVE REFERRALS"
+    ref_valid_5: "5 ACTIVE REFERRALS",
+    subscribe_tg_group: "SUBSCRIBE TO GROUP",
+    subscribe_youtube: "SUBSCRIBE TO YOUTUBE"
   };
 
   return map[key] || key;
@@ -2545,6 +2549,8 @@ function renderTasksPanel(payload) {
 
   const taskOrder = [
     "login_streak_daily",
+    "subscribe_tg_group",
+    "subscribe_youtube",
     "ads_10_daily",
     "ads_15_daily",
     "ads_20_daily",
@@ -2607,15 +2613,22 @@ function renderTasksPanel(payload) {
         <p>${progress}</p>
         <p>${reward}</p>
         ${extraHint}
-        <div style="margin-top:12px;">
-          <button
-            class="wb-button ${buttonClass}"
-            type="button"
-            onclick="claimTaskReward('${String(task.key || "")}')"
-            ${disabledAttr}
-          >
-            ${buttonText}
-          </button>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          ${(() => {
+            const isSub = task.key === 'subscribe_tg_group' || task.key === 'subscribe_youtube';
+            if (task.claimed) {
+              return `<button class="wb-button ghost" disabled>${buttonText}</button>`;
+            }
+            if (isSub) {
+              const link = task.key === 'subscribe_tg_group' ? 'https://t.me/wallbreakergame' : 'https://www.youtube.com/channel/UCOQx6GsKmUoJE9R6uF0liXQ';
+              const subLabel = currentLang === 'RU' ? 'Подписаться' : 'Subscribe';
+              return `
+                <button class="wb-button ghost" onclick="window.open('${link}', '_blank')">${subLabel}</button>
+                <button class="wb-button premium" onclick="claimTaskReward('${task.key}')">${tp.claim}</button>
+              `;
+            }
+            return `<button class="wb-button ${buttonClass}" ${disabledAttr} onclick="claimTaskReward('${task.key}')">${buttonText}</button>`;
+          })()}
         </div>
       </div>
     `;
