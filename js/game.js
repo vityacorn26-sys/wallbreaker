@@ -1421,25 +1421,25 @@ async function waitForTonWalletConnection(timeoutMs = 60000) {
 async function ensureTonWalletConnected() {
   const ui = await initTonConnect();
   if (!ui) {
-    safeAlert(t().tonWalletUnavailable);
+    safeAlert("ui is null");
     return false;
   }
-
   if (getTonWalletAddress()) {
+    safeAlert("wallet already connected: " + getTonWalletAddress());
     return true;
   }
-
   try {
     await ui.openModal();
+    safeAlert("modal opened");
   } catch (e) {
-    console.error("TON Connect openModal error:", e);
-  }
-
-  const connectedAddress = await waitForTonWalletConnection(25000);
-  if (!connectedAddress) {
+    safeAlert("openModal error: " + e.message);
     return false;
   }
-
+  const connectedAddress = await waitForTonWalletConnection(25000);
+  if (!connectedAddress) {
+    safeAlert("timeout");
+    return false;
+  }
   updateAccountPanel();
   return true;
 }
