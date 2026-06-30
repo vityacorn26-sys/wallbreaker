@@ -1421,7 +1421,6 @@ async function waitForTonWalletConnection(timeoutMs = 60000) {
 async function ensureTonWalletConnected() {
   const ui = await initTonConnect();
   if (!ui) {
-    safeAlert(t().tonWalletUnavailable);
     return false;
   }
   if (getTonWalletAddress()) {
@@ -2622,10 +2621,17 @@ function renderTasksPanel(payload) {
             if (isSub) {
               const link = task.key === 'subscribe_tg_group' ? 'https://t.me/wallbreakergame' : 'https://www.youtube.com/channel/UCOQx6GsKmUoJE9R6uF0liXQ';
               const subLabel = currentLang === 'RU' ? 'Подписаться' : 'Subscribe';
-              return `
-                <button class="wb-button ghost" onclick="window.open('${link}', '_blank')">${subLabel}</button>
-                <button class="wb-button premium" onclick="claimTaskReward('${task.key}')">${tp.claim}</button>
-              `;
+              if (task.claimable) {
+                return `
+                  <button class="wb-button ghost" onclick="window.open('${link}', '_blank')">${subLabel}</button>
+                  <button class="wb-button premium" onclick="claimTaskReward('${task.key}')">${tp.claim}</button>
+                `;
+              } else {
+                return `
+                  <button class="wb-button ghost" onclick="window.open('${link}', '_blank')">${subLabel}</button>
+                  <button class="wb-button ghost" disabled>${currentLang === 'RU' ? 'В ПРОЦЕССЕ' : 'IN PROGRESS'}</button>
+                `;
+              }
             }
             return `<button class="wb-button ${buttonClass}" ${disabledAttr} onclick="claimTaskReward('${task.key}')">${buttonText}</button>`;
           })()}
