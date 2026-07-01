@@ -1360,7 +1360,7 @@ async function reconnectTonWallet() {
   }
 
   try {
-    await ui.openWalletsModal();
+    await ui.openModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
   }
@@ -1429,7 +1429,7 @@ async function ensureTonWalletConnected() {
   // Закрываем все модалки чтобы TON Connect был виден
   closeAllPanels();
   try {
-    await ui.openWalletsModal();
+    await ui.openModal();
   } catch (e) {
     console.error("TON Connect openModal error:", e);
     return false;
@@ -3604,7 +3604,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise((resolve) => setTimeout(resolve, 120));
 
       try {
-        await ui.openWalletsModal();
+        await ui.openModal();
       } catch (e) {
         console.error("TON Connect openModal error:", e);
       }
