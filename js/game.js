@@ -1304,7 +1304,8 @@ async function initTonConnect() {
       actionsConfiguration: {
         twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/",
         returnStrategy: "back"
-      }
+      },
+      restoreConnection: true
     });
     window.tonConnectUI.uiOptions = {
       language: currentLang === "RU" ? "ru" : "en"
