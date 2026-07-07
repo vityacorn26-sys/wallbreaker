@@ -1351,8 +1351,46 @@ async function disconnectTonWallet() {
   return true;
 }
 
+async function waitForTonWalletDisconnect(ui, timeoutMs = 3000) {
+  if (!ui || typeof ui.onStatusChange !== "function") {
+    return false;
+  }
+
+  return new Promise((resolve) => {
+    let finished = false;
+    let timer = null;
+    let unsubscribe = null;
+
+    const finish = (disconnected) => {
+      if (finished) return;
+      finished = true;
+      if (timer) clearTimeout(timer);
+      if (typeof unsubscribe === "function") unsubscribe();
+      resolve(disconnected);
+    };
+
+    timer = setTimeout(() => finish(!getTonWalletAddress()), timeoutMs);
+
+    unsubscribe = ui.onStatusChange((wallet) => {
+      tonWalletState = wallet || null;
+      updateAccountPanel();
+      if (!wallet?.account?.address) {
+        finish(true);
+      }
+    });
+  });
+}
+
 async function reconnectTonWallet() {
-  await disconnectTonWallet();
+  const uiBeforeDisconnect = await initTonConnect();
+  const disconnectSettled = getTonWalletAddress()
+    ? waitForTonWalletDisconnect(uiBeforeDisconnect)
+    : Promise.resolve(true);
+
+  const disconnected = await disconnectTonWallet();
+  if (!disconnected) return false;
+
+  await disconnectSettled;
 
   const ui = await initTonConnect();
   if (!ui) {
@@ -1368,6 +1406,7 @@ async function reconnectTonWallet() {
       }
   } catch (e) {
       console.error("TON Connect open modal error:", e);
+      return false;
   }
 
   const connectedAddress = await waitForTonWalletConnection(25000);
@@ -3594,40 +3633,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", async () => {
-      const ui = await initTonConnect();
-      if (!ui) {
-        safeAlert(t().tonWalletUnavailable);
-        return;
-      }
+      const connected = await reconnectTonWallet();
+      if (!connected) return;
 
-      try {
-        if (getTonWalletAddress() && typeof ui.disconnect === "function") {
-          await ui.disconnect();
-        }
-      } catch (e) {
-        console.error("TON Connect disconnect error:", e);
-      }
-
-      tonWalletState = null;
-      updateAccountPanel();
-
-      await new Promise((resolve) => setTimeout(resolve, 120));
-
-      try {
-        if (typeof ui.openWalletsModal === "function") {
-          await ui.openWalletsModal();
-        } else {
-          await ui.openModal();
-        }
-      } catch (e) {
-        console.error("TON Connect open modal error:", e);
-      }
-
-      const connectedAddress = await waitForTonWalletConnection(25000);
-      if (!connectedAddress) {
-        safeAlert(t().tonWalletConnectFailed);
-        return;
-      }
+      const connectedAddress = getTonWalletAddress();
 
       try {
         await API.bindWallet(connectedAddress);
