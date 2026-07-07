@@ -1301,6 +1301,7 @@ async function initTonConnect() {
   try {
     window.tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
       manifestUrl: TON_CONNECT_MANIFEST_URL,
+      restoreConnection: true,
       actionsConfiguration: {
         twaReturnUrl: "https://vityacorn26-sys.github.io/wallbreaker/",
         returnStrategy: "back"
@@ -1360,9 +1361,13 @@ async function reconnectTonWallet() {
   }
 
   try {
-    await ui.openModal();
+      if (typeof ui.openWalletsModal === "function") {
+          await ui.openWalletsModal();
+      } else {
+          await ui.openModal();
+      }
   } catch (e) {
-    console.error("TON Connect openModal error:", e);
+      console.error("TON Connect open modal error:", e);
   }
 
   const connectedAddress = await waitForTonWalletConnection(25000);
@@ -1429,11 +1434,16 @@ async function ensureTonWalletConnected() {
   // Закрываем все модалки чтобы TON Connect был виден
   closeAllPanels();
   try {
-    await ui.openModal();
+      if (typeof ui.openWalletsModal === "function") {
+          await ui.openWalletsModal();
+      } else {
+          await ui.openModal();
+      }
   } catch (e) {
-    console.error("TON Connect openModal error:", e);
-    return false;
+      console.error("TON Connect open modal error:", e);
+      return false;
   }
+
   const connectedAddress = await waitForTonWalletConnection(25000);
   if (!connectedAddress) {
     return false;
@@ -3604,9 +3614,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await new Promise((resolve) => setTimeout(resolve, 120));
 
       try {
-        await ui.openModal();
+        if (typeof ui.openWalletsModal === "function") {
+          await ui.openWalletsModal();
+        } else {
+          await ui.openModal();
+        }
       } catch (e) {
-        console.error("TON Connect openModal error:", e);
+        console.error("TON Connect open modal error:", e);
       }
 
       const connectedAddress = await waitForTonWalletConnection(25000);
