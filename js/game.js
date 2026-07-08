@@ -79,7 +79,7 @@ let userState = {
 };
 
 let tapQueue = 0;
-let tonWalletActionInFlight = false;
+let lastTonWalletActionAt = 0;
 let tapWorkerRunning = false;
 let tapAnimLocked = false;
 let tapFlushTimer = null;
@@ -356,12 +356,14 @@ function setWithdrawWalletSelection(walletAddress) {
   }
 }
 
-function setWalletButtonsBusy(isBusy) {
-  const connectWalletBtn = document.getElementById("connect-wallet-btn");
-  const changeWalletBtn = document.getElementById("change-wallet-btn");
+function canStartTonWalletAction() {
+  const now = Date.now();
+  if (now - lastTonWalletActionAt < 1200) {
+    return false;
+  }
 
-  if (connectWalletBtn) connectWalletBtn.disabled = isBusy;
-  if (changeWalletBtn) changeWalletBtn.disabled = isBusy;
+  lastTonWalletActionAt = now;
+  return true;
 }
 
 const LAUNCH_CONSENT_KEY = "wb_launch_consent_v1";
@@ -3668,67 +3670,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", async () => {
-      if (tonWalletActionInFlight) return;
-      tonWalletActionInFlight = true;
-      setWalletButtonsBusy(true);
+      if (!canStartTonWalletAction()) return;
+
+      const connected = await reconnectTonWallet();
+      if (!connected) return;
+
+      const connectedAddress = getTonWalletAddress();
 
       try {
-        const connected = await reconnectTonWallet();
-        if (!connected) return;
-
-        const connectedAddress = getTonWalletAddress();
-
-        try {
-          const bindResult = await API.bindWallet(connectedAddress);
-          if (bindResult?.success !== false) {
-            userState.ton_wallet = connectedAddress;
-            setWithdrawWalletSelection(connectedAddress);
-          }
-        } catch (e) {
-          console.error("Failed to bind wallet:", e);
+        const bindResult = await API.bindWallet(connectedAddress);
+        if (bindResult?.success !== false) {
+          userState.ton_wallet = connectedAddress;
+          setWithdrawWalletSelection(connectedAddress);
         }
-
-        // Очистить старый адрес из lastWithdraw
-        if (userState.lastWithdraw) {
-          userState.lastWithdraw.wallet = "";
-        }
-
-        updateAccountPanel();
-      } finally {
-        tonWalletActionInFlight = false;
-        setWalletButtonsBusy(false);
+      } catch (e) {
+        console.error("Failed to bind wallet:", e);
       }
+
+      // Очистить старый адрес из lastWithdraw
+      if (userState.lastWithdraw) {
+        userState.lastWithdraw.wallet = "";
+      }
+
+      updateAccountPanel();
     });
   }
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
 connectWalletBtn.addEventListener("click", async () => {
-      if (tonWalletActionInFlight) return;
-      tonWalletActionInFlight = true;
-      setWalletButtonsBusy(true);
+      if (!canStartTonWalletAction()) return;
 
-      try {
-        const connected = await ensureTonWalletConnected();
-        if (!connected) {
-          safeAlert(t().tonWalletConnectFailed);
-          return;
-        }
-        const address = getTonWalletAddress();
-        if (address) {
-          try {
-            const bindResult = await API.bindWallet(address);
-            if (bindResult?.success !== false) {
-              userState.ton_wallet = address;
-              setWithdrawWalletSelection(address);
-            }
-          } catch (e) {
-            console.error("Failed to bind wallet:", e);
+      const connected = await ensureTonWalletConnected();
+      if (!connected) {
+        safeAlert(t().tonWalletConnectFailed);
+        return;
+      }
+      const address = getTonWalletAddress();
+      if (address) {
+        try {
+          const bindResult = await API.bindWallet(address);
+          if (bindResult?.success !== false) {
+            userState.ton_wallet = address;
+            setWithdrawWalletSelection(address);
           }
-          updateAccountPanel();
+        } catch (e) {
+          console.error("Failed to bind wallet:", e);
         }
-      } finally {
-        tonWalletActionInFlight = false;
-        setWalletButtonsBusy(false);
+        updateAccountPanel();
       }
     });
   }
