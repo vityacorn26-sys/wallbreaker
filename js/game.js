@@ -1382,6 +1382,9 @@ async function waitForTonWalletDisconnect(ui, timeoutMs = 3000) {
 }
 
 async function reconnectTonWallet() {
+  userState.ton_wallet = null;
+  updateAccountPanel();
+
   const uiBeforeDisconnect = await initTonConnect();
   const disconnectSettled = getTonWalletAddress()
     ? waitForTonWalletDisconnect(uiBeforeDisconnect)
@@ -3639,7 +3642,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const connectedAddress = getTonWalletAddress();
 
       try {
-        await API.bindWallet(connectedAddress);
+        const bindResult = await API.bindWallet(connectedAddress);
+        if (bindResult?.success !== false) {
+          userState.ton_wallet = connectedAddress;
+        }
       } catch (e) {
         console.error("Failed to bind wallet:", e);
       }
@@ -3663,7 +3669,10 @@ connectWalletBtn.addEventListener("click", async () => {
       const address = getTonWalletAddress();
       if (address) {
         try {
-          await API.bindWallet(address);
+          const bindResult = await API.bindWallet(address);
+          if (bindResult?.success !== false) {
+            userState.ton_wallet = address;
+          }
         } catch (e) {
           console.error("Failed to bind wallet:", e);
         }
