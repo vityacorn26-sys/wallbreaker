@@ -79,6 +79,7 @@ let userState = {
 };
 
 let tapQueue = 0;
+let tonWalletActionInFlight = false;
 let tapWorkerRunning = false;
 let tapAnimLocked = false;
 let tapFlushTimer = null;
@@ -325,6 +326,42 @@ function setManualWithdrawWallet(value) {
       localStorage.removeItem(MANUAL_WITHDRAW_WALLET_KEY);
     }
   } catch (_) {}
+}
+
+function clearWithdrawWalletSelection() {
+  setManualWithdrawWallet("");
+
+  if (withdrawWalletInput) {
+    withdrawWalletInput.value = "";
+    delete withdrawWalletInput.dataset.walletAutofilled;
+  }
+
+  const withdrawWalletPreview = document.getElementById("withdraw-wallet-preview");
+  if (withdrawWalletPreview) {
+    withdrawWalletPreview.textContent = "";
+  }
+}
+
+function setWithdrawWalletSelection(walletAddress) {
+  const wallet = String(walletAddress || "").trim();
+
+  if (withdrawWalletInput) {
+    withdrawWalletInput.value = wallet;
+    withdrawWalletInput.dataset.walletAutofilled = wallet ? "1" : "";
+  }
+
+  const withdrawWalletPreview = document.getElementById("withdraw-wallet-preview");
+  if (withdrawWalletPreview) {
+    withdrawWalletPreview.textContent = wallet ? formatWallet(wallet) : "";
+  }
+}
+
+function setWalletButtonsBusy(isBusy) {
+  const connectWalletBtn = document.getElementById("connect-wallet-btn");
+  const changeWalletBtn = document.getElementById("change-wallet-btn");
+
+  if (connectWalletBtn) connectWalletBtn.disabled = isBusy;
+  if (changeWalletBtn) changeWalletBtn.disabled = isBusy;
 }
 
 const LAUNCH_CONSENT_KEY = "wb_launch_consent_v1";
@@ -1105,11 +1142,9 @@ function updateAccountPanel() {
   tonBalanceValue.textContent = `${Number(userState.ton_balance || 0).toFixed(4)} TON`;
   }
   
-  const enteredWallet = withdrawWalletInput?.value?.trim() || "";
-  const sessionWallet = userState.lastWithdraw?.wallet || "";
   const connectedTonWalletFull = getTonWalletAddress();
-  const manualWallet = getManualWithdrawWallet();
-  const preferredWithdrawWallet = enteredWallet || manualWallet || connectedTonWalletFull || "";
+  const savedTonWallet = String(userState.ton_wallet || "").trim();
+  const preferredWithdrawWallet = connectedTonWalletFull || savedTonWallet || "";
 
   if (walletStatus) {
     if (connectedTonWalletFull) {
@@ -1129,15 +1164,8 @@ function updateAccountPanel() {
     }
   }
 
-  if (
-    withdrawWalletInput &&
-    preferredWithdrawWallet &&
-    !withdrawWalletInput.dataset.walletAutofilled &&
-    !withdrawWalletInput.matches(":focus") &&
-    !withdrawWalletInput.value.trim()
-  ) {
-    withdrawWalletInput.value = preferredWithdrawWallet;
-    withdrawWalletInput.dataset.walletAutofilled = "1";
+  if (withdrawWalletInput && !withdrawWalletInput.matches(":focus")) {
+    setWithdrawWalletSelection(preferredWithdrawWallet);
   }
 
   if (withdrawStatus) {
@@ -1383,6 +1411,10 @@ async function waitForTonWalletDisconnect(ui, timeoutMs = 3000) {
 
 async function reconnectTonWallet() {
   userState.ton_wallet = null;
+  if (userState.lastWithdraw) {
+    userState.lastWithdraw.wallet = "";
+  }
+  clearWithdrawWalletSelection();
   updateAccountPanel();
 
   const uiBeforeDisconnect = await initTonConnect();
@@ -1576,7 +1608,7 @@ async function loadSavedWallet() {
 
 async function handleWithdrawRequest() {
   try {
-    const wallet = (withdrawWalletInput?.value || "").trim();
+    const wallet = (getTonWalletAddress() || userState.ton_wallet || withdrawWalletInput?.value || "").trim();
     const amount = Number(withdrawAmountInput?.value || 0);
 
     if (withdrawMessage) withdrawMessage.textContent = "";
@@ -3636,47 +3668,67 @@ document.addEventListener("DOMContentLoaded", () => {
   const changeWalletBtn = document.getElementById("change-wallet-btn");
   if (changeWalletBtn) {
     changeWalletBtn.addEventListener("click", async () => {
-      const connected = await reconnectTonWallet();
-      if (!connected) return;
-
-      const connectedAddress = getTonWalletAddress();
+      if (tonWalletActionInFlight) return;
+      tonWalletActionInFlight = true;
+      setWalletButtonsBusy(true);
 
       try {
-        const bindResult = await API.bindWallet(connectedAddress);
-        if (bindResult?.success !== false) {
-          userState.ton_wallet = connectedAddress;
+        const connected = await reconnectTonWallet();
+        if (!connected) return;
+
+        const connectedAddress = getTonWalletAddress();
+
+        try {
+          const bindResult = await API.bindWallet(connectedAddress);
+          if (bindResult?.success !== false) {
+            userState.ton_wallet = connectedAddress;
+            setWithdrawWalletSelection(connectedAddress);
+          }
+        } catch (e) {
+          console.error("Failed to bind wallet:", e);
         }
-      } catch (e) {
-        console.error("Failed to bind wallet:", e);
-      }
 
-      // Очистить старый адрес из lastWithdraw
-      if (userState.lastWithdraw) {
-        userState.lastWithdraw.wallet = "";
-      }
+        // Очистить старый адрес из lastWithdraw
+        if (userState.lastWithdraw) {
+          userState.lastWithdraw.wallet = "";
+        }
 
-      updateAccountPanel();
+        updateAccountPanel();
+      } finally {
+        tonWalletActionInFlight = false;
+        setWalletButtonsBusy(false);
+      }
     });
   }
   const connectWalletBtn = document.getElementById("connect-wallet-btn");
   if (connectWalletBtn) {
 connectWalletBtn.addEventListener("click", async () => {
-      const connected = await ensureTonWalletConnected();
-      if (!connected) {
-        safeAlert(t().tonWalletConnectFailed);
-        return;
-      }
-      const address = getTonWalletAddress();
-      if (address) {
-        try {
-          const bindResult = await API.bindWallet(address);
-          if (bindResult?.success !== false) {
-            userState.ton_wallet = address;
-          }
-        } catch (e) {
-          console.error("Failed to bind wallet:", e);
+      if (tonWalletActionInFlight) return;
+      tonWalletActionInFlight = true;
+      setWalletButtonsBusy(true);
+
+      try {
+        const connected = await ensureTonWalletConnected();
+        if (!connected) {
+          safeAlert(t().tonWalletConnectFailed);
+          return;
         }
-        updateAccountPanel();
+        const address = getTonWalletAddress();
+        if (address) {
+          try {
+            const bindResult = await API.bindWallet(address);
+            if (bindResult?.success !== false) {
+              userState.ton_wallet = address;
+              setWithdrawWalletSelection(address);
+            }
+          } catch (e) {
+            console.error("Failed to bind wallet:", e);
+          }
+          updateAccountPanel();
+        }
+      } finally {
+        tonWalletActionInFlight = false;
+        setWalletButtonsBusy(false);
       }
     });
   }
