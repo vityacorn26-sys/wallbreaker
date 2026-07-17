@@ -2646,9 +2646,24 @@ function renderTasksPanel(payload) {
   const entries = Object.values(tasks).sort((a, b) => {
     const aKey = String(a?.key || "");
     const bKey = String(b?.key || "");
+
+    // 0 = claimable (самые верхние)
+    // 1 = in progress
+    // 2 = claimed (самые нижние)
+    const aState = a.claimed ? 2 : (a.claimable ? 0 : 1);
+    const bState = b.claimed ? 2 : (b.claimable ? 0 : 1);
+
+    // Сначала сортировка по состоянию
+    if (aState !== bState) {
+      return aState - bState;
+    }
+
+    // Затем сохраняем привычный порядок задач
     const aIndex = taskOrder.indexOf(aKey);
     const bIndex = taskOrder.indexOf(bKey);
-    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+
+    return (aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex) -
+           (bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex);
   });
 
   if (!entries.length) {
