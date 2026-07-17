@@ -7,7 +7,7 @@ window.CONFIG = {
     ENERGY_REGEN_SECONDS: 30,
     ADS_REWARD_WBC: 1500,
     REFERRAL_PERCENT: 10,
-    ZERO_DAY_KEY_PRICE: 2000000,
+    ZERO_DAY_KEY_PRICE: 1500000,
     ZERO_DAY_KEY_MAX_PER_DRAW: 2,
     RANK_DURATION_DAYS: 7
   },
@@ -37,7 +37,7 @@ window.CONFIG = {
       img: "assets/cat2.jpg",
       mult: 25,
       unlockMode: "wbc",
-      priceWBC: 250000,
+      priceWBC: 200000,
       priceTON: 0,
       priceStars: 0,
       accent: "cyan",
@@ -71,7 +71,7 @@ window.CONFIG = {
       img: "assets/cat4.jpg",
       mult: 150,
       unlockMode: "hybrid",
-      priceWBC: 750000,
+      priceWBC: 550000,
       priceTON: 1,
       priceStars: 0,
       accent: "cyan",
@@ -88,7 +88,7 @@ window.CONFIG = {
       img: "assets/cat5.jpg",
       mult: 400,
       unlockMode: "hybrid",
-      priceWBC: 1300000,
+      priceWBC: 900000,
       priceTON: 2.5,
       priceStars: 0,
       accent: "magenta",
@@ -148,7 +148,7 @@ window.CONFIG = {
       tapsActivity: 1.1
     }
   },
-    
+
   PROTOCOL: {
     EN: {
       title: "MISSION PROTOCOL",

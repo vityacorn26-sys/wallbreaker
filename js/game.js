@@ -270,7 +270,7 @@ function getReferralPercent() {
 }
 
 function getZeroDayKeyPrice() {
-  return Number(getGameConfig().ZERO_DAY_KEY_PRICE || 2000000);
+  return Number(getGameConfig().ZERO_DAY_KEY_PRICE || 1500000);
 }
 
 function getRankDurationDays() {
